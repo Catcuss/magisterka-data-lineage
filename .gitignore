@@ -1,0 +1,12 @@
+data/
+results/models/
+*.pdf
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+*.joblib
+*.npy
+*.npz
+*.pkl
+.env

@@ -1,0 +1,23 @@
+# Przetwarzanie grafów
+networkx>=3.2
+node2vec>=0.4
+
+# Dane
+pandas>=2.0
+numpy>=1.26
+
+# Machine learning
+scikit-learn>=1.4
+lightgbm>=4.3
+imbalanced-learn>=0.12
+
+# Wizualizacja
+matplotlib>=3.8
+seaborn>=0.13
+
+# Notebooki
+jupyter>=1.0
+ipykernel>=6.0
+
+# Testy
+pytest>=8.0
