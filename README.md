@@ -35,13 +35,6 @@ Dane pobierz ręcznie do `data/raw/` (pliki .rar wykluczone z repozytorium).
 | Metryki ewaluacji | `src/evaluation/metrics.py` | Precision, Recall, F1, AUC-ROC, AUC-PR |
 | Testy jednostkowe | `tests/` | 46 testów: loader (29), splitter (17) |
 
-### Do zrealizowania
-
-- [ ] `src/algorithms/embeddings.py` — Node2Vec + klasyfikacja krawędzi
-- [ ] `src/data/features.py` — rozszerzony moduł cech (do refaktoru ML)
-- [ ] Notebooki eksploracyjne (`notebooks/01–05`)
-- [ ] Testy dla heurystyk i klasyfikatora ML
-- [ ] Ewaluacja na wszystkich 18 grafach i tabela porównawcza wyników
 
 ### Wstępne wyniki (małe grafy, DATA_FLOW, test 20%, seed=42)
 
