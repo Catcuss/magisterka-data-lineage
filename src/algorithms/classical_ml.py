@@ -31,6 +31,12 @@ try:
 except ImportError:  # pragma: no cover
     _IMBLEARN_AVAILABLE = False
 
+try:
+    import lightgbm as lgb
+    _LGBM_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _LGBM_AVAILABLE = False
+
 
 _ASSET_TYPE_MAP = {"Data Table": 0, "Data Job": 1, "Data Field": 2}
 _NO_PATH_VALUE = 999  # wartość długości ścieżki gdy brak połączenia
@@ -223,4 +229,37 @@ class RUSBoostGraphClassifier(_BaseGraphClassifier):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             random_state=seed,
+        )
+
+
+class LightGBMGraphClassifier(_BaseGraphClassifier):
+    """
+    LightGBM dla link prediction w grafach lineage.
+
+    Gradient boosting na tych samych 11 cechach topologicznych co RF i RUSBoost.
+    Zwykle szybszy i dokładniejszy niż RF na małych zbiorach danych.
+    Wbudowana obsługa niezbalansowania przez class_weight="balanced".
+
+    Wymaga: pip install lightgbm
+
+    Usage
+    -----
+    clf = LightGBMGraphClassifier()
+    clf.fit(G_train, pos_train, neg_train)
+    scores = clf.predict_proba(G_train, test_edges)
+    """
+
+    def __init__(self, n_estimators: int = 200, learning_rate: float = 0.05, seed: int = 42):
+        if not _LGBM_AVAILABLE:
+            raise ImportError(
+                "Wymagana biblioteka lightgbm. "
+                "Zainstaluj: pip install lightgbm"
+            )
+        self.model = lgb.LGBMClassifier(
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            class_weight="balanced",
+            random_state=seed,
+            n_jobs=-1,
+            verbose=-1,
         )

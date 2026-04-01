@@ -19,6 +19,9 @@ Poniższe metody działają poprawnie na grafach bipartytowych:
     - Katz Index                   — Σ β^l * |spacery długości l od u do v|
                                      uogólnienie L3 na wszystkie długości ścieżek;
                                      dla par bipartytowych liczy l=1,3,5,...
+    - PPR (Personalized PageRank)  — prawdopodobieństwo odwiedzenia v przez
+                                     random walk startujący z u (α=0.85);
+                                     naturalnie bipartytowy, captures global structure
 """
 
 import math
@@ -35,6 +38,7 @@ ALL_METHODS = [
     "preferential_attachment",
     "l3",
     "katz",
+    "ppr",
 ]
 
 
@@ -61,6 +65,9 @@ def score_edges(
     np.ndarray, shape (len(edges),)
         Score dla każdej pary — wyższy = bardziej prawdopodobna krawędź.
     """
+    if method == "ppr":
+        return _ppr_batch(G_train.to_undirected(), edges)
+
     _METHODS = {
         "common_neighbors":        _common_neighbors,
         "jaccard":                 _jaccard,
@@ -98,6 +105,7 @@ def score_all_methods(
         "preferential_attachment": np.array([_preferential_attachment(G_und, u, v) for u, v in edges]),
         "l3":                      np.array([_l3(G_und, u, v)                      for u, v in edges]),
         "katz":                    np.array([_katz(G_und, u, v)                    for u, v in edges]),
+        "ppr":                     _ppr_batch(G_und, edges),
     }
 
 
@@ -214,3 +222,36 @@ def _katz(G: nx.Graph, u, v, beta: float = 0.005, max_len: int = 6) -> float:
         frontier = dict(next_frontier)
 
     return total
+
+
+def _ppr_batch(G: nx.Graph, edges: list[tuple], alpha: float = 0.85) -> np.ndarray:
+    """
+    Personalized PageRank (PPR) — batch obliczenie dla listy par krawędzi.
+
+    PPR(u→v) = prawdopodobieństwo odwiedzenia v przez random walk startujący
+    z u z restart probability (1-α).
+
+    Działa na grafach bipartytowych (random walk nie wymaga wspólnych sąsiadów).
+    Captures global structure grafu — węzły "centralnie położone" w tym samym
+    komponencie dostają wyższy score.
+
+    Implementacja batch: dla każdego unikalnego węzła źródłowego nx.pagerank()
+    jest wywoływany raz, wyniki cache'owane dla wszystkich par z tym źródłem.
+
+    Złożoność: O(|unikalnych_u| × n × iteracje_pagerank)
+    """
+    unique_sources = set(u for u, _ in edges)
+    ppr_cache: dict = {}
+
+    for u in unique_sources:
+        if G.has_node(u):
+            ppr_cache[u] = nx.pagerank(
+                G, alpha=alpha, personalization={u: 1.0}, max_iter=200
+            )
+        else:
+            ppr_cache[u] = {}
+
+    return np.array([
+        ppr_cache.get(u, {}).get(v, 0.0)
+        for u, v in edges
+    ])
