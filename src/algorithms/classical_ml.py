@@ -1,7 +1,6 @@
 """
-Klasyfikator ML dla predykcji krawędzi w grafach lineage.
+Klasyfikatory ML dla predykcji krawędzi w grafach lineage.
 
-Model: Random Forest trenowany na cechach strukturalnych grafu.
 Ponieważ ID węzłów w DLG-DG-23 są zanonimizowanymi UUID, nie można
 użyć podobieństwa nazw (Jaro-Winkler). Zamiast tego używamy wyłącznie
 cech topologicznych.
@@ -11,47 +10,52 @@ Cechy dla pary (u, v):
     Węzeł v:  asset_type (int), out_degree, in_degree
     Para:     liczba wspólnych sąsiadów, Jaccard, Adamic-Adar,
               czy istnieje ścieżka u→v, długość najkrótszej ścieżki
+
+Dostępne modele
+---------------
+GraphMLClassifier       — Random Forest (sklearn), klasa bazowa modeli
+RUSBoostGraphClassifier — RUSBoost (imbalanced-learn): AdaBoost +
+                          Random Under-Sampling w każdej iteracji;
+                          bezpośrednio porównywalny z [1] Boiński et al.
 """
 
 import math
-from collections import defaultdict
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-
 import networkx as nx
+
+try:
+    from imblearn.ensemble import RUSBoostClassifier as _RUSBoost
+    _IMBLEARN_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _IMBLEARN_AVAILABLE = False
 
 
 _ASSET_TYPE_MAP = {"Data Table": 0, "Data Job": 1, "Data Field": 2}
 _NO_PATH_VALUE = 999  # wartość długości ścieżki gdy brak połączenia
 
 
-class GraphMLClassifier:
-    """
-    Klasyfikator Random Forest dla link prediction w grafach.
+# ---------------------------------------------------------------------------
+# Klasa bazowa — ekstrakcja cech wspólna dla wszystkich modeli ML
+# ---------------------------------------------------------------------------
 
-    Usage
-    -----
-    clf = GraphMLClassifier()
-    clf.fit(G_train, pos_train, neg_train)
-    scores = clf.predict_proba(G_train, test_edges)   # zwraca P(edge=1)
+class _BaseGraphClassifier:
+    """
+    Klasa bazowa: ekstrakcja cech topologicznych i interfejs fit/predict_proba.
+
+    Podklasy ustawiają self.model na dowolny estymator sklearn-compatible
+    z metodami fit(X, y) i predict_proba(X).
     """
 
-    def __init__(self, n_estimators: int = 100, seed: int = 42):
-        self.model = RandomForestClassifier(
-            n_estimators=n_estimators,
-            class_weight="balanced",
-            random_state=seed,
-            n_jobs=-1,
-        )
-        self._G_undirected = None
+    model = None  # podklasy przypisują konkretny model
 
     def fit(
         self,
         G_train: nx.DiGraph,
         pos_train: list[tuple],
         neg_train: list[tuple],
-    ) -> "GraphMLClassifier":
+    ) -> "_BaseGraphClassifier":
         """
         Trenuje klasyfikator na krawędziach treningowych.
 
@@ -64,11 +68,8 @@ class GraphMLClassifier:
         neg_train : list of (u, v)
             Negatywne próbki treningowe (nieistniejące krawędzie).
         """
-        self._G_undirected = G_train.to_undirected()
-
         edges = pos_train + neg_train
         y = np.array([1] * len(pos_train) + [0] * len(neg_train))
-
         X = self._extract_features(G_train, edges)
         self.model.fit(X, y)
         return self
@@ -92,8 +93,6 @@ class GraphMLClassifier:
         -------
         np.ndarray, shape (len(edges),)
         """
-        if self._G_undirected is None:
-            raise RuntimeError("Wywołaj fit() przed predict_proba().")
         X = self._extract_features(G_train, edges)
         return self.model.predict_proba(X)[:, 1]
 
@@ -106,7 +105,7 @@ class GraphMLClassifier:
         ]
 
     # ------------------------------------------------------------------
-    # Ekstrakcja cech
+    # Ekstrakcja cech (identyczna dla wszystkich modeli)
     # ------------------------------------------------------------------
 
     def _extract_features(
@@ -165,3 +164,63 @@ class GraphMLClassifier:
             cn, jaccard, aa,
             has_path, float(path_len),
         ]
+
+
+# ---------------------------------------------------------------------------
+# Konkretne modele
+# ---------------------------------------------------------------------------
+
+class GraphMLClassifier(_BaseGraphClassifier):
+    """
+    Random Forest dla link prediction w grafach lineage.
+
+    Usage
+    -----
+    clf = GraphMLClassifier()
+    clf.fit(G_train, pos_train, neg_train)
+    scores = clf.predict_proba(G_train, test_edges)   # zwraca P(edge=1)
+    """
+
+    def __init__(self, n_estimators: int = 100, seed: int = 42):
+        self.model = RandomForestClassifier(
+            n_estimators=n_estimators,
+            class_weight="balanced",
+            random_state=seed,
+            n_jobs=-1,
+        )
+
+    def feature_importances(self) -> dict[str, float]:
+        """Zwraca ważność cech po trenowaniu."""
+        return dict(zip(self.feature_names(), self.model.feature_importances_))
+
+
+class RUSBoostGraphClassifier(_BaseGraphClassifier):
+    """
+    RUSBoost dla link prediction w grafach lineage.
+
+    RUSBoost = AdaBoost + Random Under-Sampling w każdej iteracji boosting.
+    Zaprojektowany dla niezbalansowanych zbiorów danych.
+
+    Bezpośrednio porównywalny z modelem z artykułu [1] Boiński et al. (ISD2025),
+    który osiągnął F1=0.79 na syntetycznych grafach lineage.
+
+    Wymaga: pip install imbalanced-learn
+
+    Usage
+    -----
+    clf = RUSBoostGraphClassifier()
+    clf.fit(G_train, pos_train, neg_train)
+    scores = clf.predict_proba(G_train, test_edges)
+    """
+
+    def __init__(self, n_estimators: int = 100, learning_rate: float = 1.0, seed: int = 42):
+        if not _IMBLEARN_AVAILABLE:
+            raise ImportError(
+                "Wymagana biblioteka imbalanced-learn. "
+                "Zainstaluj: pip install imbalanced-learn"
+            )
+        self.model = _RUSBoost(
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            random_state=seed,
+        )

@@ -1,0 +1,76 @@
+ABSTRAKT
+
+Data lineage i data provenance to pojęcia opisujące śledzenie przepływu danych i historię
+transformacji danych w systemach bazodanowych. Grafy lineage reprezentują obiekty
+bazodanowe – tabele, widoki, kolumny – jako węzły, a transformacje danych jako krawędzie.
+Znajomość zależności między obiektami w bazie danych jest kluczowa z punktu widzenia
+zapewnienia jakości danych, audytu procesów ETL, debugowania potoków danych oraz spełnienia
+wymogów regulacyjnych takich jak RODO.
+
+Głównym problemem rozważanym w niniejszej pracy jest zjawisko tzw. broken lineage –
+zerwania ciągłości grafu zależności. Do zerwania ciągłości dochodzi gdy w procesach
+przetwarzania danych używane są tabele tymczasowe lub funkcje definiowane przez użytkownika
+(UDF). Tabele tymczasowe nie są rejestrowane w standardowych słownikach bazy danych,
+a UDF ukrywają wewnętrzną logikę transformacji. W obu przypadkach automatyczne odtworzenie
+pełnego grafu zależności nie jest możliwe – w grafie lineage pojawiają się brakujące krawędzie,
+których nie można ustalić na podstawie dostępnych metadanych.
+
+Istniejące narzędzia klasy data governance, takie jak Apache Atlas, OpenLineage czy
+Informatica, umożliwiają śledzenie lineage w czasie rzeczywistym, ale wymagają dostępu do
+pełnych metadanych i nie rozwiązują problemu brakujących krawędzi w grafach, w których
+część informacji jest niedostępna. W literaturze naukowej podejmowane są próby rozwiązania
+tego problemu przy użyciu analizy logów systemowych i przepisywania zapytań SQL, a także
+uczenia maszynowego. Przykładem jest praca Boińskiego et al., w której algorytm RUSBoost
+osiągnął wartość F1 równą 0,79. Dotychczasowe podejścia nie obejmują jednak analizy wpływu
+struktury grafu lineage na dobór algorytmów predykcji. Grafy lineage mają charakter
+dwudzielny (krawędzie DATA_FLOW łączą wyłącznie węzły tabela–zadanie), co powoduje, że
+klasyczne heurystyki grafowe oparte na wspólnych sąsiadach (Common Neighbors, Jaccard,
+Adamic-Adar) są nieskuteczne w tym kontekście. Brakuje również kompleksowego porównania
+różnych klas algorytmów na rzeczywistych danych.
+
+W ramach niniejszej pracy zostaną zaimplementowane i porównane trzy grupy algorytmów
+predykcji brakujących krawędzi w grafach lineage: heurystyki grafowe (Common Neighbors,
+Jaccard, Adamic-Adar, Preferential Attachment, L3), algorytmy uczenia maszynowego
+(Random Forest, RUSBoost, LightGBM) oparte na cechach topologicznych grafu, oraz algorytmy
+grafowe oparte na zanurzeniach węzłów (Node2Vec lub GraphSAGE). Algorytmy zostaną
+zastosowane do odkrywania zależności między obiektami w bazie danych i poddane ocenie
+z użyciem metryk F1, AUC-ROC i AUC-PR. Do ewaluacji zostanie wykorzystany zbiór danych
+DLG-DG-23 zawierający 18 grafów lineage pochodzących ze środowiska Huawei Cloud.
+
+--------------------------------------------------------------------------------
+
+ABSTRACT
+
+Data lineage and data provenance refer to tracking data flow and transformation history
+in database systems. Lineage graphs represent database objects – tables, views, columns –
+as nodes and data transformations as edges. Knowledge of dependencies between database
+objects is essential for data quality assurance, auditing ETL processes, debugging data
+pipelines, and compliance with regulations such as GDPR.
+
+The main problem addressed in this thesis is the phenomenon of broken lineage – gaps in
+the continuity of the dependency graph. These gaps occur when data processing pipelines
+use temporary tables or user-defined functions (UDFs). Temporary tables are not registered
+in standard database catalogs, and UDFs hide the internal transformation logic. In both
+cases, automatic reconstruction of the full dependency graph is not possible – the lineage
+graph contains missing edges that cannot be determined from available metadata.
+
+Existing data governance tools such as Apache Atlas, OpenLineage, and Informatica support
+real-time lineage tracking, but they require access to complete metadata and do not address
+the problem of missing edges in graphs where part of the information is unavailable.
+Research literature attempts to solve this problem using system log analysis and SQL query
+rewriting, as well as machine learning. One example is the work of Boiński et al., where
+the RUSBoost algorithm achieved an F1 score of 0.79. However, existing approaches do not
+analyze the impact of lineage graph structure on algorithm selection. Lineage graphs have
+a bipartite structure (DATA_FLOW edges connect only table–job node pairs), which makes
+classical neighborhood-based graph heuristics (Common Neighbors, Jaccard, Adamic-Adar)
+ineffective in this context. A comprehensive comparison of different algorithm classes
+on real-world data is also missing.
+
+In this thesis, three groups of algorithms for predicting missing edges in lineage graphs
+will be implemented and compared: graph heuristics (Common Neighbors, Jaccard,
+Adamic-Adar, Preferential Attachment, L3), machine learning algorithms (Random Forest,
+RUSBoost, LightGBM) based on topological graph features, and node embedding algorithms
+(Node2Vec or GraphSAGE). The algorithms will be applied to discover dependencies between
+database objects and evaluated using F1, AUC-ROC, and AUC-PR metrics. The evaluation
+will use the DLG-DG-23 dataset containing 18 lineage graphs from the Huawei Cloud
+environment.

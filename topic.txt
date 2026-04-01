@@ -1,0 +1,7 @@
+Odkrywanie zależności między obiektami w bazie danych
+W ramach pracy należy wykonać następujące zadania:
+1. dokonać przeglądu literatury dot. data lineage/provenance, algorytmów odkrywania brakujących krawędzi w grafie;
+2. zaimplementować trzy najbardziej obiecujące algorytmy odkrywania brakujących krawędzi w grafie;
+3. zastosować powyższe algorytmy do odkrywania zależności między obiektami w bazie danych;
+4. opracować testy oceniające jakość działania ww. algorytmów;
+5. przeprowadzić testy i ocenić jakość odkrytych powiązań.

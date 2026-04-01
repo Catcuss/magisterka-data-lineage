@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find c:UsersMariaDesktopMAGISTERKAdata -type f -name *.json -o -name *.pkl -o -name *.npz)",
+      "Bash(git -C \"c:\\\\Users\\\\Maria\\\\Desktop\\\\MAGISTERKA\" status --porcelain)",
+      "WebSearch"
+    ]
+  }
+}

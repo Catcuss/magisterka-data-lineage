@@ -16,9 +16,14 @@ Poniższe metody działają poprawnie na grafach bipartytowych:
     - Preferential Attachment (PA) — deg(u) × deg(v), nie wymaga wspólnych sąsiadów
     - L3 (ścieżki długości 3)      — liczba ścieżek Table→Job→Table→Job
                                      odpowiednik CN na rzucie bipartytowym
+    - Katz Index                   — Σ β^l * |spacery długości l od u do v|
+                                     uogólnienie L3 na wszystkie długości ścieżek;
+                                     dla par bipartytowych liczy l=1,3,5,...
 """
 
 import math
+from collections import defaultdict
+
 import networkx as nx
 import numpy as np
 
@@ -29,6 +34,7 @@ ALL_METHODS = [
     "adamic_adar",
     "preferential_attachment",
     "l3",
+    "katz",
 ]
 
 
@@ -56,11 +62,12 @@ def score_edges(
         Score dla każdej pary — wyższy = bardziej prawdopodobna krawędź.
     """
     _METHODS = {
-        "common_neighbors":      _common_neighbors,
-        "jaccard":               _jaccard,
-        "adamic_adar":           _adamic_adar,
+        "common_neighbors":        _common_neighbors,
+        "jaccard":                 _jaccard,
+        "adamic_adar":             _adamic_adar,
         "preferential_attachment": _preferential_attachment,
-        "l3":                    _l3,
+        "l3":                      _l3,
+        "katz":                    _katz,
     }
     if method not in _METHODS:
         raise ValueError(
@@ -90,6 +97,7 @@ def score_all_methods(
         "adamic_adar":             np.array([_adamic_adar(G_und, u, v)             for u, v in edges]),
         "preferential_attachment": np.array([_preferential_attachment(G_und, u, v) for u, v in edges]),
         "l3":                      np.array([_l3(G_und, u, v)                      for u, v in edges]),
+        "katz":                    np.array([_katz(G_und, u, v)                    for u, v in edges]),
     }
 
 
@@ -163,3 +171,46 @@ def _l3(G: nx.Graph, u, v) -> float:
             if x != u and v in _neighbors(G, x):   # x → v (hop 3)
                 count += 1
     return float(count)
+
+
+def _katz(G: nx.Graph, u, v, beta: float = 0.005, max_len: int = 6) -> float:
+    """
+    Katz Index — suma ważonych spacerów wszystkich długości od u do v.
+
+    Katz(u,v) = Σ_{l=1}^{max_len} β^l × |spacery długości l od u do v|
+
+    Implementacja BFS zlicza spacery (walks), nie proste ścieżki — zgodnie
+    ze standardową definicją indeksu Katza (odpowiednik potęg macierzy A).
+
+    Działa na grafach bipartytowych:
+    - dla par (Table, Job) jedynie spacery nieparzystej długości (l=1,3,5,...)
+      mają niezerową liczbę — co czyni Katz naturalnym rozszerzeniem L3.
+
+    Parameters
+    ----------
+    beta : float
+        Współczynnik tłumienia (domyślnie 0.005).
+        Musi być < 1/λ_max(A) dla zbieżności nieskończonej sumy.
+        Przy wartości 0.005 l=3 wnosi β³ = 1.25×10⁻⁷ × liczba_ścieżek,
+        więc dłuższe ścieżki mają realny wpływ przy gęstszych grafach.
+    max_len : int
+        Maksymalna rozważana długość spaceru (domyślnie 6).
+    """
+    if not (G.has_node(u) and G.has_node(v)):
+        return 0.0
+
+    # frontier[node] = liczba spacerów aktualnej długości kończących się w node
+    frontier: dict = {u: 1}
+    total = 0.0
+    beta_l = beta  # β^l dla aktualnego l
+
+    for _ in range(max_len):
+        next_frontier: dict = defaultdict(int)
+        for node, cnt in frontier.items():
+            for nb in G.neighbors(node):
+                next_frontier[nb] += cnt
+        total += beta_l * next_frontier.get(v, 0)
+        beta_l *= beta
+        frontier = dict(next_frontier)
+
+    return total
