@@ -26,7 +26,10 @@ sys.path.insert(0, "src")
 from data.loader import load_graph
 from data.splitter import split_edges
 from algorithms.heuristics import score_all_methods
-from algorithms.classical_ml import GraphMLClassifier, RUSBoostGraphClassifier
+from algorithms.classical_ml import (
+    GraphMLClassifier, RUSBoostGraphClassifier, LightGBMGraphClassifier,
+)
+from algorithms.node2vec_ml import Node2VecMLPClassifier
 from evaluation.metrics import evaluate_split, best_threshold_f1, print_metrics
 
 
@@ -44,11 +47,14 @@ HEURISTICS = [
     "preferential_attachment",
     "l3",
     "katz",
+    "ppr",
 ]
 
 ML_MODELS = {
     "RandomForest":  GraphMLClassifier,
     "RUSBoost":      RUSBoostGraphClassifier,
+    "LightGBM":      LightGBMGraphClassifier,
+    "Node2Vec+MLP":  Node2VecMLPClassifier,
 }
 
 
