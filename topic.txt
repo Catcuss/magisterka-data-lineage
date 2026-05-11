@@ -5,3 +5,58 @@ W ramach pracy należy wykonać następujące zadania:
 3. zastosować powyższe algorytmy do odkrywania zależności między obiektami w bazie danych;
 4. opracować testy oceniające jakość działania ww. algorytmów;
 5. przeprowadzić testy i ocenić jakość odkrytych powiązań.
+
+
+Struktura pracy:
+STRUKTURA PRACY
+1. Wstęp
+ - Kilka stron 3-9, 3-4 realne, 2 minimum
+ - Lejek, opisujemy problem, to samo co abstrakt ale dłuższe i dokładniejsze 
+ - Podział procentowy - ma wyjść po połowie dla prac 2-osobowych, wymienić Imię Nazwisko - odpowiedzialne za coś tam coś tam coś tam - co stanowi X% wkładu
+ - może być 1.1 1.2 1.3 itp.
+ - musi być tekst między 1. Wstęp a 1.1 Podpunkt
+ - 1.1 - cel i zakres pracy - 2 akapity
+ - 1.2 - struktura pracy - w rozdziale pierwszym opisano, drugim opisano, trzecim czwartym, jeżeli jest repozytorium to tutaj trzeba wpisac, ale najlepiej w 1.1
+ - 1.3 Podzial zadań dla prac 2-os
+
+2. "Przegląd technologii/rozwiązań" "Zastosowane/Wykorzystane techniki/algorytmy/systemy/komponenty"
+ - "Pojęcia podstawowe i definicje" <- chujowa nazwa 
+ - wszystko co jest potrzebne do tego żeby czytający zrozumiał
+ - np. sieci neuronowe, polega na tym na tym, takie rodzaje, te do tego te do tamtego, a do rozpoznawania obrazow są jakieś sieci specjlane - je opisac dokładniej 
+ - SLR 2.1, jeśli jest dlugi to warto zrobić z niego 2. Przegląd rozwiązań i wtedy 3. Zastosowane techniki. Krótki - "parę stron"
+
+3. Problem i sposób jego rozwiązania
+ - koncepcje, problem opisac jeszcze bardziej szczegolowo i opis jego rozwiązania
+ - narysować(!) architekturę którą implementujemy i ją opisać  d o k ł a d n i e
+ - 5 stron to za mało
+
+4. Ocena rozwiązania
+ - eksperymenty
+ - 4.1 Co mierzymy
+ - - co ja oceniam i jaką funkcjonalność, czmeu będą sluzyly testy które zaraz oposzę
+ - - "Ocena będzie dotycznla przetwarzania …"
+ - - "Jakość predykcji mierzona precision/recall
+ - - wydajność, zlozonosc obliczeniowa, zweryfikować eksperymentalnie, mierzyc czas odpoweidezi, czas uczenia modelu, zużycie zasobow <- w zaleznosci od tematu rozne metryki 
+ - 4.2 Dane
+ - - Ile dnaych, jakie struktury, jakie dane, jakie rozkłady wartości atrybutow, 
+ - 4.3 Pomiary, wykresy (można z wykresow zrobić 4.3.1 itp.)
+ - 4.4 Podsumowanie
+ - - najważniejsze obserwacje jakie wynikają z naszej eksperymentacji i jej oceny
+
+5. Uwagi końcowe 
+ - jeszcze raz mówimy co było celme, jaki był problem, jak go rozwiazalismy, co z tego wynika
+ - czego nie zrobiliśmy bo się nie udało (okazało się bardzo trudne albo niemożliwe cos tam)
+ - 5.1 Uzyskane wyniki
+ - 5.2 Możliwe rozszerzenia rozwiązania
+ - - jak można ulepszyć rozwiązanie, jakich funkcji ono nie ma
+
+3 i 4 to nasza kontrybucja, może być więcej rozdzialow
+In general lepiej nie pisać za długich tekstów, nawet jeśli mają być podzielone na akapity, tylko robić podpunkty
+
+==================
+LEJEK TUTORIAL
+
+Intuicyjnie, pytania pojawiające się podczas lektury są na bieżąco wyjaśniane.
+==================
+
+Na za tydzień spróbujcie przygotować wstępy. Unikamy testów z historii informatyki "W 1940 roku zaproponowano coś tam coś tam", historia nas nie obchodzi. Są relacyjne bazy jest jak jest i tyle.

@@ -1,5 +1,5 @@
-data/
-results/models/
+/data/
+/results/models/
 *.pdf
 __pycache__/
 *.pyc
@@ -11,3 +11,6 @@ __pycache__/
 *.pkl
 .env
 .claude/
+docs/thesis_draft/thesis_template
+topic.txt
+abstrakt.txt

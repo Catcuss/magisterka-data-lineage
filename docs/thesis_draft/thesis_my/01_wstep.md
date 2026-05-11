@@ -1,13 +1,15 @@
-1. Wstęp
+# 1. Wstęp
 
-W firmach czesto dane sa przez jakas agregacje itd sql query i powstaja table tymczasowe w sumie czesto nie sa zapisane te query i chcemy sie dpoweidzec skad te dane pochadza tak zwana historia danych zaleznosc miedzy obiektami baz danych a dokladniej chodzi o usuniecie krawedzi w grafie ktore nastepnie za pomoca roznych algorytmow bedziemi chcieli odtworzyc. jest to wazny problem bazy danych bo czesto sa table tymczasowe ktore znikaja bo sa tymczasowe lol i w suemi potem juz nie ma widocznych polaczen w bazie i my chcemy je wyszukac. chcemy wykorzystac zjawiska data lineage i data aby z jakimstam prawdopodobienstwem znalesc te zaleznosci i odtworzyc polaczenia przy pomocy algorytmow np ml 
+Współczesne systemy bazodanowe przetwarzają dane przez złożone potoki transformacji SQL. W firmach często dane są przez jakąś agregację i zapytania SQL i powstają tabele tymczasowe, w sumie często nie są zapisane te zapytania i chcemy się dowiedzieć skąd te dane pochodzą — tak zwana historia danych, zależność między obiektami baz danych. Dokładniej chodzi o usunięcie krawędzi w grafie, które następnie za pomocą różnych algorytmów będziemy chcieli odtworzyć. Jest to ważny problem baz danych, bo często są tabele tymczasowe, które znikają, i potem już nie ma widocznych połączeń w bazie i my chcemy je wyszukać. Chcemy wykorzystać zjawisko data lineage, aby z jakimś prawdopodobieństwem znaleźć te zależności i odtworzyć połączenia przy pomocy algorytmów, np. ML.
 
 
-1.1 Cel i zakres pracy
-Celem pracy jest znalezienie i zbadanie jak juz instniejace algorytmy radza sobie z problemem proby odtwarzania i znajdowania tych relacji na podstawie data lineage. Dane beda przeprowadzane na algorytmach ml oraz heurystykach oraz embeddingi wezlow, a dane to z huwawiei 18 grafow dwudzielnych gdzie sa query i inen takie ktore przedstawiaja zanonimowiwane prawdziwe i realne dane jednak nie posiadaja one schematow tej bazy bo nie ma schematow bo rodo i guess ale chyba to ze dane sa realne to jest korzysne i w sumie odrazu mamy i duza i mala skale anyways mamy tez napewno 3 scenariusze podzialu danych pierwszy losowy drugi idk nei pamietam a trzeci to usuniecie widoku zamertializowanego  (w sumie jak cos to jeszcze 2 miesiace wiec mozna pozsci na innych danych zawsze) W pracy nie znajdziemy prawdziwego schematu bazy danych , wlasnego algorytmu autorskiego itd
+## 1.1 Cel i zakres pracy
 
-1.2 struktura pracy:
- - w drugim rodziale zajemiemu sie przedstwieneim najwazniejszymi pojeciami takimi jak data linage data pocenance, graf lineage poral problem broken lineage itd... oraz przegladem literatury i metrykami ewaluacji 
- - w trzecim rozdziale problem i architektora rozwiazania/systemy wraz z obrazkami pochodzenie danych metodyta symulacji i zaimplementowane algorytmy 
- - w czwartym rozdziale ocena rozwiazania co nam wyszlo jaki sed neg_ratio dla wszystkich grafow na wsztstk9ich dancych przejechane 
- - uwagi koncowe i inene takie podsomowanie co jest git co nie wszyszlo i inne takie
+Celem pracy jest znalezienie i zbadanie jak już istniejące algorytmy radzą sobie z problemem próby odtwarzania i znajdowania tych relacji na podstawie data lineage. Dane będą przeprowadzane na algorytmach ML oraz heurystykach oraz embeddingach węzłów, a dane to z Huawei — 18 grafów dwudzielnych, gdzie są joby i tabele takie, które przedstawiają zanonimizowane prawdziwe i realne dane, jednak nie posiadają one schematów tej bazy, bo nie ma schematów ze względu na ochronę danych, ale to że dane są realne jest korzystne i od razu mamy i dużą i małą skalę. Mamy też na pewno 3 scenariusze podziału danych: pierwszy losowy 80/20, drugi symulujący usunięcie tabeli staging (scenariusz A) lub ukrycie zależności przez UDF (scenariusz B), trzeci to ukrycie krawędzi do data martu (scenariusz C). W pracy nie znajdziemy prawdziwego schematu bazy danych, własnego algorytmu autorskiego itd.
+
+## 1.2 Struktura pracy
+
+- W rozdziale drugim zajmiemy się przedstawieniem najważniejszych pojęć takich jak data lineage, data provenance, graf lineage, problem broken lineage itd., oraz przeglądem literatury i metrykami ewaluacji.
+- W rozdziale trzecim opisano problem i architekturę rozwiązania wraz z rysunkami, pochodzenie danych, metodykę symulacji i zaimplementowane algorytmy.
+- W rozdziale czwartym przedstawiono ocenę rozwiązania — wyniki eksperymentów przeprowadzonych na wszystkich 18 grafach ze zbioru DLG-DG-23.
+- Rozdział piąty zawiera uwagi końcowe — podsumowanie tego co wyszło, co nie wyszło i możliwe rozszerzenia.

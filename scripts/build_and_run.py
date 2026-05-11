@@ -8,8 +8,11 @@ Przebudowuje i odpala cały projekt:
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 PYTHON = sys.executable
+ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS = ROOT / "scripts"
 OK  = "[OK]"
 ERR = "[BLAD]"
 
@@ -18,16 +21,16 @@ steps = [
      [PYTHON, "-m", "pytest", "tests/", "-v", "--tb=short"]),
 
     ("Wizualizacje oryginalne (UUID, 18 grafow)",
-     [PYTHON, "visualize_graphs.py"]),
+     [PYTHON, str(SCRIPTS / "visualize_graphs.py")]),
 
     ("Wizualizacje z etykietami",
-     [PYTHON, "docs/relabeled_graphs/generate_relabeled_viz.py"]),
+     [PYTHON, str(ROOT / "docs" / "relabeled_graphs" / "generate_relabeled_viz.py")]),
 
     ("Syntetyczne scenariusze broken lineage",
-     [PYTHON, "docs/synthetic_schema/generate_schema_viz.py"]),
+     [PYTHON, str(ROOT / "docs" / "synthetic_schema" / "generate_schema_viz.py")]),
 
     ("Eksperymenty — wszystkie algorytmy na DLG1–DLG4",
-     [PYTHON, "run_experiments.py"]),
+     [PYTHON, str(SCRIPTS / "run_experiments.py")]),
 ]
 
 results = []
@@ -38,7 +41,7 @@ for name, cmd in steps:
     print(f">>> {name}")
     print('='*60)
     t0 = time.time()
-    ret = subprocess.run(cmd, cwd="C:/Users/Maria/Desktop/MAGISTERKA")
+    ret = subprocess.run(cmd, cwd=str(ROOT))
     elapsed = time.time() - t0
     status = OK if ret.returncode == 0 else ERR
     results.append((name, status, elapsed))

@@ -17,15 +17,18 @@ Opcje:
 """
 
 import argparse
+import csv
 import sys
 import time
 import warnings
+from pathlib import Path
 
 import numpy as np
 
 warnings.filterwarnings("ignore")
 
-sys.path.insert(0, "src")
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 from data.loader import load_graph
 from data.splitter import split_edges
 from data.scenario_splitter import scenario_split
@@ -34,7 +37,7 @@ from algorithms.classical_ml import (
     GraphMLClassifier, RUSBoostGraphClassifier, LightGBMGraphClassifier,
 )
 from algorithms.node2vec_ml import Node2VecMLPClassifier
-from evaluation.metrics import evaluate_split, best_threshold_f1
+from evaluation.metrics import tune_and_evaluate
 
 
 # ---------------------------------------------------------------------------
@@ -66,28 +69,34 @@ ML_MODELS = {
 # Uruchomienie jednego grafu
 # ---------------------------------------------------------------------------
 
-def run_one(dlg_id: int, seed: int, run_ml: bool) -> list[dict]:
+def run_one(dlg_id: int, seed: int, run_ml: bool,
+            val_ratio: float = 0.2) -> list[dict]:
     """
-    Wczytuje DLG{dlg_id}, dzieli krawędzie 80/20, ocenia wszystkie algorytmy.
-    Zwraca listę słowników wyników.
+    Wczytuje DLG{dlg_id}, dzieli krawędzie 60/20/20 (train/val/test),
+    ocenia wszystkie algorytmy.
+
+    Próg klasyfikacji każdego algorytmu jest strojony na zbiorze walidacyjnym;
+    metryki raportowane na teście. AUC-ROC i AUC-PR są niezależne od progu.
     """
     label = f"DLG{dlg_id}"
     G = load_graph(label)
 
     try:
-        splits = split_edges(G, edge_type="DATA_FLOW", test_ratio=0.2, seed=seed)
+        splits = split_edges(G, edge_type="DATA_FLOW", test_ratio=0.2,
+                             val_ratio=val_ratio, seed=seed)
     except ValueError as e:
         print(f"  [{label}] Pominięto: {e}")
         return []
 
     n_nodes = G.number_of_nodes()
     n_train = len(splits["pos_train"])
+    n_val   = len(splits["pos_val"])
     n_test  = len(splits["pos_test"])
 
     algo_results = _run_algorithms(splits["G_train"], splits, run_ml, seed)
     return [
         {"graph": label, "nodes": n_nodes,
-         "train_pos": n_train, "test_pos": n_test, **r}
+         "train_pos": n_train, "val_pos": n_val, "test_pos": n_test, **r}
         for r in algo_results
     ]
 
@@ -146,23 +155,29 @@ def print_table(all_results: list[dict]):
 def _run_algorithms(G_train, splits, run_ml, seed) -> list[dict]:
     """
     Wspólna logika: heurystyki + (opcjonalnie) modele ML na gotowym splicie.
-    Zwraca listę słowników z metrykami, bez pól 'graph' / 'nodes' / etc.
+    Próg klasyfikacji strojony na walidacji, metryki raportowane na teście.
     """
-    pos_test  = splits["pos_test"]
-    neg_test  = splits["neg_test"]
     pos_train = splits["pos_train"]
     neg_train = splits["neg_train"]
+    pos_val   = splits.get("pos_val", [])
+    neg_val   = splits.get("neg_val", [])
+    pos_test  = splits["pos_test"]
+    neg_test  = splits["neg_test"]
+
+    val_edges  = pos_val + neg_val
     test_edges = pos_test + neg_test
-    y_true = np.array([1] * len(pos_test) + [0] * len(neg_test))
+    y_val  = np.array([1] * len(pos_val)  + [0] * len(neg_val))
+    y_test = np.array([1] * len(pos_test) + [0] * len(neg_test))
 
     results = []
 
     # --- Heurystyki ---
-    scores_dict = score_all_methods(G_train, test_edges)
+    val_scores_dict  = score_all_methods(G_train, val_edges) if val_edges else {}
+    test_scores_dict = score_all_methods(G_train, test_edges)
     for method in HEURISTICS:
-        scores = scores_dict[method]
-        t = best_threshold_f1(y_true, scores) if len(np.unique(scores)) > 1 else 0.5
-        m = evaluate_split(splits, scores, threshold=t)
+        sc_val  = val_scores_dict.get(method, np.array([]))
+        sc_test = test_scores_dict[method]
+        m = tune_and_evaluate(y_val, sc_val, y_test, sc_test)
         results.append({"algorithm": method, **m})
 
     if not run_ml:
@@ -173,8 +188,10 @@ def _run_algorithms(G_train, splits, run_ml, seed) -> list[dict]:
         try:
             clf = ModelClass(seed=seed)
             clf.fit(G_train, pos_train, neg_train)
-            scores = clf.predict_proba(G_train, test_edges)
-            m = evaluate_split(splits, scores, threshold=0.5)
+            sc_val  = (clf.predict_proba(G_train, val_edges)
+                       if val_edges else np.array([]))
+            sc_test = clf.predict_proba(G_train, test_edges)
+            m = tune_and_evaluate(y_val, sc_val, y_test, sc_test)
             results.append({"algorithm": model_name, **m})
         except Exception as e:
             print(f"    {model_name} błąd: {e}")
@@ -182,7 +199,8 @@ def _run_algorithms(G_train, splits, run_ml, seed) -> list[dict]:
     return results
 
 
-def run_scenarios(dlg_id: int, seed: int, run_ml: bool) -> list[dict]:
+def run_scenarios(dlg_id: int, seed: int, run_ml: bool,
+                  val_ratio: float = 0.2) -> list[dict]:
     """
     Dla DLG{dlg_id} uruchamia scenariusze A, B, C.
     Zwraca listę wyników z polem 'scenario'.
@@ -194,16 +212,19 @@ def run_scenarios(dlg_id: int, seed: int, run_ml: bool) -> list[dict]:
     results = []
     for sc in ("A", "B", "C"):
         try:
-            splits = scenario_split(G, scenario=sc, seed=seed)
+            splits = scenario_split(G, scenario=sc,
+                                    val_ratio=val_ratio, seed=seed)
         except ValueError as e:
             print(f"  [{label}] Scenariusz {sc} pominięty: {e}")
             continue
 
         G_train   = splits["G_train"]
         n_train   = len(splits["pos_train"])
+        n_val     = len(splits["pos_val"])
         n_test    = len(splits["pos_test"])
 
-        print(f"  [{label}] Scenariusz {sc}: train_pos={n_train} test_pos={n_test}", flush=True)
+        print(f"  [{label}] Scenariusz {sc}: "
+              f"train_pos={n_train} val_pos={n_val} test_pos={n_test}", flush=True)
         algo_results = _run_algorithms(G_train, splits, run_ml, seed)
 
         for r in algo_results:
@@ -212,6 +233,7 @@ def run_scenarios(dlg_id: int, seed: int, run_ml: bool) -> list[dict]:
                 "scenario":  sc,
                 "nodes":     n_nodes,
                 "train_pos": n_train,
+                "val_pos":   n_val,
                 "test_pos":  n_test,
                 **r,
             })
@@ -270,6 +292,35 @@ def print_scenario_table(all_results: list[dict]):
 # Main
 # ---------------------------------------------------------------------------
 
+_RESULTS_DIR = _PROJECT_ROOT / "results"
+
+_CSV_FIELDS_BASE = [
+    "graph", "nodes", "train_pos", "val_pos", "test_pos",
+    "algorithm", "precision", "recall", "f1",
+    "auc_roc", "auc_pr", "threshold",
+]
+
+
+def save_csv(all_results: list[dict], path: Path,
+             extra_fields: tuple[str, ...] = ()) -> None:
+    """Zapis wyników w UTF-8 CSV — niezależnie od kodowania terminala."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fields = list(_CSV_FIELDS_BASE)
+    for f in extra_fields:
+        if f not in fields:
+            fields.insert(1, f)  # tuż po "graph"
+    with path.open("w", encoding="utf-8", newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        for r in all_results:
+            row = {k: r.get(k, "") for k in fields}
+            for k in ("precision", "recall", "f1", "auc_roc", "auc_pr", "threshold"):
+                v = row.get(k)
+                if isinstance(v, float) and np.isnan(v):
+                    row[k] = ""
+            writer.writerow(row)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Eksperymenty link prediction — DLG-DG-23")
     parser.add_argument("--all",       action="store_true", help="wszystkie 18 grafów")
@@ -297,12 +348,14 @@ def main():
     t0 = time.time()
 
     # --- Losowy split (zawsze) ---
-    print(">>> Losowy split 80/20")
+    print(">>> Losowy split 60/20/20")
     all_results = []
     for dlg_id in dlg_ids:
         print(f"DLG{dlg_id}...", flush=True)
         all_results.extend(run_one(dlg_id, seed=args.seed, run_ml=run_ml))
     print_table(all_results)
+    save_csv(all_results, _RESULTS_DIR / "wyniki_random_split.csv")
+    print(f"Wyniki zapisane: {_RESULTS_DIR / 'wyniki_random_split.csv'}")
 
     # --- Scenariusze (opcjonalnie) ---
     if args.scenarios:
@@ -312,6 +365,9 @@ def main():
             print(f"DLG{dlg_id} — scenariusze:", flush=True)
             sc_results.extend(run_scenarios(dlg_id, seed=args.seed, run_ml=run_ml))
         print_scenario_table(sc_results)
+        save_csv(sc_results, _RESULTS_DIR / "wyniki_scenariusze.csv",
+                 extra_fields=("scenario",))
+        print(f"Wyniki zapisane: {_RESULTS_DIR / 'wyniki_scenariusze.csv'}")
 
     print(f"\nCzas łączny: {time.time() - t0:.1f}s")
 
