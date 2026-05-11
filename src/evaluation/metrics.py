@@ -92,6 +92,36 @@ def evaluate_split(
     return compute_metrics(y_true, scores_test, threshold)
 
 
+def tune_and_evaluate(
+    y_val: np.ndarray,
+    scores_val: np.ndarray,
+    y_test: np.ndarray,
+    scores_test: np.ndarray,
+) -> dict:
+    """
+    Wybiera próg klasyfikacji na zbiorze walidacyjnym, raportuje metryki na teście.
+
+    Eliminuje przeciek informacji (próg dobrany na teście) i ujednolica
+    traktowanie wszystkich algorytmów: heurystyki i ML są strojone identycznie.
+
+    Gdy zbiór walidacyjny jest pusty lub scores są stałe, próg = 0.5
+    (raportowane P/R/F1 wówczas mają ograniczoną wiarygodność, ale AUC-ROC
+    i AUC-PR pozostają poprawne).
+
+    Returns
+    -------
+    dict z kluczami: precision, recall, f1, auc_roc, auc_pr, threshold
+    """
+    scores_val = np.asarray(scores_val, dtype=float)
+    if len(scores_val) > 0 and len(np.unique(scores_val)) > 1:
+        threshold = best_threshold_f1(y_val, scores_val)
+    else:
+        threshold = 0.5
+    metrics = compute_metrics(y_test, scores_test, threshold=threshold)
+    metrics["threshold"] = threshold
+    return metrics
+
+
 def print_metrics(name: str, metrics: dict) -> None:
     """Wypisuje metryki w czytelnym formacie."""
     print(

@@ -1,6 +1,13 @@
 """
 Node2Vec + MLP dla predykcji krawędzi w grafach lineage.
 
+Kategoria: zanurzenia sieciowe (network embeddings). Node2Vec NIE jest
+grafową siecią neuronową (GNN) — uczy reprezentacji węzłów poprzez biased
+random walks (rozszerzenie skip-gramu Word2Vec na grafy), bez mechanizmu
+propagacji wiadomości (message passing) charakterystycznego dla GCN /
+GraphSAGE / GAT. Klasyfikatorem nad embeddingami jest MLP, a nie warstwa
+grafowa.
+
 Podejście:
     1. Node2Vec uczy reprezentacje węzłów przez biased random walks na G_train.
     2. Dla każdej pary (u, v) embedding krawędzi = hadamard(emb_u, emb_v).
