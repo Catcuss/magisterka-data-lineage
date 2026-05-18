@@ -36,6 +36,7 @@ ALL_METHODS = [
     "jaccard",
     "adamic_adar",
     "preferential_attachment",
+    "rwpa",
     "l3",
     "katz",
     "ppr",
@@ -67,6 +68,10 @@ def score_edges(
     """
     if method == "ppr":
         return _ppr_batch(G_train.to_undirected(), edges)
+
+    if method == "rwpa":
+        G_und = G_train.to_undirected()
+        return np.array([_rwpa(G_train, G_und, u, v) for u, v in edges])
 
     _METHODS = {
         "common_neighbors":        _common_neighbors,
@@ -103,6 +108,7 @@ def score_all_methods(
         "jaccard":                 np.array([_jaccard(G_und, u, v)                 for u, v in edges]),
         "adamic_adar":             np.array([_adamic_adar(G_und, u, v)             for u, v in edges]),
         "preferential_attachment": np.array([_preferential_attachment(G_und, u, v) for u, v in edges]),
+        "rwpa":                    np.array([_rwpa(G_train, G_und, u, v)           for u, v in edges]),
         "l3":                      np.array([_l3(G_und, u, v)                      for u, v in edges]),
         "katz":                    np.array([_katz(G_und, u, v)                    for u, v in edges]),
         "ppr":                     _ppr_batch(G_und, edges),
@@ -222,6 +228,39 @@ def _katz(G: nx.Graph, u, v, beta: float = 0.005, max_len: int = 6) -> float:
         frontier = dict(next_frontier)
 
     return total
+
+
+def _role_weight(G: nx.DiGraph, node) -> float:
+    """Waga roli węzła w potoku ETL na podstawie stopni DATA_FLOW."""
+    df_in  = sum(1 for _, _, d in G.in_edges(node,  data=True)
+                 if d.get("relation_type") == "DATA_FLOW")
+    df_out = sum(1 for _, _, d in G.out_edges(node, data=True)
+                 if d.get("relation_type") == "DATA_FLOW")
+    if df_in > 0 and df_out > 0:
+        return 2.0   # intermediate / staging (grid search opt.)
+    elif df_in == 0 and df_out > 0:
+        return 0.75  # source (grid search opt.)
+    elif df_in > 0 and df_out == 0:
+        return 1.0   # sink
+    return 0.5       # isolated
+
+
+def _rwpa(G_directed: nx.DiGraph, G_und: nx.Graph, u, v) -> float:
+    """
+    Role-Weighted Preferential Attachment (RWPA).
+
+    RWPA(u,v) = role_weight(u) × role_weight(v) × deg(u) × deg(v)
+
+    Rozszerza PA o wagi ról ETL: węzły intermediate (staging tables) mają
+    trzykrotnie wyższy priorytet niż sink, bo to one znikają jako tymczasowe
+    i generują broken lineage. Zachowuje wszystkie właściwości PA (brak
+    wymagania wspólnych sąsiadów, działa na grafach bipartytowych).
+    """
+    if not (G_directed.has_node(u) and G_directed.has_node(v)):
+        return 0.0
+    return (_role_weight(G_directed, u) *
+            _role_weight(G_directed, v) *
+            float(G_und.degree(u) * G_und.degree(v)))
 
 
 def _ppr_batch(G: nx.Graph, edges: list[tuple], alpha: float = 0.85) -> np.ndarray:
