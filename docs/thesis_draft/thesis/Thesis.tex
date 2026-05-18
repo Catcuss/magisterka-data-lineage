@@ -211,8 +211,14 @@ mówi się o~zjawisku \emph{broken lineage}~\cite{Boinski2025}. Celem
 niniejszej pracy jest zastosowanie algorytmów predykcji brakujących krawędzi
 w~celu odtworzenia przerwanych połączeń w~grafie lineage.
 
-% TODO: Rozważyć dodanie krótkiego przykładu motywującego (1–2 zdania
-%       z~konkretnym scenariuszem biznesowym, np. raportowanie finansowe).
+W~sektorze finansowym banki są zobowiązane do~wykazania, które transakcje
+źródłowe złożyły się na~poszczególne pozycje raportów kwartalnych; przerwanie
+grafu zależności w~warstwie ETL uniemożliwia przeprowadzenie takiego audytu.
+Podobne konsekwencje niesie Rozporządzenie o~Ochronie Danych Osobowych (RODO):
+brak pełnego grafu lineage sprawia, że~dotarcie do~wszystkich kopii danych
+konkretnej osoby jest czasochłonne lub~niemożliwe, co~może skutkować
+nałożeniem kar finansowych.
+
 
 \section{Cel i~zakres pracy}
 
@@ -230,18 +236,16 @@ Eksperymenty przeprowadzono na~zbiorze danych DLG-DG-23, obejmującym
 \cite{Chen2023}. Przyjęto trzy scenariusze symulacji brakujących krawędzi,
 odzwierciedlające typowe przypadki broken lineage:
 
-\begin{enumerate}
-  \item losowe usunięcie 20\% krawędzi ze~zbioru treningowego,
-  \item symulację ukrycia zależności przez tabelę pośrednią (staging),
-  \item symulację ukrycia krawędzi do~tabeli docelowej (data mart).
-\end{enumerate}
+\begin{itemize}
+  \item \textbf{Scenariusz~A} — losowe usunięcie 20\% krawędzi ze~zbioru treningowego,
+  \item \textbf{Scenariusz~B} — symulacja ukrycia zależności przez tabelę pośrednią (staging),
+  \item \textbf{Scenariusz~C} — symulacja ukrycia krawędzi do~tabeli docelowej (data mart).
+\end{itemize}
 
 Zakres pracy nie~obejmuje opracowania autorskiego algorytmu predykcji,
 odtworzenia rzeczywistego schematu bazy danych ani analizy treści
 zanonimizowanych danych.
 
-% TODO: Jeśli scenariusze mają ustalone nazwy (np. Scenariusz A, B, C)
-%       w rozdziale 3 — ujednolicić nazewnictwo w całej pracy.
 
 \section{Struktura pracy}
 
