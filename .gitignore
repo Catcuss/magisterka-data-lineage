@@ -1,6 +1,5 @@
 /data/
 /results/models/
-*.pdf
 __pycache__/
 *.pyc
 *.pyo
@@ -14,6 +13,7 @@ __pycache__/
 docs/thesis_draft/thesis_template
 topic.txt
 abstrakt.txt
+references
 
 # LaTeX auxiliary files
 *.aux

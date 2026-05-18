@@ -35,6 +35,7 @@ from data.scenario_splitter import scenario_split
 from algorithms.heuristics import score_all_methods
 from algorithms.classical_ml import (
     GraphMLClassifier, RUSBoostGraphClassifier, LightGBMGraphClassifier,
+    ETLAwareGraphMLClassifier, ETLAwareRUSBoostClassifier,
 )
 from algorithms.node2vec_ml import Node2VecMLPClassifier
 from evaluation.metrics import tune_and_evaluate
@@ -52,16 +53,19 @@ HEURISTICS = [
     "jaccard",
     "adamic_adar",
     "preferential_attachment",
+    "rwpa",
     "l3",
     "katz",
     "ppr",
 ]
 
 ML_MODELS = {
-    "RandomForest":  GraphMLClassifier,
-    "RUSBoost":      RUSBoostGraphClassifier,
-    "LightGBM":      LightGBMGraphClassifier,
-    "Node2Vec+MLP":  Node2VecMLPClassifier,
+    "RandomForest":    GraphMLClassifier,
+    "RUSBoost":        RUSBoostGraphClassifier,
+    "LightGBM":        LightGBMGraphClassifier,
+    "Node2Vec+MLP":    Node2VecMLPClassifier,
+    "RF-18(ETL)":      ETLAwareGraphMLClassifier,
+    "RUSBoost-18(ETL)": ETLAwareRUSBoostClassifier,
 }
 
 
