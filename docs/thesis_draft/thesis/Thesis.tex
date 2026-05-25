@@ -42,7 +42,7 @@
 
 \title{Odkrywanie zależności między obiektami w~bazie danych}
 
-\ppsupervisor{prof.~dr hab.~inż.~Robert Wrembel}
+\ppsupervisor{dr hab.~inż.~Robert Wrembel, prof.~PP}
 
 \ppyear{2026}
 
@@ -424,53 +424,116 @@ rzeczywistych~\cite{Boinski2025,KohanMarzagao2023}.
 % TODO: Sprawdzić, czy AUC-ROC jest faktycznie raportowane w kodzie —
 %       jeśli nie, usunąć lub zastąpić metryką AUC-PR.
 
-\section{Przegląd literatury}
+\section{Wyniki systematycznego przeglądu literatury}
 \label{sec:literatura}
 
-Niniejsza sekcja omawia siedem prac wybranych w~ramach systematycznego
-przeglądu literatury (ang. \emph{Systematic Literature Review}, SLR).
+Przeprowadzony systematyczny przegląd literatury (ang. \emph{Systematic
+Literature Review}, SLR) pozwolił zidentyfikować siedem prac bezpośrednio
+odnoszących się do~postawionych pytań badawczych. Spośród nich dwie mają
+bezpośrednie zastosowanie w~niniejszej pracy: pierwsza stanowi jej~główną
+inspirację i~punkt odniesienia metodologicznego, druga dostarcza danych
+empirycznych wykorzystywanych w~eksperymentach. Pozostałe prace pełnią rolę
+tła literaturowego i~potwierdzają aktualność oraz zasadność podjętego
+problemu badawczego.
 
-% TODO: Rozbudować każdy akapit do ok. 3–5 zdań.
+\subsection{Leveraging machine learning techniques for discovering broken
+lineage links \cite{Boinski2025}}
 
-Boiński et~al.~\cite{Boinski2025} zaproponowali zastosowanie klasycznych
-metod ML do~problemu broken lineage. Autorzy zastosowali algorytm RUSBoost
-(ang. \emph{Random Under-Sampling Boosting}) na~cechach obejmujących
-metadane tabel oraz miary podobieństwa nazw (Jaro-Winkler), uzyskując
-wartość F1 równą 0{,}79. Praca ta~stanowi bezpośrednie odniesienie
-metodologiczne dla~niniejszej pracy.
+\textbf{Problem badawczy.}
+Ciągłość grafów \emph{data lineage} ulega przerwaniu, gdy w~potokach ETL
+(ang. \emph{Extract, Transform, Load}) wykorzystywane są obiekty pośrednie
+— tabele tymczasowe lub funkcje definiowane przez użytkownika (ang.
+\emph{User-Defined Function}, UDF). Elementy te mają charakter tymczasowy
+i~są usuwane po~zakończeniu procesu przetwarzania. W~rezultacie istniejące
+narzędzia klasy \emph{data governance} tracą ślad przepływu danych
+i~błędnie interpretują trwałą tabelę źródłową oraz tabelę docelową jako
+byty niezależne.
 
-Chen et~al.~\cite{Chen2023} udostępnili zbiór danych DLG-DG-23 — 18~grafów
-lineage pobranych ze~środowiska produkcyjnego Huawei Cloud, obejmujących
-grafy o~liczbie węzłów od~278 do~17~085. Zbiór ten~stanowi podstawowy
-materiał eksperymentalny niniejszej pracy.
+\textbf{Zaproponowane rozwiązanie.}
+Autorzy formułują problem rekonstrukcji przerwanych zależności jako binarną
+klasyfikację par obiektów bazodanowych. Podejście obejmuje następujące
+elementy:
 
-Dietrich et~al.~\cite{Dietrich2023} omówili specyfikę śledzenia danych w~SQL
-z~rekurencyjnymi wspólnymi wyrażeniami tabelowymi (ang. \emph{Common Table
-Expression}, CTE). Autorzy zaproponowali technikę przepisywania zapytań
-(ang. \emph{query rewriting}) umożliwiającą propagację informacji
-o~proweniencji przez operacje rekurencyjne.
+\begin{itemize}
+  \item inżynierię cech opartą na~ekstrakcji metadanych i~analizie
+        podobieństwa semantycznego nazw tabel oraz atrybutów
+        z~wykorzystaniem miary odległości Jaro--Winkler,
+  \item klasyfikację z~użyciem algorytmów Random Forest, RUSBoost,
+        BalancedBagging oraz LightGBM,
+  \item generowanie etykiet referencyjnych (\emph{ground truth}) metodą
+        rekurencyjnego zastępowania tabel tymczasowych ich trwałymi
+        źródłami.
+\end{itemize}
 
-Kohan~Marzagão et~al.~\cite{KohanMarzagao2023} zaproponowali jądro grafowe
-(ang. \emph{Provenance Graph Kernel}, PGK) do~porównywania grafów
-proweniencji. Podejście to~umożliwia pomiar podobieństwa między grafami
-lineage bez~konieczności ich jawnego wyrównywania.
+Ze~względu na~brak ogólnodostępnych zbiorów danych autorzy wygenerowali
+syntetyczne schematy baz danych z~wykorzystaniem dużych modeli językowych
+(ang. \emph{Large Language Model}, LLM): schemat systemu zarządzania
+ochroną zdrowia (model Grok) jako zbiór treningowy oraz schemat systemu
+finansowego (model Llama~3) jako zbiór testowy.
 
-Psallidas et~al.~\cite{Psallidas2020} opracowali system OneProvenance,
-który ekstrahuje informacje o~proweniencji danych bezpośrednio z~logów
-silnika bazy danych, budując strukturę drzewa zapytań (ang. \emph{QQTree})
-bez~modyfikacji kodu źródłowego systemu.
+\textbf{Analiza krytyczna.}
+Najwyższą skuteczność spośród testowanych klasyfikatorów osiągnął algorytm
+RUSBoost — miara F1 wyniosła 0{,}79. Metoda wykazuje odporność na~silne
+niezbalansowanie klas, typowe dla~tego rodzaju problemu, gdzie liczba par
+bez relacji znacznie przewyższa liczbę par powiązanych. Istotnym
+ograniczeniem jest zależność jakości predykcji od~spójności konwencji
+nazewniczych stosowanych w~bazie danych oraz konieczność ręcznej weryfikacji
+danych syntetycznych generowanych przez modele LLM.
 
-Shan et~al.~\cite{Shan2022} zaproponowali model KPI-HGNN oparty
-na~heterogenicznej grafowej sieci neuronowej (ang. \emph{Heterogeneous
-Graph Neural Network}, HGNN). Model stosuje mechanizm wykrywania
-społeczności (ang. \emph{community detection}) w~celu agregacji informacji
-o~lokalnym sąsiedztwie węzłów.
+Praca ta~stanowi bezpośrednią motywację dla~niniejszej pracy magisterskiej.
+Zastosowane przez autorów cechy topologiczne i~modele klasyfikacji zostały
+zaadaptowane i~rozszerzone, natomiast problem \emph{broken lineage} —
+zdefiniowany w~tej publikacji — przyjęto jako centralny problem badawczy.
 
-Yamada et~al.~\cite{Yamada2023} rozszerzyli standardowe podejścia do~data
-lineage o~obsługę funkcji definiowanych przez użytkownika (UDF). Autorzy
-zaproponowali mechanizm rozszerzonych adnotacji lineage (ang. \emph{augmented
-lineage}), który pozwala śledzić przepływ danych przez ciała funkcji UDF
-niewidocznych w~standardowych planach zapytań.
+\subsection{An open dataset of data lineage graphs \cite{Chen2023}}
+
+\textbf{Problem badawczy.}
+Rozwój metod badawczych w~obszarze \emph{data governance} jest ograniczany
+przez brak ogólnodostępnych, rzeczywistych zbiorów danych. Przedsiębiorstwa
+nie~udostępniają grafów \emph{lineage} ze~względu na~poufność procesów
+biznesowych i~wymogi bezpieczeństwa.
+
+\textbf{Zaproponowane rozwiązanie.}
+Autorzy opublikowali zbiór DLG-DG-23 — pierwszy otwarty zestaw
+rzeczywistych grafów pochodzenia danych, charakteryzujący się następującymi
+właściwościami:
+
+\begin{itemize}
+  \item źródło: środowisko produkcyjne Huawei Cloud (dane zanonimizowane),
+  \item liczba grafów: 18, o~zróżnicowanej wielkości w~zakresie
+        278–17~085 węzłów,
+  \item scenariusze zastosowań: infrastruktura chmurowa, obsługa klienta,
+        analiza operacyjna,
+  \item model grafu: węzły trzech typów — tabela, zadanie i~pole — oraz
+        relacje przepływu danych i~hierarchii.
+\end{itemize}
+
+\textbf{Analiza krytyczna.}
+Unikalną wartość zbioru stanowi jego rzeczywiste pochodzenie przemysłowe,
+odróżniające go od~danych generowanych syntetycznie. Zbiór umożliwia
+zastosowanie do~różnorodnych zadań analitycznych: wykrywania anomalii,
+wizualizacji zależności oraz rekonstrukcji grafów. Ograniczeniem jest
+stosunkowo niewielka liczba grafów, utrudniająca trenowanie dużych modeli
+głębokich, a~anonimizacja danych ogranicza dostępność atrybutów węzłów.
+
+W~niniejszej pracy zbiór DLG-DG-23 pełni rolę referencyjnego zbioru danych
+(\emph{ground truth}) we~wszystkich przeprowadzonych eksperymentach
+dotyczących rekonstrukcji grafów \emph{lineage}.
+
+\subsection{Prace kontekstowe}
+
+Spośród pozostałych prac zidentyfikowanych w~SLR na~szczególną uwagę
+zasługuje metoda \emph{Provenance Graph Kernel} (PGK)~\cite{KohanMarzagao2023},
+która definiuje miary podobieństwa między grafami proweniencji i~może
+stanowić punkt odniesienia przy~ocenie jakości zrekonstruowanych grafów.
+Pozostałe prace — dotyczące proweniencji rekurencyjnych zapytań
+SQL~\cite{Dietrich2023}, analizy logów systemowych~\cite{Psallidas2020},
+heterogenicznych grafowych sieci neuronowych (ang. \emph{Graph Neural
+Network}, GNN)~\cite{Shan2022} oraz rozszerzonego \emph{lineage}
+dla~funkcji UDF~\cite{Yamada2023} — tworzą szerszy kontekst literaturowy
+i~potwierdzają aktualność problematyki odkrywania zależności w~danych.
+Metody w~nich opisane nie~są bezpośrednio stosowane w~niniejszej pracy,
+jednak wskazują kierunki możliwych rozszerzeń omówionych w~rozdziale~5.
 
 % ============================================================
 %  ROZDZIAŁ 3 — PROBLEM I SPOSÓB JEGO ROZWIĄZANIA
