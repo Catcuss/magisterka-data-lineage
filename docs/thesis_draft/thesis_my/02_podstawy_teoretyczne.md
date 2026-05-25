@@ -13,3 +13,63 @@ Link prediction to jest poroba przewidzenia czy jakiestam polaczenia miedzy dany
 Bedizemy mieli 3 klasy algorytmow: heurystyki , uczenie maszynowe i embeddingi.
 
 2.5 — Co znalazłaś w SLR?
+
+Tutaj napewno ten artykul z data setem An open dataset od data lineage graphs:
+An open dataset of data lineage graphs [2]
+Problem badawczy: Rozwój metod badawczych w obszarze data governance jest hamowany
+przez brak ogólnodostępnych, rzeczywistych zbiorów danych. Przedsiębiorstwa nie udostępniają
+grafów lineage ze względu na poufność procesów biznesowych i wymogi bezpieczeństwa.
+Zaproponowane rozwiązanie: Publikacja zbioru DLG-DG-23 – pierwszego otwartego ze-
+stawu rzeczywistych grafów pochodzenia danych:
+• Źródło: środowisko produkcyjne Huawei Cloud (dane zanonimizowane).
+• Charakterystyka: 18 grafów o zróżnicowanej wielkości (278–17 085 węzłów).
+• Scenariusze: infrastruktura chmurowa, obsługa klienta, analiza operacyjna.
+• Model: węzły typów tabela, zadanie, pole oraz relacje przepływu i hierarchii.
+Zastosowanie: Zbiór ten posłuży w niniejszej pracy jako referencyjny punkt odniesienia (gro-
+und truth) w eksperymentach dotyczących rekonstrukcji grafów provenance.
+Analiza krytyczna:
+3.3. Metryki i zbiory danych 11
++ Unikalna wartość badawcza wynikająca z rzeczywistego pochodzenia danych (w przeciwień-
+stwie do generatorów syntetycznych).
++ Możliwość wszechstronnego zastosowania (wykrywanie anomalii, wizualizacja, rekonstruk-
+cja).
+- Stosunkowo niewielka liczba grafów ograniczająca trenowanie dużych modeli głębokich.
+- Ograniczenie atrybutów węzłów wynikające z konieczności anonimizacji.
+Na pewno tez ten bo on jest glowna motywacja i inspiracja:
+3.1.2 Leveraging machine learning techniques for discovering broken lineage
+links [1]
+Problem badawczy: Ciągłość grafów pochodzenia (lineage) ulega przerwaniu, gdy w potokach
+ETL wykorzystywane są obiekty pośrednie, takie jak tabele tymczasowe lub funkcje definiowane
+przez użytkownika (UDF). Elementy te mają charakter tymczasowy i są usuwane natychmiast po
+zakończeniu procesu przetwarzania. W rezultacie, istniejące narzędzia klasy data governance tracą
+ślad przepływu danych i nie są w stanie automatycznie powiązać trwałej tabeli źródłowej z tabelą
+docelową, błędnie interpretując je jako niezależne byty.
+Zaproponowane rozwiązanie: Autorzy proponują zastosowanie metod uczenia maszynowego
+do problemu binarnej klasyfikacji par obiektów, celem predykcji istnienia ukrytej relacji pochodze-
+nia. Podejście to obejmuje:
+• Inżynieria cech: ekstrakcja metadanych i analiza podobieństwa semantycznego nazw tabel
+oraz atrybutów (z wykorzystaniem miary odległości Jaro–Winkler).
+• Modele klasyfikacji: przetestowano algorytmy Random Forest, RUSBoost, BalancedBag-
+ging oraz LightGBM. Najlepsze wyniki w eksperymentach osiągnął klasyfikator RUSBo-
+ostClassifier.
+• Generowanie danych uczących: zastosowanie techniki rekurencyjnego zastępowania tabel
+tymczasowych ich trwałymi źródłami w celu skonstruowania etykiet referencyjnych (ground
+truth).
+Zbiór danych i ewaluacja: Ze względu na brak ogólnodostępnych zbiorów danych tego typu,
+autorzy wykorzystali wielkie modele językowe (LLM) do wygenerowania syntetycznych schematów
+baz danych:
+3.1. Metody ekstrakcji i algorytmy ML/GNN 7
+• Zbiór treningowy: schemat systemu zarządzania w ochronie zdrowia wygenerowany przez
+model Grok (dane wymagały ręcznej korekty i czyszczenia).
+• Zbiór testowy: schemat systemu finansowego wygenerowany przez model Llama3.
+Analiza krytyczna:
++ Wysoka skuteczność rekonstrukcji zerwanych zależności (miara F1-score na poziomie do
+0.79).
++ Odporność metody na silnie niezbalansowane zbiory danych (gdzie liczba par bez relacji
+znacznie przewyższa liczbę par powiązanych).
+- Istotna zależność jakości predykcji od stosowania spójnych konwencji nazewniczych w bazie
+danych.
+- Konieczność weryfikacji i ręcznej korekty danych syntetycznych generowanych przez modele
+LLM
+nie wiem czy z tego kozystalismy Provenance Graph Kernel [4]
+a reszta to raczej tylko kontekst nie korzystamy tego w pracy wiec mozna je pominac w tym rozdziale
