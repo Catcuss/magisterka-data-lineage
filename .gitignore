@@ -9,7 +9,7 @@ __pycache__/
 *.npz
 *.pkl
 .env
-.claude/
+#.claude/
 docs/thesis_draft/thesis_template
 topic.txt
 abstrakt.txt
