@@ -21,3 +21,7 @@ ipykernel>=6.0
 
 # Testy
 pytest>=8.0
+
+
+-kropka tylko po poprawnie zbudowanym zdaniu, nie bać sie średników
+-po dwukropku mala litera

@@ -22,29 +22,35 @@ Problem odkrywania przekształacamy na problem klasyfikacji binarnej, gdzie klas
 
 <!-- TU MUSI BYĆ RYSUNEK — wstaw diagram z draw.io lub narysuj w PowerPoint -->
 <!-- Diagram: JSON → loader → NetworkX → splitter → algorytmy → metryki -->
-
-<!-- Opisz każdy komponent jednym akapitem: -->
-
+Graf lineage jest przechowywany w dwoch plikach json. W pierwszym (DLGi-node.json) znajduja się informacje o wierzcholkach; natomiast w drugim (DLGi-edge.json) znajduja sie informacje o krawedziach. Pliki te wczytywane sa przez loader na ich podstawie jest budowany graf przechowywany w nx.DiGraph korzystajac z biblioteki NetworkX. W tym obiekcie, każdy węzeł przechowuje atrybut asset_type, każda krawędź atrybuty relation_type i relation_id, a sam graf posiada atrybut name (np. DLG1). Nastepnie przechodzi do splittera ktory dzieli graf na scenariusze na ktorych beda wykonywane po kolei algorytmy. Wszystkie algorymy sa potem porownywane przy pomocy metryk ewaluacji takich jak precyzja, czułość , f1 AUC-ROC. Skrypty powstaly w celu prostego odtworzenia moich testow przez innych uzytkownikow, dzieki temu mozna przetestowac inne algorytmy i porownacc je z moimi wynikami
 <!-- Co robi loader.py — jakie pliki wczytuje, co zwraca, jak wygląda struktura NetworkX DiGraph? -->
-
+Plik loader.py wczytuje dane wejściowe z dwoch plików JSON dla każdego grafu DLG nastepnie jest budowany obiek NetworkX a na koncu zwracany jest slownik wszystkich grafow dla zbioru DLG-DG-23.
 <!-- Co robi splitter.py — jak działa podział 80/20, jak generowane są próbki negatywne, 
      dlaczego stosunek 1:1, dlaczego próbki muszą być zgodne typologicznie? -->
-
+Spliter dzieli krawędzie wybranego typu (data_flow) na zbiory treningowy testowy i walidacyjny w proporcji 60/20/20 a nastepnie generowane sa negatywne probki krawedzi. Probki pozytywne sa to krawedzie istniejace w grafie usuniete ze zbioru terningowego i przeznaczone do ewaluacji natomiast probki negatywne to pary wezlow miedzy krawedziamu ktore nigdy nie bylu polaczone (tylko data flow ) zapobiega to generowaniu trywialnie falszywych przykladow. Stosunek negatywnych do pozytywnych jest 1:1, zapewnia to zbalansowany zbiór ewulacyjny i stabilne metyki ewaluacji
 <!-- Co robi scenario_splitter.py — czym różni się od zwykłego splittera? -->
 W kontekscie pracy wykorzystany zostal skrypty do uruchamiania wszystkich implementacji. Spliter korzystal z usuwania losowych mozliwych w sensie te ktore sa miedzy job a table itd natomiast scenario_splitter rozdziela na 3 wspomniane we wczesniejszym rozdziale scenariusze 
 <!-- Jak algorytmy używają G_train — co dostają na wejściu, co zwracają? -->
 
 <!-- Co robi metrics.py — jakie metryki, jak dobierany próg binaryzacji? -->
-
+Metryki
 ---
 
 ## 3.3 Zbiór danych DLG-DG-23
 
 <!-- Skąd pochodzi dataset — kto go stworzył, kiedy, z jakiego systemu? -->
-
+Jak wymieniono w przegladnie literatury zbiór danych pochodzi z huwawei cloud, sa to realne dane, jednakrze sa one zanonimizowane zostaly one udostepnione w 2024 r i opisane w pracy przez Yunpeng Chen a
+, Ying Zhao a, 
+Xuanjing Li a
+, 
+Jiang Zhang b
+, 
+Jiang Long b
+, Fangfang Zhou a
+jest to otarty data set. 
 <!-- Dlaczego wybrałaś akurat ten dataset — co go wyróżnia spośród innych? 
      (podpowiedź: jedyny publiczny dataset rzeczywistych grafów lineage) -->
-
+Mimo wady jaka jest anoninowość, dataset ten został wybrany ze wzgledu na to ze jest to jedyny na ten momnet publiczny dataset zawierajacy rzeczywiste grafy lineage. Pozwala to przetestowac algorytmy na realnych danych i wskazac czy przez topologie grafu lineage jest sie w stanie przewidziec czy dana krawedz istnieje, czy jedak dane takie jak nazwy kolumn sa niezbedne do przewidywania zerwanych krawedzi.
 <!-- Co oznacza że dane są zanonimizowane i jaką ma to konsekwencję dla algorytmów? -->
 
 <!-- Wstaw tabelę 18 grafów: ID | Węzły | Krawędzie DATA_FLOW | Skala (mały/średni/duży) -->
