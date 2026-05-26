@@ -22,7 +22,7 @@
 
 <!-- TU MUSI BYĆ RYSUNEK — wstaw diagram z draw.io lub narysuj w PowerPoint -->
 <!-- Diagram: JSON → loader → NetworkX → splitter → algorytmy → metryki -->
-Graf lineage jest przechowywany w dwoch plikach json. W pierwszym (DLGi-node.json) znajduja się informacje o wierzcholkach; natomiast w drugim (DLGi-edge.json) znajduja sie informacje o krawedziach. Pliki te wczytywane sa przez loader na ich podstawie jest budowany graf przechowywany w nx.DiGraph korzystajac z biblioteki NetworkX. W tym obiekcie, każdy węzeł przechowuje atrybut asset_type, każda krawędź atrybuty relation_type i relation_id, a sam graf posiada atrybut name (np. DLG1). Nastepnie przechodzi do splittera ktory dzieli graf na scenariusze na ktorych beda wykonywane po kolei algorytmy. Wszystkie algorymy sa potem porownywane przy pomocy metryk ewaluacji takich jak precyzja, czułość , f1 AUC-ROC. 
+Graf lineage jest przechowywany w dwoch plikach json. W pierwszym (DLGi-node.json) znajduja się informacje o wierzcholkach; natomiast w drugim (DLGi-edge.json) znajduja sie informacje o krawedziach. Pliki te wczytywane sa przez loader na ich podstawie jest budowany graf przechowywany w nx.DiGraph korzystajac z biblioteki NetworkX. W tym obiekcie, każdy węzeł przechowuje atrybut asset_type, każda krawędź atrybuty relation_type i relation_id, a sam graf posiada atrybut name (np. DLG1). Nastepnie przechodzi do splittera ktory dzieli graf na scenariusze na ktorych beda wykonywane po kolei algorytmy. Wszystkie algorymy sa potem porownywane przy pomocy metryk ewaluacji takich jak precyzja, czułość , f1 AUC-ROC. Skrypty powstaly w celu prostego odtworzenia moich testow przez innych uzytkownikow, dzieki temu mozna przetestowac inne algorytmy i porownacc je z moimi wynikami
 <!-- Co robi loader.py — jakie pliki wczytuje, co zwraca, jak wygląda struktura NetworkX DiGraph? -->
 Plik loader.py wczytuje dane wejściowe z dwoch plików JSON dla każdego grafu DLG nastepnie jest budowany obiek NetworkX a na koncu zwracany jest slownik wszystkich grafow dla zbioru DLG-DG-23.
 <!-- Co robi splitter.py — jak działa podział 80/20, jak generowane są próbki negatywne, 
@@ -39,10 +39,18 @@ Metryki
 ## 3.3 Zbiór danych DLG-DG-23
 
 <!-- Skąd pochodzi dataset — kto go stworzył, kiedy, z jakiego systemu? -->
-
+Jak wymieniono w przegladnie literatury zbiór danych pochodzi z huwawei cloud, sa to realne dane, jednakrze sa one zanonimizowane zostaly one udostepnione w 2024 r i opisane w pracy przez Yunpeng Chen a
+, Ying Zhao a, 
+Xuanjing Li a
+, 
+Jiang Zhang b
+, 
+Jiang Long b
+, Fangfang Zhou a
+jest to otarty data set. 
 <!-- Dlaczego wybrałaś akurat ten dataset — co go wyróżnia spośród innych? 
      (podpowiedź: jedyny publiczny dataset rzeczywistych grafów lineage) -->
-
+Mimo wady jaka jest anoninowość, dataset ten został wybrany ze wzgledu na to ze jest to jedyny na ten momnet publiczny dataset zawierajacy rzeczywiste grafy lineage. Pozwala to przetestowac algorytmy na realnych danych i wskazac czy przez topologie grafu lineage jest sie w stanie przewidziec czy dana krawedz istnieje, czy jedak dane takie jak nazwy kolumn sa niezbedne do przewidywania zerwanych krawedzi.
 <!-- Co oznacza że dane są zanonimizowane i jaką ma to konsekwencję dla algorytmów? -->
 
 <!-- Wstaw tabelę 18 grafów: ID | Węzły | Krawędzie DATA_FLOW | Skala (mały/średni/duży) -->
