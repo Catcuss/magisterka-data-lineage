@@ -7,13 +7,13 @@
 <!-- Odpowiedz na te pytania: -->
 
 <!-- Jak formalnie opisać graf lineage który masz — co to jest G_obs i G*? -->
+Graf lineage mozna formalnie opisac jako G = (V,E), gdzie V to zbiór obiektów bazodanowych, a E* to krawędzie reprezentujące zbiór wszystkich relacji DATA_FLOW. Po usunięciu krawędzi dostajemy graf G_obs = (V,E_obs), gdzie E_obs to krawędzie które widzimi ale nie jest to zbiór wszystkich krawędzi. Celem jest wyznaczenie funkcji, która dla każdej pary węzłów oszacuje prawdopodobieństwo z jakim dana krawędz istniała w pełnym grafie.
 
 <!-- Czym są brakujące krawędzie E* \ E_obs — co reprezentują w kontekście broken lineage? -->
-
+Krawędzie E*\ E_obs reprezentują zerwane zależności np. poprzez usunięcia tabeli tymczasowej albo ukrycia transformacji przez UDF. To własnie ich istnienie algorytmy będa próbować odtworzyć.
 <!-- Jak zamieniasz to na problem klasyfikacji binarnej — co jest klasą 0 a co klasą 1? -->
-
-<!-- Dlaczego tylko pary (Data Table, Data Job) są kandydatami — a nie np. (Table, Table)? -->
-
+Problem odkrywania przekształacamy na problem klasyfikacji binarnej, gdzie klasa 1 oznacza że krawędz istnieje, natomiast klasa 0 oznacza, że nie istnieje. Pozwala to określić prawdopodobieństwo istnienia i ułatwia to praca algorytmów jak prawdopobocienstwo przekracza 50% to algorytm przewiduje ze krawedz istanieje.
+<!-- Dlaczego tylko pary (Data Table, Data Job) są kandydatami — a nie np. (Table, Table)? --> Kandydatami sa tylko pary job i table poniewaz to wlasnie miedzy tymi wierzcholkami jest relacja DATA_FLOW ktora chcemy przewidywac, nie mozemy brac pod uwage zaleznosci tabla tabla poniewaz one nie istnieja, natomiast relacja miedzy tabla a field to poprostu ektykieta ktora kolumna nalezy do danej tableli 
 <!-- Co algorytm "widzi" a czego nie widzi podczas predykcji? -->
 
 ---
