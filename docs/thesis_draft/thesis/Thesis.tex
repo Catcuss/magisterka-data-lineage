@@ -10,7 +10,7 @@
 \documentclass[polish,master,a4paper,oneside]{ppfcmthesis}
 
 \usepackage[utf8]{inputenc}
-\usepackage[OT4]{fontenc}
+\usepackage[T1]{fontenc}
 \usepackage{csquotes}
 
 % ── Dodatkowe pakiety ────────────────────────────────────────
@@ -23,6 +23,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{float}
+\usepackage{threeparttable}
 
 \lstset{
   basicstyle=\ttfamily\small,
@@ -550,6 +551,43 @@ lineage oraz szczegóły implementacji zrealizowanych algorytmów.
 % TODO: Opisać zbiór DLG-DG-23 szczegółowo: statystyki poszczególnych grafów
 %       (tabela z nazwami grafów, liczbą węzłów, krawędzi, gęstością).
 %       Wprowadzić tabelę zdaniem: „Tabela X przedstawia...".
+\begin{table}[ht]
+\centering
+\caption{Charakterystyka grafów zbioru DLG-DG-23.}
+\label{tab:dlg-stats}
+\begin{threeparttable}
+\begin{tabular}{llrl}
+\toprule
+\textbf{ID} & \textbf{Węzły} & \textbf{Krawędzie DATA\_FLOW} & \textbf{Skala} \\
+\midrule
+DLG1  &    298 &    24 & mały   \\
+DLG2  &    464 &    37 & mały   \\
+DLG3  &    603 &    57 & mały   \\
+DLG4  &    415 &    32 & mały   \\
+DLG5  & 1\,299 &   175 & średni \\
+DLG6  & 13\,840 & 1\,443 & duży  \\
+DLG7  &    574 &    43 & mały   \\
+DLG8  &    546 &    34 & mały   \\
+DLG9  &    756 &    62 & mały   \\
+DLG10 & 5\,378 &   497 & duży   \\
+DLG11 & 2\,024 &   121 & średni \\
+DLG12 & 5\,645 &   469 & duży   \\
+DLG13 & 2\,157 &   229 & średni \\
+DLG14 &    453 &    24 & mały   \\
+DLG15 &    558 &    41 & mały   \\
+DLG16 & 5\,574 &   745 & duży   \\
+DLG17 &    651 &    38 & mały   \\
+DLG18 & 17\,085 & 1\,694 & duży \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Skala: mały $<$ 1\,000 węzłów; średni 1\,000–5\,000; duży $>$ 5\,000.
+\item Liczba krawędzi DATA\_FLOW to suma zbiorów train + val + test (podział 60/20/20).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
 
 \section{Scenariusze symulacji broken lineage}
 \label{sec:scenariusze}
