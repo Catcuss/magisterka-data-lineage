@@ -201,7 +201,7 @@ zanika — niemożliwe staje się ustalenie, skąd pochodzi dana wartość
 w~tabeli wynikowej ani jakie operacje ją~wytworzyły. Zjawisko to, określane
 w~literaturze jako \emph{data lineage} bądź \emph{data provenance}, stanowi
 istotny problem zarówno z~perspektywy audytu danych, jak i~ich
-jakości~\cite{Psallidas2020,Yamada2023}.
+jakości~\cite{Psallidas2022,Yamada2023}.
 
 Formalnie problem ten można wyrazić w~kategoriach teorii grafów: graf
 zależności (ang. \emph{lineage graph}) reprezentuje przepływ danych między
@@ -234,7 +234,7 @@ brakujących krawędzi w~grafach lineage. Zakres obejmuje trzy klasy metod:
 
 Eksperymenty przeprowadzono na~zbiorze danych DLG-DG-23, obejmującym
 18~zanonimizowanych grafów dwudzielnych ze~środowiska Huawei Cloud
-\cite{Chen2023}. Przyjęto trzy scenariusze symulacji brakujących krawędzi,
+\cite{Chen2024}. Przyjęto trzy scenariusze symulacji brakujących krawędzi,
 odzwierciedlające typowe przypadki broken lineage:
 
 \begin{itemize}
@@ -278,7 +278,7 @@ zawiera przegląd wybranej literatury.
 \label{sec:lineage_def}
 
 Pojęcia \emph{data lineage} i~\emph{data provenance} są w~literaturze
-stosowane zarówno zamiennie, jak i~z~rozróżnieniem semantycznym~\cite{Psallidas2020}.
+stosowane zarówno zamiennie, jak i~z~rozróżnieniem semantycznym~\cite{Psallidas2022}.
 W~węższym ujęciu \emph{data lineage} odnosi się do~śledzenia przepływu
 informacji przez kolejne etapy przetwarzania — opisuje, przez jakie
 transformacje przeszły dane i~jak zmieniała się ich postać. Z~kolei
@@ -302,7 +302,7 @@ spowoduje utratę danych bez~widocznego komunikatu~błędu~\cite{Boinski2025}.
 \section{Struktura grafu lineage w~zbiorze DLG-DG-23}
 \label{sec:graf_lineage}
 
-Zbiór danych DLG-DG-23, opracowany przez Chen et~al.~\cite{Chen2023},
+Zbiór danych DLG-DG-23, opracowany przez Chen et~al.~\cite{Chen2024},
 zawiera 18~grafów lineage pobranych ze~środowiska produkcyjnego Huawei
 Cloud. Dane zostały zanonimizowane — nie~udostępniono schematów tabel.
 Grafy różnią się skalą: liczba węzłów waha się od~278 do~17~085.
@@ -486,7 +486,7 @@ Zastosowane przez autorów cechy topologiczne i~modele klasyfikacji zostały
 zaadaptowane i~rozszerzone, natomiast problem \emph{broken lineage} —
 zdefiniowany w~tej publikacji — przyjęto jako centralny problem badawczy.
 
-\subsection{An open dataset of data lineage graphs \cite{Chen2023}}
+\subsection{An open dataset of data lineage graphs \cite{Chen2024}}
 
 \textbf{Problem badawczy.}
 Rozwój metod badawczych w~obszarze \emph{data governance} jest ograniczany
@@ -528,9 +528,9 @@ zasługuje metoda \emph{Provenance Graph Kernel} (PGK)~\cite{KohanMarzagao2023},
 która definiuje miary podobieństwa między grafami proweniencji i~może
 stanowić punkt odniesienia przy~ocenie jakości zrekonstruowanych grafów.
 Pozostałe prace — dotyczące proweniencji rekurencyjnych zapytań
-SQL~\cite{Dietrich2023}, analizy logów systemowych~\cite{Psallidas2020},
+SQL~\cite{Dietrich2022}, analizy logów systemowych~\cite{Psallidas2022},
 heterogenicznych grafowych sieci neuronowych (ang. \emph{Graph Neural
-Network}, GNN)~\cite{Shan2022} oraz rozszerzonego \emph{lineage}
+Network}, GNN)~\cite{Shan2023} oraz rozszerzonego \emph{lineage}
 dla~funkcji UDF~\cite{Yamada2023} — tworzą szerszy kontekst literaturowy
 i~potwierdzają aktualność problematyki odkrywania zależności w~danych.
 Metody w~nich opisane nie~są bezpośrednio stosowane w~niniejszej pracy,
@@ -607,8 +607,79 @@ DLG18 & 17\,085 & 1\,694 & duży \\
 
 \subsection{Heurystyki grafowe}
 
-% TODO: Common Neighbors, Jaccard, Adamic-Adar — wzory matematyczne,
-%       interpretacja, złożoność obliczeniowa.
+Heurystyki grafowe stanowią najprostszą klasę metod predykcji krawędzi
+(\textit{link prediction}). Wynik dla pary węzłów $(u, v)$ wyznaczany jest
+wyłącznie na podstawie lokalnej lub globalnej struktury grafu — bez etapu
+trenowania modelu. Metody te charakteryzują się niską złożonością obliczeniową
+i~pełną interpretowalością, co czyni je naturalnym punktem odniesienia
+(ang.\ \textit{baseline}) przy porównywaniu bardziej zaawansowanych
+podejść.
+% pierwsza systematyczna ewaluacja heurystyk grafowych jako baseline dla link prediction
+
+\subsubsection{Preferential Attachment}
+
+Miara \textit{Preferential Attachment} (PA) opiera się na obserwacji, że
+w~sieciach rzeczywistych nowe połączenia powstają z~prawdopodobieństwem
+proporcjonalnym do stopnia istniejących węzłów — węzły o~wielu sąsiadach
+z~większym prawdopodobieństwem pozyskują kolejne
+połączenia~\cite{Barabasi1999}; jako heurystyka predykcji krawędzi PA
+została zastosowana przez Liben-Nowella i~Kleinberga~\cite{LibenNowell2007}.
+% Barabasi1999: oryginalne wprowadzenie PA w kontekście rosnących sieci bezskalowych
+% LibenNowell2007: zastosowanie PA jako miary link prediction w sieciach społecznościowych
+
+Dla pary węzłów $(u, v)$ wynik PA definiuje się jako:
+%
+\[
+  \mathrm{PA}(u, v) = |N(u)| \cdot |N(v)|,
+\]
+%
+gdzie $N(u)$ oraz $N(v)$ oznaczają zbiory sąsiadów odpowiednio węzła $u$
+i~węzła $v$, a~$|\cdot|$ denotes rozmiar zbioru, tj.\ stopień węzła w~grafie.
+
+W~kontekście grafów \textit{lineage} węzły grafu dwudzielnego DLG-DG-23 dzielą
+się na dwa typy: zadania przetwarzania danych (\textit{job}) oraz tabele
+(\textit{table}). Wysoki stopień węzła \textit{job} oznacza, że dane zadanie
+czyta z~wielu tabel źródłowych lub zapisuje do wielu tabel docelowych;
+wysoki stopień węzła \textit{table} wskazuje na tabelę centralną — często
+pośrednią warstwę integracyjną w~potoku ETL. Para $(u, v)$, w~której oba
+węzły mają duże stopnie, otrzymuje wysoki wynik PA, co interpretuje się jako
+sygnał potencjalnej zależności \textit{data\_flow}.
+
+Zasadnicze ograniczenie PA polega na tym, że miara ignoruje pokrycie sąsiedztw:
+dwa węzły mogą mieć duże stopnie, lecz nie posiadać żadnych wspólnych sąsiadów,
+a~mimo to otrzymać wysoki wynik. W~grafach dwudzielnych takich jak DLG-DG-23
+węzły tego samego typu (\textit{job}–\textit{job} lub
+\textit{table}–\textit{table}) nigdy nie mają wspólnych sąsiadów bezpośrednich,
+dlatego miary oparte na wspólnych sąsiadach (Common Neighbors, Jaccard,
+Adamic-Adar) wymagają adaptacji do struktury bipartite. PA nie wymaga takiej
+adaptacji — obliczany jest bezpośrednio z~stopni węzłów — co stanowi jego
+przewagę praktyczną w~omawianym scenariuszu, kosztem mniejszej precyzji
+predykcji w~porównaniu z~miarami uwzględniającymi topologię sąsiedztwa.
+
+% ----------------------------------------------------------------
+% WZORZEC: Przy opisie każdej kolejnej heurystyki (Common Neighbors,
+% Jaccard, Adamic-Adar, L3, Katz, PPR) zastosuj poniższy schemat:
+%
+%   \subsubsection{Nazwa heurystyki}
+%
+%   (1) ŹRÓDŁO: podaj artykuł, który jako pierwszy zaproponował lub
+%       sformalizował metodę w kontekście link prediction.
+%       Użyj \cite{klucz} PRZED kropką zdania, z komentarzem
+%       wyjaśniającym, dlaczego ta praca jest cytowana.
+%
+%   (2) WZÓR: wstaw \[ ... \] z opisem wszystkich symboli
+%       bezpośrednio pod wzorem ("gdzie $X$ oznacza...").
+%
+%   (3) INTERPRETACJA W GRAFACH LINEAGE: wyjaśnij, co wysoka/niska
+%       wartość miary oznacza dla pary węzłów job/table w DLG-DG-23.
+%       Odwołuj się do typów węzłów i krawędzi data_flow.
+%
+%   (4) OGRANICZENIA: omów słabości metody specyficzne dla grafów
+%       dwudzielnych lub dla problemu broken lineage.
+%       Nie pomijaj tego punktu — promotor ocenia krytyczne podejście.
+%
+% Długość opisu jednej heurystyki: 10–20 zdań (wzoruj się na PA powyżej).
+% ----------------------------------------------------------------
 
 \subsection{Klasyczne metody uczenia maszynowego}
 
