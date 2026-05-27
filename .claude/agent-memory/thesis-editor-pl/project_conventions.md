@@ -51,6 +51,7 @@ metadata:
 5. Psallidas2020 — Psallidas et al., OneProvenance (log analysis, QQTree)
 6. Shan2022 — Shan et al., KPI-HGNN (heterogeniczne GNN)
 7. Yamada2023 — Yamada et al., Augmented lineage (UDF, VLDB 2023)
+8. LibenNowell2007 — Liben-Nowell & Kleinberg (JASIST 2007), formalizacja heurystyk grafowych jako baseline dla link prediction (w tym PA)
 
 ## Struktura pracy (wymagana przez promotora)
 
