@@ -382,8 +382,11 @@ W~pracy zastosowano trzy klasy algorytmów:
 
 \begin{enumerate}
   \item \textbf{Heurystyki grafowe} — miary podobieństwa sąsiedztwa węzłów,
-        takie jak Common Neighbors, indeks Jaccarda i~miara Adamic-Adar;
+        takie jak Common Neighbors, indeks Jaccarda i~miara Adamic-Adar~\cite{LibenNowell2007};
         nie~wymagają uczenia, opierają się wyłącznie na~strukturze grafu.
+        Miary oparte na~wspólnych sąsiadach wymagają adaptacji dla~grafów
+        dwudzielnych, w~których węzły tego samego typu nie~posiadają
+        wspólnych sąsiadów bezpośrednich (omówiono w~sekcji~\ref{sec:algorytmy}).
   \item \textbf{Klasyczne metody ML} — Random Forest, RUSBoost i~LightGBM;
         wykorzystują wektory cech opisujących pary węzłów,
         w~tym cechy strukturalne grafu i~metryki podobieństwa nazw
@@ -418,7 +421,10 @@ klasyfikacji binarnej. W~niniejszej pracy przyjęto następujące metryki:
   \item \textbf{F1} — średnia harmoniczna precyzji i~czułości; główna
         miara porównawcza stosowana w~pracy,
   \item \textbf{AUC-ROC} — pole pod krzywą ROC; mierzy zdolność modelu
-        do~rozróżnienia par połączonych od~niepołączonych.
+        do~rozróżnienia par połączonych od~niepołączonych,
+  \item \textbf{AUC-PR} — pole pod krzywą precyzja–czułość; szczególnie
+        miarodajne przy silnym niezbalansowaniu klas, gdy klasa pozytywna
+        (brakujące krawędzie) stanowi ułamek wszystkich par węzłów.
 \end{itemize}
 
 Metryka F1 jest szczególnie istotna w~warunkach niezrównoważonych klas,
@@ -426,8 +432,7 @@ charakterystycznych dla~grafów rzadkich, gdzie liczba potencjalnych
 brakujących krawędzi wielokrotnie przewyższa liczbę krawędzi
 rzeczywistych~\cite{Boinski2025,KohanMarzagao2023}.
 
-% TODO: Sprawdzić, czy AUC-ROC jest faktycznie raportowane w kodzie —
-%       jeśli nie, usunąć lub zastąpić metryką AUC-PR.
+
 
 \section{Wyniki systematycznego przeglądu literatury}
 \label{sec:literatura}
@@ -444,7 +449,7 @@ problemu badawczego.
 \subsection{Leveraging machine learning techniques for discovering broken
 lineage links \cite{Boinski2025}}
 
-\textbf{Problem badawczy.}
+\textbf{Problem badawczy}
 Ciągłość grafów \emph{data lineage} ulega przerwaniu, gdy w~potokach ETL
 (ang. \emph{Extract, Transform, Load}) wykorzystywane są obiekty pośrednie
 — tabele tymczasowe lub funkcje definiowane przez użytkownika (ang.
@@ -454,7 +459,7 @@ narzędzia klasy \emph{data governance} tracą ślad przepływu danych
 i~błędnie interpretują trwałą tabelę źródłową oraz tabelę docelową jako
 byty niezależne.
 
-\textbf{Zaproponowane rozwiązanie.}
+\textbf{Zaproponowane rozwiązanie}
 Autorzy formułują problem rekonstrukcji przerwanych zależności jako binarną
 klasyfikację par obiektów bazodanowych. Podejście obejmuje następujące
 elementy:
@@ -476,7 +481,7 @@ syntetyczne schematy baz danych z~wykorzystaniem dużych modeli językowych
 ochroną zdrowia (model Grok) jako zbiór treningowy oraz schemat systemu
 finansowego (model Llama~3) jako zbiór testowy.
 
-\textbf{Analiza krytyczna.}
+\textbf{Analiza krytyczna}
 Najwyższą skuteczność spośród testowanych klasyfikatorów osiągnął algorytm
 RUSBoost — miara F1 wyniosła 0{,}79. Metoda wykazuje odporność na~silne
 niezbalansowanie klas, typowe dla~tego rodzaju problemu, gdzie liczba par
@@ -492,13 +497,13 @@ zdefiniowany w~tej publikacji — przyjęto jako centralny problem badawczy.
 
 \subsection{An open dataset of data lineage graphs \cite{Chen2024}}
 
-\textbf{Problem badawczy.}
+\textbf{Problem badawczy}
 Rozwój metod badawczych w~obszarze \emph{data governance} jest ograniczany
 przez brak ogólnodostępnych, rzeczywistych zbiorów danych. Przedsiębiorstwa
 nie~udostępniają grafów \emph{lineage} ze~względu na~poufność procesów
 biznesowych i~wymogi bezpieczeństwa.
 
-\textbf{Zaproponowane rozwiązanie.}
+\textbf{Zaproponowane rozwiązanie}
 Autorzy opublikowali zbiór DLG-DG-23 — pierwszy otwarty zestaw
 rzeczywistych grafów pochodzenia danych, charakteryzujący się następującymi
 właściwościami:
@@ -513,7 +518,7 @@ właściwościami:
         relacje przepływu danych i~hierarchii.
 \end{itemize}
 
-\textbf{Analiza krytyczna.}
+\textbf{Analiza krytyczna}
 Unikalną wartość zbioru stanowi jego rzeczywiste pochodzenie przemysłowe,
 odróżniające go od~danych generowanych syntetycznie. Zbiór umożliwia
 zastosowanie do~różnorodnych zadań analitycznych: wykrywania anomalii,
@@ -617,7 +622,7 @@ wyłącznie na~podstawie lokalnej lub globalnej struktury grafu, bez etapu
 trenowania modelu. Metody te charakteryzują się niską złożonością obliczeniową
 i~pełną interpretowalnością, co czyni je naturalnym punktem odniesienia
 (ang.\ \textit{baseline}) przy porównywaniu bardziej zaawansowanych
-podejść~\cite{Psallidas2022}.
+podejść~\cite{LibenNowell2007}.
 % pierwsza systematyczna ewaluacja heurystyk grafowych jako baseline dla link prediction
 
 \subsubsection{Preferential Attachment}
