@@ -1,0 +1,460 @@
+% ============================================================
+%  ROZDZIAŁ 3 — PROBLEM I SPOSÓB JEGO ROZWIĄZANIA
+%  Plik: 03_problemiarchitektura.tex
+%  Włączany do Thesis.tex przez \input{03_problemiarchitektura}
+% ============================================================
+
+\chapter{Problem i~sposób jego rozwiązania}
+
+Niniejszy rozdział precyzuje formalną definicję problemu broken lineage
+i~jego ujęcie jako zadania klasyfikacji binarnej (sekcja~\ref{sec:sformulowanie}).
+Sekcja~\ref{sec:architektura} opisuje architekturę zaproponowanego
+potoku przetwarzania, a~sekcja~\ref{sec:dane} charakteryzuje zastosowany
+zbiór danych. Metodykę symulacji brakujących krawędzi przedstawiono
+w~sekcji~\ref{sec:scenariusze}, natomiast szczegóły implementacji
+algorytmów omówiono w~sekcji~\ref{sec:algorytmy}.
+
+% ============================================================
+\section{Sformułowanie problemu}
+\label{sec:sformulowanie}
+% ============================================================
+
+Graf lineage modeluje się jako graf skierowany $G^{*} = (V, E^{*})$,
+gdzie $V$ oznacza zbiór obiektów bazodanowych (tabel, widoków, zadań ETL),
+a~$E^{*}$ — zbiór wszystkich rzeczywistych relacji przepływu danych
+(\emph{data\_flow}). W~praktyce część krawędzi jest niedostępna
+z~powodu zjawiska broken lineage: tabele tymczasowe nie~są rejestrowane
+w~standardowych słownikach bazy danych, a~funkcje definiowane przez
+użytkownika (\emph{User-Defined Function}, UDF) ukrywają wewnętrzną
+logikę transformacji. Obserwowany graf ma~zatem postać
+$G_{\mathrm{obs}} = (V, E_{\mathrm{obs}})$, gdzie
+$E_{\mathrm{obs}} \subsetneq E^{*}$. Brakujące krawędzie
+$E^{*} \setminus E_{\mathrm{obs}}$ reprezentują zerwane zależności,
+których odtworzenie jest celem niniejszej pracy.
+
+Zadanie wykrywania brakujących krawędzi sprowadza się do~klasyfikacji
+binarnej. Dla~każdej pary węzłów $(u, v) \in V \times V$ algorytm
+wyznacza wartość $\hat{y}(u, v) \in [0, 1]$, interpretowaną jako
+oszacowane prawdopodobieństwo istnienia krawędzi w~pełnym grafie
+$G^{*}$. Para jest klasyfikowana jako krawędź istniejąca (klasa~1)
+lub~nieistniejąca (klasa~0) po~przekroczeniu progu binaryzacji
+wynoszącego $0{,}5$.
+
+Ze~względu na~strukturę grafu DLG-DG-23 kandydatami do~wykrywania
+są wyłącznie pary węzłów różnych typów: (\emph{job},~\emph{table})
+lub~(\emph{table},~\emph{job}). Para (\emph{table},~\emph{table})
+nigdy nie~jest połączona krawędzią \emph{data\_flow}, a~relacja
+\emph{parent\_child} łączy wyłącznie węzły \emph{table} i~\emph{field}
+— pary te nie~są przedmiotem wykrywania. Ograniczenie przestrzeni
+kandydatów do~typologicznie dopuszczalnych par eliminuje trywialnie
+fałszywe przykłady ujemne i~zapewnia spójność z~semantyką domeny.
+
+% ============================================================
+\section{Architektura rozwiązania}
+\label{sec:architektura}
+% ============================================================
+
+Potok przetwarzania składa się z~czterech głównych komponentów:
+modułu wczytywania danych (\emph{loader}), modułu podziału krawędzi
+(\emph{splitter}), właściwych algorytmów wykrywania oraz modułu
+ewaluacji.
+
+% TODO (WYMAGANE): Wstawić rysunek blokowy potoku:
+%   JSON → loader → NetworkX DiGraph → splitter → algorytmy → metryki.
+%   Rysunek musi być wprowadzony zdaniem przed jego wystąpieniem,
+%   np. „Rysunek~X przedstawia schemat blokowy zaproponowanego potoku."
+
+\subsection{Moduł wczytywania danych}
+
+Dane wejściowe dla~każdego grafu DLG przechowywane są w~dwóch plikach
+JSON: \texttt{DLGi-node.json} zawiera opisy węzłów wraz z~atrybutem
+\texttt{asset\_type}, natomiast \texttt{DLGi-edge.json} — opisy
+krawędzi z~atrybutami \texttt{relation\_type} i~\texttt{relation\_id}.
+Moduł \texttt{loader.py} wczytuje oba pliki dla~każdego grafu i~buduje
+obiekt \texttt{nx.DiGraph} z~biblioteki NetworkX, a~następnie zwraca
+słownik wszystkich 18~grafów zbioru DLG-DG-23. Sam graf przechowuje
+atrybut \texttt{name} (np.\ \texttt{DLG1}).
+
+\subsection{Moduł podziału krawędzi}
+
+Moduł \texttt{splitter.py} wyodrębnia ze~struktury grafu krawędzie
+typu \emph{data\_flow} i~dzieli je~na~trzy rozłączne podzbiory
+w~proporcji 60/20/20 (treningowy, walidacyjny, testowy). Próbki
+pozytywne stanowią krawędzie usunięte ze~zbioru treningowego
+i~przeznaczone do~ewaluacji; próbki negatywne to~pary węzłów
+typologicznie dopuszczalnych (wyłącznie \emph{job}--\emph{table}),
+które nigdy nie~były połączone krawędzią. Stosunek próbek negatywnych
+do~pozytywnych wynosi 1:1, co~zapewnia zbalansowany zbiór ewaluacyjny
+i~stabilne wartości metryk porównawczych.
+
+Moduł \texttt{scenario\_splitter.py} realizuje analogiczny podział,
+lecz zamiast losowego usuwania krawędzi stosuje trzy scenariusze
+symulacji broken lineage opisane w~sekcji~\ref{sec:scenariusze}.
+
+\subsection{Moduł ewaluacji}
+
+Moduł \texttt{metrics.py} wyznacza standardowe metryki klasyfikacji
+binarnej: precyzję, czułość, miarę F1, AUC-ROC i~AUC-PR. Próg
+binaryzacji wynosi $0{,}5$ dla~wszystkich metod. Wyniki są
+uśredniane po~wszystkich 18~grafach zbioru DLG-DG-23 i~agregowane
+według scenariusza oraz algorytmu, co~umożliwia bezpośrednie
+porównanie między metodami.
+
+% ============================================================
+\section{Zbiór danych DLG-DG-23}
+\label{sec:dane}
+% ============================================================
+
+Zastosowany zbiór danych pochodzi z~pracy Chen et~al.~\cite{Chen2024}
+i~zawiera 18~grafów lineage pobranych ze~środowiska produkcyjnego
+Huawei Cloud. Dane zostały zanonimizowane — nazwy tabel i~atrybutów
+zastąpiono identyfikatorami w~formacie UUID, a~schematy bazy danych
+nie~zostały udostępnione. Zbiór opublikowano w~2024~roku jako pierwszy
+otwarty zestaw rzeczywistych grafów lineage; szczegółową charakterystykę
+poszczególnych grafów zamieszczono w~tabeli~\ref{tab:dlg-stats} w~sekcji~\ref{sec:dane-opis}.
+
+Zbiór DLG-DG-23 wybrano ze~względu na~jego unikatowy charakter:
+jest to~jedyny publicznie dostępny zestaw rzeczywistych grafów lineage,
+co~umożliwia ewaluację algorytmów na~danych o~autentycznej topologii
+przemysłowej, bez~ryzyka artefaktów wprowadzonych przez dane
+syntetyczne. Anonimizacja nazw węzłów ma~bezpośredni wpływ na~dobór
+algorytmów: metryki podobieństwa oparte na~nazwach obiektów
+(np.~odległość Jaro--Winkler stosowana przez Boińskiego
+et~al.~\cite{Boinski2025}) są nieaplikowalne. W~niniejszej pracy
+wektor cech ograniczono zatem do~atrybutów topologicznych grafu,
+co~jednocześnie stanowi element badań nad~pytaniem, czy sama struktura
+grafu lineage jest wystarczająca do~wykrywania zerwanych zależności.
+
+\subsection{Charakterystyka grafów}
+\label{sec:dane-opis}
+
+Tabela~\ref{tab:dlg-stats} przedstawia statystyki poszczególnych
+grafów zbioru DLG-DG-23.
+
+\begin{table}[ht]
+\centering
+\caption{Charakterystyka grafów zbioru DLG-DG-23.}
+\label{tab:dlg-stats}
+\begin{threeparttable}
+\begin{tabular}{llrl}
+\toprule
+\textbf{ID} & \textbf{Węzły} & \textbf{Krawędzie DATA\_FLOW} & \textbf{Skala} \\
+\midrule
+DLG1  &    298 &    24 & mały   \\
+DLG2  &    464 &    37 & mały   \\
+DLG3  &    603 &    57 & mały   \\
+DLG4  &    415 &    32 & mały   \\
+DLG5  & 1\,299 &   175 & średni \\
+DLG6  & 13\,840 & 1\,443 & duży  \\
+DLG7  &    574 &    43 & mały   \\
+DLG8  &    546 &    34 & mały   \\
+DLG9  &    756 &    62 & mały   \\
+DLG10 & 5\,378 &   497 & duży   \\
+DLG11 & 2\,024 &   121 & średni \\
+DLG12 & 5\,645 &   469 & duży   \\
+DLG13 & 2\,157 &   229 & średni \\
+DLG14 &    453 &    24 & mały   \\
+DLG15 &    558 &    41 & mały   \\
+DLG16 & 5\,574 &   745 & duży   \\
+DLG17 &    651 &    38 & mały   \\
+DLG18 & 17\,085 & 1\,694 & duży \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Skala: mały $<$ 1\,000 węzłów; średni 1\,000–5\,000; duży $>$ 5\,000.
+\item Liczba krawędzi DATA\_FLOW podana dla sumy zbiorów treningowego,
+      walidacyjnego i~testowego (podział 60/20/20).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ============================================================
+\section{Metodyka symulacji broken lineage}
+\label{sec:scenariusze}
+% ============================================================
+
+Ponieważ zbiór DLG-DG-23 zawiera w~pełni zaobserwowane grafy lineage,
+zjawisko broken lineage symulowane jest poprzez kontrolowane usuwanie
+krawędzi. Podejście to jest standardowe w~literaturze wykrywania
+krawędzi~\cite{LibenNowell2007}: dysponując kompletnym grafem
+$G^{*}$, usuwa się podzbiór krawędzi, tworząc graf obserwowany
+$G_{\mathrm{obs}}$, a~następnie sprawdza, czy algorytm potrafi
+odtworzyć usunięte krawędzie. W~niniejszej pracy przyjęto trzy
+scenariusze symulacji, odzwierciedlające typowe przyczyny powstawania
+broken lineage.
+
+\textbf{Scenariusz A} — losowe usunięcie krawędzi — realizuje
+najprostszą formę symulacji: 20\% krawędzi \emph{data\_flow} jest
+usuwanych ze~zbioru treningowego w~sposób losowy, bez~względu na~typ
+węzłów końcowych. Scenariusz ten modeluje sytuację, w~której~broken
+lineage wynika z~przyczyn losowych (np.~niedokompletowania logów
+systemowych) i~nie~jest skoncentrowany na~konkretnym typie obiektu.
+
+\textbf{Scenariusz B} — usunięcie krawędzi tabeli pośredniej —
+symuluje sytuację, w~której tabela pośrednia (staging) jest tabelą
+tymczasową i~nie~zostaje zarejestrowana w~metadanych. Usuwane są
+wszystkie krawędzie prowadzące do~wybranego węzła \emph{table}
+o~wysokim stopniu (tabela pośrednia), co~powoduje odcięcie
+całego podgrafu zależności przepływającego przez ten węzeł.
+
+\textbf{Scenariusz C} — usunięcie krawędzi do~tabeli docelowej —
+symuluje ukrycie zależności na~ostatnim etapie potoku ETL, kiedy
+krawędź do~tabeli docelowej (\emph{data mart}) nie~zostaje utrwalona.
+Usuwane są krawędzie wchodzące do~wybranego węzła \emph{table}
+o~zerowym lub~niskim stopniu wyjściowym, co~odpowiada tabelom
+końcowym w~hierarchii przepływu danych.
+
+% TODO (WYMAGANE): Wstawić tabelę zbiorczą scenariuszy:
+%   Scenariusz | Co usuwamy | Co symuluje | Typ węzłów dotkniętych
+%   Tabela musi być poprzedzona zdaniem „Tabela X przedstawia...".
+
+% TODO (OPCJONALNIE): Wstawić poglądowe rysunki małego grafu
+%   przed i~po usunięciu krawędzi dla~każdego scenariusza.
+%   Rysunki muszą być wprowadzone zdaniem w~tekście.
+
+% ============================================================
+\section{Zaimplementowane algorytmy}
+\label{sec:algorytmy}
+% ============================================================
+
+W~pracy zaimplementowano trzy grupy algorytmów wykrywania
+brakujących krawędzi. Pierwszą grupę stanowią heurystyki grafowe
+— metody niewymagające uczenia, opierające się wyłącznie na~strukturze
+grafu. Drugą grupę tworzą klasyczne metody uczenia maszynowego,
+budujące klasyfikator na~podstawie wektora cech topologicznych
+pary węzłów. Trzecia grupa obejmuje metody zanurzeń sieciowych
+(\emph{network embeddings}), reprezentowane przez algorytm Node2Vec.
+
+% ============================================================
+\subsection{Heurystyki grafowe}
+% ============================================================
+
+Heurystyki grafowe stanowią najprostszą klasę metod wykrywania krawędzi
+(\emph{link prediction}). Wynik dla~pary węzłów $(u, v)$ wyznaczany jest
+wyłącznie na~podstawie lokalnej lub~globalnej struktury grafu, bez~etapu
+trenowania modelu. Metody te charakteryzują się niską złożonością
+obliczeniową i~pełną interpretowalnością, co~czyni je~naturalnym punktem
+odniesienia (ang.\ \emph{baseline}) przy~porównywaniu bardziej
+zaawansowanych podejść~\cite{LibenNowell2007}.
+
+Wstępna analiza struktury grafów DLG-DG-23 wykazała, że~miary oparte
+na~wspólnych sąsiadach — Common Neighbors, indeks Jaccarda
+i~miara Adamic-Adar — są nieskuteczne w~grafach dwudzielnych.
+W~strukturze bipartite węzły tego samego typu (\emph{job}--\emph{job}
+lub~\emph{table}--\emph{table}) nigdy nie~posiadają wspólnych sąsiadów
+bezpośrednich, ponieważ krawędzie \emph{data\_flow} łączą wyłącznie
+węzły różnych typów. W~konsekwencji wymienione miary zwracają wynik
+zerowy dla~każdej typologicznie dopuszczalnej pary kandydackiej,
+co~dyskwalifikuje je~jako metody wykrywania w~omawianym scenariuszu.
+W~implementacji uwzględniono wyłącznie heurystyki działające poprawnie
+na~grafach dwudzielnych: Preferential Attachment, L3, Katz
+oraz~Personalized PageRank.
+
+\subsubsection{Preferential Attachment}
+
+Miara \emph{Preferential Attachment} (PA) opiera się na~obserwacji,
+że~w~sieciach rzeczywistych nowe połączenia powstają z~prawdopodobieństwem
+proporcjonalnym do~stopnia istniejących węzłów — węzły o~wielu sąsiadach
+z~większym prawdopodobieństwem pozyskują kolejne
+połączenia~\cite{Barabasi1999}. Jako heurystyka wykrywania krawędzi PA
+została zastosowana przez Liben-Nowella i~Kleinberga~\cite{LibenNowell2007}.
+
+Dla~pary węzłów $(u, v)$ wynik PA definiuje się jako:
+%
+\[
+  \mathrm{PA}(u, v) = |N(u)| \cdot |N(v)|,
+\]
+%
+gdzie $N(u)$ oraz $N(v)$ oznaczają zbiory sąsiadów odpowiednio węzła $u$
+i~węzła $v$, a~$|\cdot|$ oznacza rozmiar zbioru, tj.\ stopień węzła w~grafie.
+
+W~kontekście grafów lineage wysoki stopień węzła \emph{job} oznacza,
+że~dane zadanie czyta z~wielu tabel źródłowych lub~zapisuje do~wielu
+tabel docelowych; wysoki stopień węzła \emph{table} wskazuje na~tabelę
+centralną — często pośrednią warstwę integracyjną w~potoku ETL.
+Para $(u, v)$, w~której oba węzły mają duże stopnie, otrzymuje wysoki
+wynik PA, co~interpretuje się jako sygnał potencjalnej zależności
+\emph{data\_flow}. Miara PA nie~wymaga istnienia wspólnych sąsiadów,
+co~stanowi jej kluczową przewagę w~grafach dwudzielnych.
+
+\subsubsection{L3}
+
+Miara L3 (ang.\ \emph{path of length 3}) liczy ścieżki długości~3
+między węzłami $u$ i~$v$~\cite{LibenNowell2007}. W~grafie dwudzielnym
+ścieżka długości~3 między węzłem \emph{job} a~węzłem \emph{table}
+przebiega przez pośredni węzeł \emph{table} i~pośredni węzeł \emph{job}
+— co odpowiada wzorcowi: zadanie~$u$ czyta z~tabeli~$t_1$, tabela~$t_1$
+jest zapisywana przez zadanie~$j_1$, zadanie~$j_1$ czyta z~tabeli~$v$.
+Wysoka wartość L3 sygnalizuje, że~para $(u, v)$ jest gęsto połączona
+przez pośrednie obiekty, co~w~kontekście broken lineage może wskazywać
+na~zależność ukrytą przez tabelę tymczasową.
+
+Wynik L3 dla~pary $(u, v)$ definiuje się jako:
+%
+\[
+  \mathrm{L3}(u, v) = \sum_{w \in V} A_{uw} \cdot A_{wv}^{(2)},
+\]
+%
+gdzie $A$ oznacza macierz sąsiedztwa grafu, a~$A^{(2)} = A \cdot A$
+— jej kwadrat (liczba ścieżek długości~2 między węzłami).
+W~praktyce L3 obliczany jest jako element $(u,v)$ macierzy $A^3$.
+
+\subsubsection{Katz}
+
+Miara Katza uogólnia L3, sumując wkłady ścieżek wszystkich długości
+z~wykładniczo malejącymi wagami~\cite{LibenNowell2007}:
+%
+\[
+  \mathrm{Katz}(u, v) = \sum_{l=1}^{\infty} \beta^{l} \cdot |{\rm paths}_{uv}^{(l)}|
+  = \left[(I - \beta A)^{-1} - I\right]_{uv},
+\]
+%
+gdzie $\beta \in (0, 1)$ jest parametrem tłumienia, $A$ — macierzą
+sąsiedztwa, a~$|{\rm paths}_{uv}^{(l)}|$ — liczbą ścieżek długości~$l$
+między węzłami $u$ i~$v$. Mała wartość $\beta$ sprawia, że~dominujący
+wkład pochodzi od~ścieżek najkrótszych. W~eksperymentach przyjęto
+$\beta = 0{,}005$, co~zapewnia numeryczną stabilność obliczeń
+przy~dużych grafach zbioru DLG-DG-23.
+
+\subsubsection{Personalized PageRank}
+
+\emph{Personalized PageRank} (PPR) realizuje ideę błądzenia losowego
+z~restartem (\emph{random walk with restart})~\cite{LibenNowell2007}.
+Dla~każdego węzła źródłowego $u$ oblicza się stacjonarny rozkład
+prawdopodobieństwa błądzenia, które z~prawdopodobieństwem $\alpha$
+powraca do~węzła $u$, a~z~prawdopodobieństwem $1 - \alpha$ przechodzi
+do~losowego sąsiada. Wynik $\mathrm{PPR}(u, v)$ interpretuje się
+jako prawdopodobieństwo odwiedzenia węzła $v$ podczas błądzenia
+zainicjowanego w~$u$; wysoka wartość wskazuje na~bliskie sąsiedztwo
+strukturalne. W~eksperymentach przyjęto $\alpha = 0{,}85$ (standardowa
+wartość stosowana w~bibliotece NetworkX). Ze~względu na~koszt obliczenia
+pełnej macierzy PPR dla~dużych grafów zastosowano obliczenia wsadowe
+(\emph{batch computation}) z~wektorem startowym ograniczonym
+do~węzłów zbioru treningowego.
+
+% ============================================================
+\subsection{Klasyczne metody uczenia maszynowego}
+\label{sec:ml}
+% ============================================================
+
+Klasyczne metody uczenia maszynowego traktują problem wykrywania krawędzi
+jako binarną klasyfikację, w~której wejściem jest wektor cech opisujący
+parę węzłów $(u, v)$. Ze~względu na~anonimizację zbioru DLG-DG-23
+(nazwy węzłów w~formacie UUID) jako cechy przyjęto wyłącznie atrybuty
+topologiczne grafu — metryki oparte na~podobieństwie nazw (np.~Jaro-Winkler
+stosowane w~\cite{Boinski2025}) są w~tym zbiorze nieaplikowalne.
+
+\subsubsection{Wektor cech}
+
+Dla~każdej pary kandydackiej $(u, v)$ wyznaczany jest wektor
+11~cech topologicznych. Tabela~\ref{tab:cechy} przedstawia pełną
+listę zastosowanych cech.
+
+% TODO (WYMAGANE): Wstawić tabelę z opisem 11 cech:
+%   Nr | Nazwa cechy | Opis | Uzasadnienie
+%   Tabela musi być poprzedzona zdaniem „Tabela~X przedstawia...".
+%   Uwzględnić: stopnie węzłów u i v, shortest_path, wyniki PA/L3/Katz/PPR,
+%   przynależność do składowej spójnej, clustering coefficient itp.
+
+Najwyższą istotność predykcyjną wykazuje cecha \emph{shortest\_path}
+(długość najkrótszej ścieżki między $u$ a~$v$ w~grafie nieskierowanym),
+co wskazuje, że~pary węzłów blisko połączonych w~istniejącej strukturze
+grafu z~dużym prawdopodobieństwem są ze~sobą powiązane krawędzią
+\emph{data\_flow} — nawet jeśli krawędź bezpośrednia nie~jest
+obserwowana. Cecha ta~uzyskała ważność 52{,}6\% w~modelu Random Forest,
+co~potwierdzono metodą permutacji na~zbiorze walidacyjnym.
+
+\subsubsection{Random Forest}
+
+Random Forest (RF) to~metoda uczenia zespołowego (\emph{ensemble
+learning}) oparta na~uśrednianiu predykcji drzew decyzyjnych
+wytrenowanych na~losowych podpróbkach danych i~cech
+(\emph{bagging})~\cite{LibenNowell2007}. W~celu obsługi
+niezrównoważonych klas zastosowano parametr
+\texttt{class\_weight=\textquotedbl{}balanced\textquotedbl{}},
+który skaluje wagi klas odwrotnie proporcjonalnie do~ich liczności.
+
+\subsubsection{RUSBoost}
+
+RUSBoost (\emph{Random Under-Sampling Boosting}) łączy algorytm
+boostingu AdaBoost z~losowym podpróbkowaniem klasy większościowej
+przed każdą iteracją. Metoda ta~jest szczególnie skuteczna przy silnym
+niezbalansowaniu klas, typowym dla~problemu wykrywania krawędzi
+w~rzadkich grafach. W~niniejszej pracy algorytm RUSBoost zaimplementowano
+w~celu bezpośredniego porównania z~wynikami Boińskiego
+et~al.~\cite{Boinski2025}, którzy uzyskali wartość F1~=~0{,}79
+na~danych syntetycznych.
+
+\subsubsection{LightGBM}
+
+LightGBM to~implementacja gradientowego boostingu drzew decyzyjnych
+(\emph{Gradient Boosted Decision Trees}) zoptymalizowana pod~kątem
+wydajności i~skalowalności. W~odróżnieniu od~Random Forest, LightGBM
+buduje kolejne drzewa w~sposób sekwencyjny, każde minimalizując błąd
+resztkowy poprzednika. Parametr \texttt{scale\_pos\_weight} ustawiono
+na~stosunek liczby próbek negatywnych do~pozytywnych, co~kompensuje
+niezbalansowanie klas bez~konieczności podpróbowania.
+
+% ============================================================
+\subsection{Zanurzenia sieciowe — Node2Vec}
+\label{sec:node2vec}
+% ============================================================
+
+\emph{Node2Vec} to~metoda uczenia reprezentacji węzłów grafu
+(\emph{node embeddings}), opierająca się na~biased random walks
+i~modelu Skip-gram~\cite{LibenNowell2007}. Każdemu węzłowi $v$
+przypisywany jest wektor $\mathbf{z}_v \in \mathbb{R}^d$, zwany
+zanurzeniem (\emph{embedding}), tak by~węzły o~podobnym kontekście
+strukturalnym w~grafie były reprezentowane przez geometrycznie bliskie
+wektory.
+
+\subsubsection{Biased random walk}
+
+Błądzenie losowe rozpoczyna się od~węzła $v$ i~na~każdym kroku
+wybiera następny węzeł spośród sąsiadów bieżącego węzła
+z~prawdopodobieństwem kontrolowanym przez dwa hiperparametry:
+
+\begin{itemize}
+  \item $p$ — parametr powrotu (\emph{return parameter}): kontroluje
+        prawdopodobieństwo powrotu do~poprzednio odwiedzonego węzła;
+        mała wartość $p$ sprzyja eksploatacji lokalnego sąsiedztwa,
+  \item $q$ — parametr ekspansji (\emph{in-out parameter}): kontroluje
+        skłonność do~oddalania się od~węzła startowego; wartość $q < 1$
+        faworyzuje eksplorację dalszych obszarów grafu (strategia DFS),
+        natomiast $q > 1$ — eksplorację lokalną (strategia BFS).
+\end{itemize}
+
+W~eksperymentach przyjęto $p = 1$ i~$q = 0{,}5$, co~sprzyja
+eksploracji struktury globalnej grafu dwudzielnego — biased walk
+z~$q < 1$ chętniej przemierza ścieżki prowadzące przez węzły obu
+typów (\emph{job} i~\emph{table}), co~jest korzystne przy uczeniu
+się reprezentacji par kandydackich.
+
+\subsubsection{Generowanie embeddingu krawędzi}
+
+Wykrywanie krawędzi wymaga przekształcenia pary zanurzeń węzłów
+$(\mathbf{z}_u, \mathbf{z}_v)$ w~pojedynczy wektor reprezentujący
+potencjalną krawędź $(u, v)$. Zastosowano iloczyn Hadamarda:
+%
+\[
+  \mathbf{e}_{uv} = \mathbf{z}_u \odot \mathbf{z}_v,
+\]
+%
+gdzie $\odot$ oznacza mnożenie element po~elemencie. Uzyskany
+wektor $\mathbf{e}_{uv} \in \mathbb{R}^d$ podawany jest na~wejście
+klasyfikatora — wielowarstwowej sieci neuronowej (ang.\
+\emph{Multilayer Perceptron}, MLP) z~jedną warstwą ukrytą.
+
+\subsubsection{Różnica względem grafowych sieci neuronowych}
+
+Należy podkreślić, że~Node2Vec nie~jest grafową siecią neuronową
+(ang.\ \emph{Graph Neural Network}, GNN). Metoda ta~uczy reprezentacji
+węzłów wyłącznie na~podstawie sekwencji węzłów generowanych przez
+błądzenie losowe (analogicznie do~metody Word2Vec na~sekwencjach
+słów), bez~mechanizmu propagacji wiadomości (\emph{message passing})
+charakterystycznego dla~GNN, takich jak GraphSAGE, R-GCN czy~HGT.
+W~konsekwencji Node2Vec nie~uwzględnia atrybutów węzłów ani
+typów krawędzi podczas uczenia zanurzeń. Rozszerzenie pracy
+o~właściwe grafowe sieci neuronowe wskazano w~rozdziale~5 jako
+kierunek dalszych badań.
