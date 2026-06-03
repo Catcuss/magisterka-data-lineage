@@ -193,15 +193,17 @@
 \chapter{Wstęp}
 
 Współczesne systemy bazodanowe przetwarzają dane za~pośrednictwem złożonych
-potoków transformacji SQL. W~środowiskach korporacyjnych dane są wielokrotnie
+potoków przetwarzania danych. W~środowiskach korporacyjnych dane są wielokrotnie
 agregowane i~przekształcane przez sekwencje zapytań, a~wyniki pośrednie
 przechowywane w~tabelach tymczasowych. Tymczasowość tych obiektów sprawia,
 że~po~zakończeniu procesu przetwarzania ślad po~wykonanych transformacjach
 zanika, a zatem niemożliwe staje się ustalenie, skąd pochodzi dana wartość
-w~tabeli wynikowej ani jakie operacje ją~wytworzyły. Zjawisko to, określane
-w~literaturze jako \emph{data lineage} bądź \emph{data provenance}, stanowi
-istotny problem zarówno z~perspektywy audytu danych, jak i~ich
-jakości~\cite{Psallidas2022,Yamada2023}.
+w~tabeli wynikowej ani jakie operacje ją~wytworzyły. Śledzenie takich zależności, 
+czyli ustalanie, skąd pochodzi dana wartość i jakie operacje ją wytworzyły, 
+jest przedmiotem dziedziny określanej w literaturze jako \emph{data lineage} 
+lub \emph{data provenance}~\cite{Psallidas2022,Yamada2023}. 
+Brak pełnej informacji o przepływie danych utrudnia audyt i kontrolę 
+jakości danych.
 
 Formalnie problem ten można wyrazić w~kategoriach teorii grafów: graf
 zależności (ang. \emph{lineage graph}) reprezentuje przepływ danych między
@@ -209,16 +211,16 @@ obiektami bazy takimi jak tabele, widoki, zapytania oraz~ich atrybutami.
 Gdy~pewne węzły lub~krawędzie zostaną utracone (np.~z~powodu usunięcia
 tabeli tymczasowej lub zastosowania funkcji definiowanej przez użytkownika),
 mówi się o~zjawisku \emph{broken lineage}~(Boinski et al. 2025)\cite{Boinski2025}. Celem
-niniejszej pracy jest zastosowanie algorytmów wykrywania brakujących krawędzi
+niniejszej pracy jest zastosowanie i ewaluacja skutecznośći algorytmów wykrywania brakujących krawędzi
 w~celu odtworzenia przerwanych połączeń w~grafie lineage.
 
 W~sektorze finansowym banki są zobowiązane do~wykazania, które transakcje
 źródłowe złożyły się na~poszczególne pozycje raportów kwartalnych, przerwanie
-grafu zależności w~warstwie ETL(\emph{Extract, Transform, Load}) uniemożliwia przeprowadzenie takiego audytu.
+grafu zależności w~warstwie ETL(\emph{Extract, Transform, Load}) uniemożliwia przeprowadzenie takiego audytu~\cite{Boinski2025}.
 Podobne konsekwencje niesie Rozporządzenie o~Ochronie Danych Osobowych (RODO):
 brak pełnego grafu lineage sprawia, że~dotarcie do~wszystkich kopii danych
 konkretnej osoby jest czasochłonne lub~niemożliwe, co~może skutkować
-nałożeniem kar finansowych.
+nałożeniem kar finansowych~\cite{Boinski2025}.
 
 
 \section{Cel i~zakres pracy}
@@ -229,7 +231,7 @@ brakujących krawędzi w~grafach lineage. Zakres obejmuje trzy klasy metod:
 \begin{itemize}
   \item heurystyki grafowe (ang. \emph{graph heuristics}),
   \item klasyczne metody uczenia maszynowego (ang. \emph{Machine Learning}, ML),
-  \item embeddingi węzłów grafu (ang. \emph{node embeddings}).
+  \item zanurzenia węzłów grafu (ang. \emph{node embeddings}).
 \end{itemize}
 
 Eksperymenty przeprowadzono na~zbiorze danych DLG-DG-23, obejmującym
@@ -331,10 +333,12 @@ Krawędzie grafu przyjmują dwa typy:
         (polem); wyraża relację przynależności kolumny do~tabeli.
 \end{itemize}
 
-Graf jest dwudzielny w~tej~części, w~której węzły job i~table tworzą
-rozłączne zbiory połączone wyłącznie krawędziami data\_flow. Właściwość
-dwudzielności odzwierciedla strukturę przetwarzania ETL: dane przepływają
-między magazynami danych (table) a~procesami transformacji (job).
+Pełny graf DLG-DG-23 jest grafem heterogenicznym: zawiera węzły trzech
+typów połączone krawędziami dwóch typów. W~niniejszej pracy predykcja
+krawędzi ogranicza się do podgrafu indukowanego przez węzły \textit{job}
+i~\textit{table} powiązane krawędziami \textit{data\_flow}. Podgraf ten
+ma strukturę dwudzielną, każda krawędź łączy węzeł jednego typu
+z~węzłem drugiego.
 
 % TODO: Warto dodać rysunek poglądowy — przykładowy mały graf z węzłami
 %       job, table, field i krawędziami data_flow, parent_child.
@@ -384,8 +388,11 @@ W~pracy zastosowano trzy klasy algorytmów:
 
 \begin{enumerate}
   \item \textbf{Heurystyki grafowe} — miary podobieństwa sąsiedztwa węzłów,
-        takie jak Common Neighbors, indeks Jaccarda i~miara Adamic-Adar;
+        takie jak Common Neighbors, indeks Jaccarda i~miara Adamic-Adar~\cite{LibenNowell2007};
         nie~wymagają uczenia, opierają się wyłącznie na~strukturze grafu.
+        Miary oparte na~wspólnych sąsiadach wymagają adaptacji dla~grafów
+        dwudzielnych, w~których węzły tego samego typu nie~posiadają
+        wspólnych sąsiadów bezpośrednich (omówiono w~sekcji~\ref{sec:algorytmy}).
   \item \textbf{Klasyczne metody ML} — Random Forest, RUSBoost i~LightGBM;
         wykorzystują wektory cech opisujących pary węzłów,
         w~tym cechy strukturalne grafu i~metryki podobieństwa nazw
@@ -431,8 +438,7 @@ charakterystycznych dla~grafów rzadkich, gdzie liczba potencjalnych
 brakujących krawędzi wielokrotnie przewyższa liczbę krawędzi
 rzeczywistych~\cite{Boinski2025,KohanMarzagao2023}.
 
-% TODO: Sprawdzić, czy AUC-ROC jest faktycznie raportowane w kodzie —
-%       jeśli nie, usunąć lub zastąpić metryką AUC-PR.
+
 
 \section{Wyniki systematycznego przeglądu literatury}
 \label{sec:literatura}
@@ -626,9 +632,9 @@ Heurystyki grafowe stanowią najprostszą klasę metod wykrywania krawędzi
 (\textit{link prediction}). Wynik dla pary węzłów $(u, v)$ wyznaczany jest
 wyłącznie na podstawie lokalnej lub globalnej struktury grafu bez etapu
 trenowania modelu. Metody te charakteryzują się niską złożonością obliczeniową
-i~pełną interpretowalością, co czyni je naturalnym punktem odniesienia
+i~pełną interpretowalnością, co czyni je naturalnym punktem odniesienia
 (ang.\ \textit{baseline}) przy porównywaniu bardziej zaawansowanych
-podejść.
+podejść~\cite{LibenNowell2007}.
 % pierwsza systematyczna ewaluacja heurystyk grafowych jako baseline dla link prediction
 
 \subsubsection{Preferential Attachment}
@@ -649,7 +655,7 @@ Dla pary węzłów $(u, v)$ wynik PA definiuje się jako:
 \]
 %
 gdzie $N(u)$ oraz $N(v)$ oznaczają zbiory sąsiadów odpowiednio węzła $u$
-i~węzła $v$, a~$|\cdot|$ denotes rozmiar zbioru, tj.\ stopień węzła w~grafie.
+i~węzła $v$, a~$|\cdot|$ oznacza rozmiar zbioru, tj.\ stopień węzła w~grafie.
 
 W~kontekście grafów \textit{lineage} węzły grafu dwudzielnego DLG-DG-23 dzielą
 się na dwa typy: zadania przetwarzania danych (\textit{job}) oraz tabele
