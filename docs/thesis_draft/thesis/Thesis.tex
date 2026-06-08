@@ -43,7 +43,7 @@
 
 \title{Odkrywanie zależności między obiektami w~bazie danych}
 
-\ppsupervisor{dr hab.~inż.~Robert Wrembel, prof.~PP}
+\ppsupervisor{dr hab.~inż.~Robert Wrembel, prof.~PP.}
 
 \ppyear{2026}
 
@@ -64,8 +64,8 @@
 \vfill\cleardoublepage%
 
 % ── Streszczenie (PL) ───────────────────────────────────────
-\chapter*{Streszczenie}
-\addcontentsline{toc}{chapter}{Streszczenie}
+%\chapter*{Streszczenie}
+%\addcontentsline{toc}{chapter}{Streszczenie}
 
 % UWAGA REDAKCYJNA: Streszczenie zawiera cel, problem, lukę badawczą i metodykę.
 %   Brakuje wyników liczbowych — uzupełnić po zakończeniu eksperymentów.
@@ -74,58 +74,58 @@
 
 % TODO (WYMAGANE): Uzupełnić ostatni akapit o konkretne wartości F1/AUC-ROC.
 
-Data lineage i~data provenance to~pojęcia opisujące śledzenie przepływu
-danych i~historię transformacji danych w~systemach bazodanowych. Grafy
-lineage reprezentują obiekty bazodanowe — tabele, widoki, kolumny — jako
-węzły, a~transformacje danych jako krawędzie. Znajomość zależności między
-obiektami w~bazie danych jest kluczowa z~punktu widzenia zapewnienia
-jakości danych, audytu procesów ekstrakcji, transformacji i~ładowania
-danych (ang. \emph{Extract, Transform, Load}, ETL), debugowania potoków
-danych oraz spełnienia wymogów regulacyjnych takich jak RODO.
+%Data lineage i~data provenance to~pojęcia opisujące śledzenie przepływu
+%danych i~historię transformacji danych w~systemach bazodanowych. Grafy
+%lineage reprezentują obiekty bazodanowe — tabele, widoki, kolumny — jako
+%węzły, a~transformacje danych jako krawędzie. Znajomość zależności między
+%obiektami w~bazie danych jest kluczowa z~punktu widzenia zapewnienia
+%jakości danych, audytu procesów ekstrakcji, transformacji i~ładowania
+%danych (ang. \emph{Extract, Transform, Load}, ETL), debugowania potoków
+%danych oraz spełnienia wymogów regulacyjnych takich jak RODO.
 
-Głównym problemem rozważanym w~niniejszej pracy jest zjawisko tzw.\
-\emph{broken lineage} — zerwania ciągłości grafu zależności. Do~zerwania
-ciągłości dochodzi, gdy w~procesach przetwarzania danych używane są tabele
-tymczasowe lub funkcje definiowane przez użytkownika (ang.
-\emph{User-Defined Function}, UDF). Tabele tymczasowe nie są rejestrowane
-w~standardowych słownikach bazy danych, a~UDF ukrywają wewnętrzną logikę
-transformacji. W~obu przypadkach automatyczne odtworzenie pełnego grafu
-zależności nie jest możliwe — w~grafie lineage pojawiają się brakujące
-krawędzie, których nie można ustalić na~podstawie dostępnych metadanych.
+%Głównym problemem rozważanym w~niniejszej pracy jest zjawisko tzw.\
+%\emph{broken lineage} — zerwania ciągłości grafu zależności. Do~zerwania
+%ciągłości dochodzi, gdy w~procesach przetwarzania danych używane są tabele
+%tymczasowe lub funkcje definiowane przez użytkownika (ang.
+%\emph{User-Defined Function}, UDF). Tabele tymczasowe nie są rejestrowane
+%w~standardowych słownikach bazy danych, a~UDF ukrywają wewnętrzną logikę
+%transformacji. W~obu przypadkach automatyczne odtworzenie pełnego grafu
+%zależności nie jest możliwe — w~grafie lineage pojawiają się brakujące
+%krawędzie, których nie można ustalić na~podstawie dostępnych metadanych.
 
-Istniejące narzędzia klasy data governance umożliwiają śledzenie lineage
-w~czasie rzeczywistym, lecz wymagają dostępu do~pełnych metadanych
-i~nie rozwiązują problemu brakujących krawędzi. W~literaturze naukowej
-podejmowane są próby rozwiązania tego problemu przy użyciu analizy logów
-systemowych, przepisywania zapytań SQL oraz uczenia maszynowego.
-Dotychczasowe podejścia nie obejmują jednak analizy wpływu struktury grafu
-lineage na~dobór algorytmów predykcji. Grafy lineage mają charakter
-dwudzielny — krawędzie przepływu danych łączą wyłącznie węzły tabela
-i~zadanie ETL — co powoduje, że~klasyczne heurystyki grafowe oparte
-na~wspólnych sąsiadach są w~tym kontekście nieskuteczne.
+%Istniejące narzędzia klasy data governance umożliwiają śledzenie lineage
+%w~czasie rzeczywistym, lecz wymagają dostępu do~pełnych metadanych
+%i~nie rozwiązują problemu brakujących krawędzi. W~literaturze naukowej
+%podejmowane są próby rozwiązania tego problemu przy użyciu analizy logów
+%systemowych, przepisywania zapytań SQL oraz uczenia maszynowego.
+%Dotychczasowe podejścia nie obejmują jednak analizy wpływu struktury grafu
+%lineage na~dobór algorytmów wykrywania. Grafy lineage mają charakter
+%dwudzielny — krawędzie przepływu danych łączą wyłącznie węzły tabela
+%i~zadanie ETL — co powoduje, że~klasyczne heurystyki grafowe oparte
+%na~wspólnych sąsiadach są w~tym kontekście nieskuteczne.
 
-W~ramach niniejszej pracy zaimplementowano i~porównano trzy grupy
-algorytmów predykcji brakujących krawędzi w~grafach lineage: heurystyki
-grafowe (Common Neighbors, Jaccard, Adamic-Adar, Preferential Attachment,
-L3), algorytmy uczenia maszynowego oparte na~cechach topologicznych grafu
-(Random Forest, RUSBoost, LightGBM) oraz metody zanurzeń sieciowych
-(\emph{network embeddings}) reprezentowane przez Node2Vec. Tę ostatnią
-grupę celowo odróżniono od~grafowych sieci neuronowych (GNN), z~którymi
-bywa~mylona — Node2Vec uczy reprezentacji wektorowych węzłów poprzez
-biased random walks, bez~mechanizmu propagacji wiadomości
-(\emph{message passing}) charakterystycznego dla GNN. Algorytmy
-poddano ocenie z~użyciem metryk F1, precyzji, czułości oraz AUC-ROC
-i~AUC-PR na~zbiorze danych DLG-DG-23, zawierającym 18~grafów lineage
-ze~środowiska Huawei Cloud.
+%W~ramach niniejszej pracy zaimplementowano i~porównano trzy grupy
+%algorytmów wykrywania brakujących krawędzi w~grafach lineage: heurystyki
+%grafowe (Common Neighbors, Jaccard, Adamic-Adar, Preferential Attachment,
+%L3), algorytmy uczenia maszynowego oparte na~cechach topologicznych grafu
+%(Random Forest, RUSBoost, LightGBM) oraz metody zanurzeń sieciowych
+%(\emph{network embeddings}) reprezentowane przez Node2Vec. Tę ostatnią
+%grupę celowo odróżniono od~grafowych sieci neuronowych (GNN), z~którymi
+%bywa~mylona — Node2Vec uczy reprezentacji wektorowych węzłów poprzez
+%biased random walks, bez~mechanizmu propagacji wiadomości
+%(\emph{message passing}) charakterystycznego dla GNN. Algorytmy
+%poddano ocenie z~użyciem metryk F1, precyzji, czułości oraz AUC-ROC
+%i~AUC-PR na~zbiorze danych DLG-DG-23, zawierającym 18~grafów lineage
+%ze~środowiska Huawei Cloud.
 
 % TODO (WYMAGANE): Dodać zdanie z wynikami, np.:
 %   „Najlepsze wyniki uzyskał algorytm X, osiągając wartość F1 równą Y
 %    w scenariuszu Z."
 
-\bigskip
-\noindent\textbf{Słowa kluczowe:} data lineage, data provenance, broken
-lineage, predykcja krawędzi, uczenie maszynowe, grafy dwudzielne,
-Node2Vec, RUSBoost.
+%\bigskip
+%\noindent\textbf{Słowa kluczowe:} data lineage, data provenance, broken
+%lineage, wykrywanie krawędzi, uczenie maszynowe, grafy dwudzielne,
+%Node2Vec, RUSBoost.
 
 % ── Abstract (EN) ───────────────────────────────────────────
 \chapter*{Abstract}
@@ -134,48 +134,48 @@ Node2Vec, RUSBoost.
 % TODO (WYMAGANE): Add a sentence with numerical results after experiments,
 %   e.g., "The best-performing algorithm achieved an F1 score of X in scenario Y."
 
-Data lineage and data provenance refer to tracking data flow and
-transformation history in database systems. Lineage graphs represent
-database objects — tables, views, columns — as nodes and data
-transformations as edges. Knowledge of dependencies between database
-objects is essential for data quality assurance, auditing
-Extract-Transform-Load (ETL) processes, debugging data pipelines, and
-compliance with regulations such as GDPR.
+%Data lineage and data provenance refer to tracking data flow and
+%transformation history in database systems. Lineage graphs represent
+%database objects — tables, views, columns — as nodes and data
+%transformations as edges. Knowledge of dependencies between database
+%objects is essential for data quality assurance, auditing
+%Extract-Transform-Load (ETL) processes, debugging data pipelines, and
+%compliance with regulations such as GDPR.
 
-The main problem addressed in this thesis is the phenomenon of
-\emph{broken lineage} — gaps in the continuity of the dependency graph.
-These gaps occur when data processing pipelines use temporary tables or
-user-defined functions (UDFs). Temporary tables are not registered in
-standard database catalogs, and UDFs hide the internal transformation
-logic. In both cases, automatic reconstruction of the full dependency
-graph is not possible — the lineage graph contains missing edges that
-cannot be determined from available metadata.
+%The main problem addressed in this thesis is the phenomenon of
+%\emph{broken lineage} — gaps in the continuity of the dependency graph.
+%These gaps occur when data processing pipelines use temporary tables or
+%user-defined functions (UDFs). Temporary tables are not registered in
+%standard database catalogs, and UDFs hide the internal transformation
+%logic. In both cases, automatic reconstruction of the full dependency
+%graph is not possible — the lineage graph contains missing edges that
+%cannot be determined from available metadata.
 
-Existing data governance tools support real-time lineage tracking, but
-they require access to complete metadata and do not address the problem
-of missing edges. Research literature attempts to solve this problem using
-system log analysis, SQL query rewriting, and machine learning. However,
-existing approaches do not analyze the impact of lineage graph structure
-on algorithm selection. Lineage graphs have a bipartite structure —
-data-flow edges connect only table--job node pairs — which makes classical
-neighborhood-based graph heuristics ineffective in this context.
+%Existing data governance tools support real-time lineage tracking, but
+%they require access to complete metadata and do not address the problem
+%of missing edges. Research literature attempts to solve this problem using
+%system log analysis, SQL query rewriting, and machine learning. However,
+%existing approaches do not analyze the impact of lineage graph structure
+%on algorithm selection. Lineage graphs have a bipartite structure —
+%data-flow edges connect only table--job node pairs — which makes classical
+%neighborhood-based graph heuristics ineffective in this context.
 
-In this thesis, three groups of algorithms for predicting missing edges in
-lineage graphs are implemented and compared: graph heuristics (Common
-Neighbors, Jaccard, Adamic-Adar, Preferential Attachment, L3), machine
-learning algorithms based on topological graph features (Random Forest,
-RUSBoost, LightGBM), and a network embedding method represented by
-Node2Vec. The latter group is deliberately distinguished from
-Graph Neural Networks (GNNs) with which it is sometimes confused —
-Node2Vec learns node representations via biased random walks, without
-the message-passing mechanism characteristic of GNNs. The algorithms
-are evaluated using F1, precision, recall, AUC-ROC, and AUC-PR
-metrics on the DLG-DG-23 dataset, comprising 18~lineage graphs from
-a~Huawei Cloud environment.
+%In this thesis, three groups of algorithms for predicting missing edges in
+%lineage graphs are implemented and compared: graph heuristics (Common
+%Neighbors, Jaccard, Adamic-Adar, Preferential Attachment, L3), machine
+%learning algorithms based on topological graph features (Random Forest,
+%RUSBoost, LightGBM), and a network embedding method represented by
+%Node2Vec. The latter group is deliberately distinguished from
+%Graph Neural Networks (GNNs) with which it is sometimes confused —
+%Node2Vec learns node representations via biased random walks, without
+%the message-passing mechanism characteristic of GNNs. The algorithms
+%are evaluated using F1, precision, recall, AUC-ROC, and AUC-PR
+%metrics on the DLG-DG-23 dataset, comprising 18~lineage graphs from
+%a~Huawei Cloud environment.
 
-\bigskip
-\noindent\textbf{Keywords:} data lineage, data provenance, broken lineage,
-link prediction, machine learning, bipartite graphs, Node2Vec, RUSBoost.
+%\bigskip
+%\noindent\textbf{Keywords:} data lineage, data provenance, broken lineage,
+%link prediction, machine learning, bipartite graphs, Node2Vec, RUSBoost.
 
 % ── Spis treści ─────────────────────────────────────────────
 \pagenumbering{Roman}\pagestyle{ppfcmthesis}%
@@ -197,7 +197,7 @@ potoków przetwarzania danych. W~środowiskach korporacyjnych dane są wielokrot
 agregowane i~przekształcane przez sekwencje zapytań, a~wyniki pośrednie
 przechowywane w~tabelach tymczasowych. Tymczasowość tych obiektów sprawia,
 że~po~zakończeniu procesu przetwarzania ślad po~wykonanych transformacjach
-zanika — niemożliwe staje się ustalenie, skąd pochodzi dana wartość
+zanika, a zatem niemożliwe staje się ustalenie, skąd pochodzi dana wartość
 w~tabeli wynikowej ani jakie operacje ją~wytworzyły. Śledzenie takich zależności, 
 czyli ustalanie, skąd pochodzi dana wartość i jakie operacje ją wytworzyły, 
 jest przedmiotem dziedziny określanej w literaturze jako \emph{data lineage} 
@@ -207,16 +207,16 @@ jakości danych.
 
 Formalnie problem ten można wyrazić w~kategoriach teorii grafów: graf
 zależności (ang. \emph{lineage graph}) reprezentuje przepływ danych między
-obiektami bazy — tabelami, widokami, zapytaniami i~ich atrybutami.
+obiektami bazy takimi jak tabele, widoki, zapytania oraz~ich atrybutami.
 Gdy~pewne węzły lub~krawędzie zostaną utracone (np.~z~powodu usunięcia
 tabeli tymczasowej lub zastosowania funkcji definiowanej przez użytkownika),
-mówi się o~zjawisku \emph{broken lineage}~\cite{Boinski2025}. Celem
-niniejszej pracy jest zastosowanie i ewaluacja skutecznośći algorytmów predykcji brakujących krawędzi
+mówi się o~zjawisku \emph{broken lineage}~(Boinski et al. 2025)\cite{Boinski2025}. Celem
+niniejszej pracy jest zastosowanie i ewaluacja skutecznośći algorytmów wykrywania brakujących krawędzi
 w~celu odtworzenia przerwanych połączeń w~grafie lineage.
 
 W~sektorze finansowym banki są zobowiązane do~wykazania, które transakcje
-źródłowe złożyły się na~poszczególne pozycje raportów kwartalnych; przerwanie
-grafu zależności w~warstwie ETL uniemożliwia przeprowadzenie takiego audytu~\cite{Boinski2025}.
+źródłowe złożyły się na~poszczególne pozycje raportów kwartalnych, przerwanie
+grafu zależności w~warstwie ETL(\emph{Extract, Transform, Load}) uniemożliwia przeprowadzenie takiego audytu~\cite{Boinski2025}.
 Podobne konsekwencje niesie Rozporządzenie o~Ochronie Danych Osobowych (RODO):
 brak pełnego grafu lineage sprawia, że~dotarcie do~wszystkich kopii danych
 konkretnej osoby jest czasochłonne lub~niemożliwe, co~może skutkować
@@ -225,7 +225,7 @@ nałożeniem kar finansowych~\cite{Boinski2025}.
 
 \section{Cel i~zakres pracy}
 
-Celem pracy jest zbadanie skuteczności istniejących algorytmów predykcji
+Celem pracy jest zbadanie skuteczności istniejących algorytmów wykrywania
 brakujących krawędzi w~grafach lineage. Zakres obejmuje trzy klasy metod:
 
 \begin{itemize}
@@ -235,17 +235,23 @@ brakujących krawędzi w~grafach lineage. Zakres obejmuje trzy klasy metod:
 \end{itemize}
 
 Eksperymenty przeprowadzono na~zbiorze danych DLG-DG-23, obejmującym
-18~zanonimizowanych grafów dwudzielnych ze~środowiska Huawei Cloud
+18~zanonimizowanych grafów dwudzielnych ze~środowiska Huawei Cloud (Chen et al. 2024) 
 \cite{Chen2024}. Przyjęto trzy scenariusze symulacji brakujących krawędzi,
 odzwierciedlające typowe przypadki broken lineage:
 
 \begin{itemize}
-  \item \textbf{Scenariusz~A} — losowe usunięcie 20\% krawędzi ze~zbioru treningowego,
-  \item \textbf{Scenariusz~B} — symulacja ukrycia zależności przez tabelę pośrednią (staging),
-  \item \textbf{Scenariusz~C} — symulacja ukrycia krawędzi do~tabeli docelowej (data mart).
+  \item \textbf{Scenariusz~A} — symulacja ukrycia zależności przez tabelę pośrednią (staging):
+        usunięcie krawędzi wychodzących z~węzłów o~roli pośredniej
+        ($\mathrm{in\_df}>0$ i~$\mathrm{out\_df}>0$),
+  \item \textbf{Scenariusz~B} — symulacja ukrycia zależności przez funkcję UDF:
+        losowe usunięcie 20\% krawędzi wychodzących z~węzłów źródłowych
+        ($\mathrm{in\_df}=0$),
+  \item \textbf{Scenariusz~C} — symulacja ukrycia krawędzi do~tabeli docelowej (data mart):
+        usunięcie krawędzi wchodzących do~węzłów o~roli docelowej
+        ($\mathrm{out\_df}=0$).
 \end{itemize}
 
-Zakres pracy nie~obejmuje opracowania autorskiego algorytmu predykcji,
+Zakres pracy nie~obejmuje %opracowania autorskiego algorytmu wykrywania,
 odtworzenia rzeczywistego schematu bazy danych ani analizy treści
 zanonimizowanych danych.
 
@@ -253,8 +259,8 @@ zanonimizowanych danych.
 \section{Struktura pracy}
 
 Praca składa się z~pięciu rozdziałów. Rozdział~2 zawiera przegląd pojęć
-podstawowych — data lineage, data provenance, broken lineage oraz predykcja
-krawędzi — a~także omówienie wybranych prac z~literatury i~stosowanych
+podstawowych (data lineage, data provenance, broken lineage oraz wykrywanie
+krawędzi) a~także omówienie wybranych prac z~literatury i~stosowanych
 metryk ewaluacji. Rozdział~3 opisuje problem badawczy, architekturę
 zaproponowanego rozwiązania, metodykę symulacji brakujących krawędzi oraz
 zaimplementowane algorytmy. Rozdział~4 prezentuje wyniki eksperymentów
@@ -272,7 +278,7 @@ dalszych części pracy. W~sekcji~\ref{sec:lineage_def} zdefiniowano pojęcia
 data lineage i~data provenance. Sekcja~\ref{sec:graf_lineage} opisuje
 strukturę grafów lineage na~przykładzie zbioru danych DLG-DG-23.
 Sekcja~\ref{sec:broken_lineage} omawia przyczyny niekompletności grafów,
-a~sekcja~\ref{sec:link_prediction} przedstawia problem predykcji krawędzi.
+a~sekcja~\ref{sec:link_prediction} przedstawia problem wykrywania krawędzi.
 Sekcja~\ref{sec:metryki} opisuje metryki ewaluacji, a~sekcja~\ref{sec:literatura}
 zawiera przegląd wybranej literatury.
 
@@ -282,21 +288,21 @@ zawiera przegląd wybranej literatury.
 Pojęcia \emph{data lineage} i~\emph{data provenance} są w~literaturze
 stosowane zarówno zamiennie, jak i~z~rozróżnieniem semantycznym~\cite{Psallidas2022}.
 W~węższym ujęciu \emph{data lineage} odnosi się do~śledzenia przepływu
-informacji przez kolejne etapy przetwarzania — opisuje, przez jakie
+informacji przez kolejne etapy przetwarzania, opisuje, przez jakie
 transformacje przeszły dane i~jak zmieniała się ich postać. Z~kolei
-\emph{data provenance} kładzie nacisk na~pochodzenie i~autentyczność danych:
+\emph{data provenance} kładzie nacisk na~pochodzenie i~autentyczność danych,
 rejestruje, skąd dane zostały pobrane i~kto je~wytworzył. W~praktyce
 granica między tymi pojęciami jest płynna i~większość opracowań traktuje je
-jako synonimy~\cite{Yamada2023}. Takie podejście przyjęto również w~niniejszej
+jako synonimy. Takie podejście przyjęto również w~niniejszej
 pracy.
 
 Znajomość historii danych ma~istotne znaczenie praktyczne. W~systemach
 raportowych możliwość odtworzenia ścieżki transformacji pozwala zlokalizować
-źródło błędnych wartości — bez~tej informacji ręczna weryfikacja wielkich
+źródło błędnych wartości, bez~tej informacji ręczna weryfikacja wielkich
 zbiorów danych jest nieefektywna. Innym przykładem jest bezpieczne usuwanie
 obiektów bazy: tabela pozornie niepowiązana z~żadnym procesem może
 w~rzeczywistości dostarczać danych do~raportów końcowych, a~jej usunięcie
-spowoduje utratę danych bez~widocznego komunikatu~błędu~\cite{Boinski2025}.
+spowoduje utratę danych bez~widocznego komunikatu~błędu~(Boinskiet al. 2025)\cite{Boinski2025}.
 
 % TODO: Można rozszerzyć o zastosowania w zgodności z regulacjami (GDPR,
 %       audyt finansowy) — jeśli autorka chce poszerzyć kontekst biznesowy.
@@ -358,18 +364,18 @@ Zjawisko to, określane jako \emph{broken lineage}, prowadzi do~sytuacji,
 w~której graf zawiera węzły bez~połączeń lub~z~niepełnym sąsiedztwem,
 mimo że~rzeczywista zależność między odpowiadającymi im~obiektami istnieje.
 W~niniejszej pracy problem broken lineage jest modelowany jako zadanie
-predykcji brakujących krawędzi — każdej usuniętej krawędzi odpowiada para
+wykrywania brakujących krawędzi — każdej usuniętej krawędzi odpowiada para
 węzłów, dla~której algorytm ma~ocenić prawdopodobieństwo istnienia
-połączenia~\cite{Boinski2025}.
+połączenia~ (Boinski et al. 2025)\cite{Boinski2025}.
 
 % TODO: Rozważyć dodanie formalnej definicji problemu:
 %       G = (V, E) — kompletny graf, G' = (V, E \ E_b) — graf z broken lineage,
 %       cel: dla każdej pary (u,v) \in V \times V \setminus E' oszacować P((u,v) \in E).
 
-\section{Predykcja brakujących krawędzi}
+\section{Wykrywanie brakujących krawędzi}
 \label{sec:link_prediction}
 
-Predykcja brakujących krawędzi (ang. \emph{link prediction}) to~zadanie
+Wykrywanie brakujących krawędzi (ang. \emph{link prediction}) to~zadanie
 uczenia maszynowego polegające na~ocenie prawdopodobieństwa istnienia
 krawędzi między parą węzłów w~grafie~\cite{KohanMarzagao2023}. W~klasycznym
 ujęciu problem ten pojawia się w~grafach, w~których część krawędzi nigdy
@@ -395,7 +401,7 @@ W~pracy zastosowano trzy klasy algorytmów:
   \item \textbf{Zanurzenia sieciowe} (ang. \emph{network embeddings})
         — metoda Node2Vec, która odwzorowuje węzły grafu w~przestrzeni
         wektorowej tak, by~węzły o~podobnym kontekście strukturalnym były
-        reprezentowane przez zbliżone wektory; predykcja krawędzi odbywa się
+        reprezentowane przez zbliżone wektory; wykrywanie krawędzi odbywa się
         przez klasyfikator (MLP) operujący na~iloczynie Hadamarda
         embeddingów pary węzłów. Należy podkreślić, że~Node2Vec nie~jest
         grafową siecią neuronową (GNN) — uczy reprezentacji wyłącznie
@@ -411,7 +417,7 @@ W~pracy zastosowano trzy klasy algorytmów:
 \section{Metryki ewaluacji}
 \label{sec:metryki}
 
-Do~oceny jakości predykcji krawędzi stosuje się standardowe metryki
+Do~oceny jakości wykrywania krawędzi stosuje się standardowe metryki
 klasyfikacji binarnej. W~niniejszej pracy przyjęto następujące metryki:
 
 \begin{itemize}
@@ -424,8 +430,8 @@ klasyfikacji binarnej. W~niniejszej pracy przyjęto następujące metryki:
   \item \textbf{AUC-ROC} — pole pod krzywą ROC; mierzy zdolność modelu
         do~rozróżnienia par połączonych od~niepołączonych,
   \item \textbf{AUC-PR} — pole pod krzywą precyzja–czułość; szczególnie
-        miarodajne przy silnym niezbalansowaniu klas, gdy klasa pozytywna
-        (brakujące krawędzie) stanowi ułamek wszystkich par węzłów.
+        istotne przy niezrównoważonych klasach, gdy liczba par niepołączonych
+        wielokrotnie przewyższa liczbę rzeczywistych krawędzi.
 \end{itemize}
 
 Metryka F1 jest szczególnie istotna w~warunkach niezrównoważonych klas,
@@ -448,9 +454,10 @@ tła literaturowego i~potwierdzają aktualność oraz zasadność podjętego
 problemu badawczego.
 
 \subsection{Leveraging machine learning techniques for discovering broken
-lineage links \cite{Boinski2025}}
+lineage links}
+\noindent\textbf{Autorzy: }
+\noindent\textbf{Problem badawczy}
 
-\textbf{Problem badawczy}
 Ciągłość grafów \emph{data lineage} ulega przerwaniu, gdy w~potokach ETL
 (ang. \emph{Extract, Transform, Load}) wykorzystywane są obiekty pośrednie
 — tabele tymczasowe lub funkcje definiowane przez użytkownika (ang.
@@ -460,7 +467,8 @@ narzędzia klasy \emph{data governance} tracą ślad przepływu danych
 i~błędnie interpretują trwałą tabelę źródłową oraz tabelę docelową jako
 byty niezależne.
 
-\textbf{Zaproponowane rozwiązanie}
+\noindent\textbf{Zaproponowane rozwiązanie}
+
 Autorzy formułują problem rekonstrukcji przerwanych zależności jako binarną
 klasyfikację par obiektów bazodanowych. Podejście obejmuje następujące
 elementy:
@@ -482,12 +490,13 @@ syntetyczne schematy baz danych z~wykorzystaniem dużych modeli językowych
 ochroną zdrowia (model Grok) jako zbiór treningowy oraz schemat systemu
 finansowego (model Llama~3) jako zbiór testowy.
 
-\textbf{Analiza krytyczna}
+\noindent\textbf{Analiza krytyczna}
+
 Najwyższą skuteczność spośród testowanych klasyfikatorów osiągnął algorytm
 RUSBoost — miara F1 wyniosła 0{,}79. Metoda wykazuje odporność na~silne
 niezbalansowanie klas, typowe dla~tego rodzaju problemu, gdzie liczba par
 bez relacji znacznie przewyższa liczbę par powiązanych. Istotnym
-ograniczeniem jest zależność jakości predykcji od~spójności konwencji
+ograniczeniem jest zależność jakości wykrywania od~spójności konwencji
 nazewniczych stosowanych w~bazie danych oraz konieczność ręcznej weryfikacji
 danych syntetycznych generowanych przez modele LLM.
 
@@ -496,15 +505,17 @@ Zastosowane przez autorów cechy topologiczne i~modele klasyfikacji zostały
 zaadaptowane i~rozszerzone, natomiast problem \emph{broken lineage} —
 zdefiniowany w~tej publikacji — przyjęto jako centralny problem badawczy.
 
-\subsection{An open dataset of data lineage graphs \cite{Chen2024}}
+\subsection{An open dataset of data lineage graphs }
+\noindent\textbf{Autorzy: }
+\noindent\textbf{Problem badawczy}
 
-\textbf{Problem badawczy}
 Rozwój metod badawczych w~obszarze \emph{data governance} jest ograniczany
 przez brak ogólnodostępnych, rzeczywistych zbiorów danych. Przedsiębiorstwa
 nie~udostępniają grafów \emph{lineage} ze~względu na~poufność procesów
 biznesowych i~wymogi bezpieczeństwa.
 
-\textbf{Zaproponowane rozwiązanie}
+\noindent\textbf{Zaproponowane rozwiązanie}
+
 Autorzy opublikowali zbiór DLG-DG-23 — pierwszy otwarty zestaw
 rzeczywistych grafów pochodzenia danych, charakteryzujący się następującymi
 właściwościami:
@@ -519,7 +530,8 @@ właściwościami:
         relacje przepływu danych i~hierarchii.
 \end{itemize}
 
-\textbf{Analiza krytyczna}
+\noindent\textbf{Analiza krytyczna}
+
 Unikalną wartość zbioru stanowi jego rzeczywiste pochodzenie przemysłowe,
 odróżniające go od~danych generowanych syntetycznie. Zbiór umożliwia
 zastosowanie do~różnorodnych zadań analitycznych: wykrywania anomalii,
@@ -617,9 +629,9 @@ DLG18 & 17\,085 & 1\,694 & duży \\
 
 \subsection{Heurystyki grafowe}
 
-Heurystyki grafowe stanowią najprostszą klasę metod predykcji krawędzi
+Heurystyki grafowe stanowią najprostszą klasę metod wykrywania krawędzi
 (\textit{link prediction}). Wynik dla pary węzłów $(u, v)$ wyznaczany jest
-wyłącznie na~podstawie lokalnej lub globalnej struktury grafu, bez etapu
+wyłącznie na podstawie lokalnej lub globalnej struktury grafu bez etapu
 trenowania modelu. Metody te charakteryzują się niską złożonością obliczeniową
 i~pełną interpretowalnością, co czyni je naturalnym punktem odniesienia
 (ang.\ \textit{baseline}) przy porównywaniu bardziej zaawansowanych
@@ -630,10 +642,10 @@ podejść~\cite{LibenNowell2007}.
 
 Miara \textit{Preferential Attachment} (PA) opiera się na obserwacji, że
 w~sieciach rzeczywistych nowe połączenia powstają z~prawdopodobieństwem
-proporcjonalnym do stopnia istniejących węzłów — węzły o~wielu sąsiadach
+proporcjonalnym do stopnia istniejących węzłów. Oznacza to, że węzły o~wielu sąsiadach
 z~większym prawdopodobieństwem pozyskują kolejne
-połączenia~\cite{Barabasi1999}; jako heurystyka predykcji krawędzi PA
-została zastosowana przez Liben-Nowella i~Kleinberga~\cite{LibenNowell2007}.
+połączenia~\cite{Barabasi1999}. 
+Jako heurystyka wykrywania krawędzi PA została zastosowana przez Liben-Nowella i~Kleinberga~\cite{LibenNowell2007}.
 % Barabasi1999: oryginalne wprowadzenie PA w kontekście rosnących sieci bezskalowych
 % LibenNowell2007: zastosowanie PA jako miary link prediction w sieciach społecznościowych
 
@@ -650,8 +662,7 @@ W~kontekście grafów \textit{lineage} węzły grafu dwudzielnego DLG-DG-23 dzie
 się na dwa typy: zadania przetwarzania danych (\textit{job}) oraz tabele
 (\textit{table}). Wysoki stopień węzła \textit{job} oznacza, że dane zadanie
 czyta z~wielu tabel źródłowych lub zapisuje do wielu tabel docelowych;
-wysoki stopień węzła \textit{table} wskazuje na tabelę centralną — często
-pośrednią warstwę integracyjną w~potoku ETL. Para $(u, v)$, w~której oba
+wysoki stopień węzła \textit{table} wskazuje na tabelę centralnąL. Para $(u, v)$, w~której oba
 węzły mają duże stopnie, otrzymuje wysoki wynik PA, co interpretuje się jako
 sygnał potencjalnej zależności \textit{data\_flow}.
 
@@ -661,10 +672,10 @@ a~mimo to otrzymać wysoki wynik. W~grafach dwudzielnych takich jak DLG-DG-23
 węzły tego samego typu (\textit{job}–\textit{job} lub
 \textit{table}–\textit{table}) nigdy nie mają wspólnych sąsiadów bezpośrednich,
 dlatego miary oparte na wspólnych sąsiadach (Common Neighbors, Jaccard,
-Adamic-Adar) wymagają adaptacji do struktury bipartite. PA nie wymaga takiej
-adaptacji — obliczany jest bezpośrednio z~stopni węzłów — co stanowi jego
+Adamic-Adar) wymagają adaptacji do struktury dwudzielnej. PA nie wymaga takiej
+adaptacji,  obliczany jest bezpośrednio z~stopni węzłów co stanowi jego
 przewagę praktyczną w~omawianym scenariuszu, kosztem mniejszej precyzji
-predykcji w~porównaniu z~miarami uwzględniającymi topologię sąsiedztwa.
+wykrywania w~porównaniu z~miarami uwzględniającymi topologię sąsiedztwa.
 
 % ----------------------------------------------------------------
 % WZORZEC: Przy opisie każdej kolejnej heurystyki (Common Neighbors,
@@ -709,7 +720,7 @@ predykcji w~porównaniu z~miarami uwzględniającymi topologię sąsiedztwa.
 
 % TODO: Schemat blokowy całego potoku: wczytanie grafu →
 %       symulacja broken lineage → ekstrakcja cech → trening →
-%       predykcja → ewaluacja.
+%       wykrywanie → ewaluacja.
 %       Rysunek musi być wprowadzony w tekście przed jego wystąpieniem.
 
 % ============================================================
@@ -748,7 +759,7 @@ dalszych kierunków badań.
 
 \section{Podsumowanie}
 \label{sec:podsumowanie}
-
+ 
 % TODO: Odpowiedzieć na pytania badawcze PB1–PB4 sformułowane we wstępie.
 %       Co zadziałało, co nie zadziałało i dlaczego.
 
