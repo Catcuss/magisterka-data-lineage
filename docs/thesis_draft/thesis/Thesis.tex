@@ -389,8 +389,9 @@ W~pracy zastosowano trzy klasy algorytmów:
         wspólnych sąsiadów bezpośrednich (omówiono w~sekcji~\ref{sec:algorytmy}).
   \item \textbf{Klasyczne metody ML} — Random Forest, RUSBoost i~LightGBM;
         wykorzystują wektory cech opisujących pary węzłów,
-        w~tym cechy strukturalne grafu i~metryki podobieństwa nazw
-        (np.~Jaro-Winkler).
+        w~tym cechy strukturalne grafu natomiast metryki podobieństwa nazw (np. Jaro-Winkler) 
+        nie mogą być zastosowane, ponieważ zbiór DLG-DG-23 używa zanonimizowanych 
+        identyfikatorów UUID.
   \item \textbf{Zanurzenia sieciowe} (ang. \emph{network embeddings})
         — metoda Node2Vec, która odwzorowuje węzły grafu w~przestrzeni
         wektorowej tak, by~węzły o~podobnym kontekście strukturalnym były
