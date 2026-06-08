@@ -32,7 +32,7 @@ $E_{\mathrm{obs}} \subsetneq E^{*}$. Brakujące krawędzie
 $E^{*} \setminus E_{\mathrm{obs}}$ reprezentują zerwane zależności,
 których odtworzenie jest celem niniejszej pracy.
 
-Zadanie predykcji brakujących krawędzi sprowadza się do~klasyfikacji
+Zadanie wykrywania brakujących krawędzi sprowadza się do~klasyfikacji
 binarnej. Dla~każdej pary węzłów $(u, v) \in V \times V$ algorytm
 wyznacza wartość $\hat{y}(u, v) \in [0, 1]$, interpretowaną jako
 oszacowane prawdopodobieństwo istnienia krawędzi w~pełnym grafie
@@ -40,12 +40,12 @@ $G^{*}$. Para jest klasyfikowana jako krawędź istniejąca (klasa~1)
 lub~nieistniejąca (klasa~0) po~przekroczeniu progu binaryzacji
 wynoszącego $0{,}5$.
 
-Ze~względu na~strukturę grafu DLG-DG-23 kandydatami do~predykcji
+Ze~względu na~strukturę grafu DLG-DG-23 kandydatami do~wykrywania
 są wyłącznie pary węzłów różnych typów: (\emph{job},~\emph{table})
 lub~(\emph{table},~\emph{job}). Para (\emph{table},~\emph{table})
 nigdy nie~jest połączona krawędzią \emph{data\_flow}, a~relacja
 \emph{parent\_child} łączy wyłącznie węzły \emph{table} i~\emph{field}
-— pary te nie~są przedmiotem predykcji. Ograniczenie przestrzeni
+— pary te nie~są przedmiotem wykrywania. Ograniczenie przestrzeni
 kandydatów do~typologicznie dopuszczalnych par eliminuje trywialnie
 fałszywe przykłady ujemne i~zapewnia spójność z~semantyką domeny.
 
@@ -56,7 +56,7 @@ fałszywe przykłady ujemne i~zapewnia spójność z~semantyką domeny.
 
 Potok przetwarzania składa się z~czterech głównych komponentów:
 modułu wczytywania danych (\emph{loader}), modułu podziału krawędzi
-(\emph{splitter}), właściwych algorytmów predykcji oraz modułu
+(\emph{splitter}), właściwych algorytmów wykrywania oraz modułu
 ewaluacji.
 
 % TODO (WYMAGANE): Wstawić rysunek blokowy potoku:
@@ -123,7 +123,7 @@ algorytmów: metryki podobieństwa oparte na~nazwach obiektów
 et~al.~\cite{Boinski2025}) są nieaplikowalne. W~niniejszej pracy
 wektor cech ograniczono zatem do~atrybutów topologicznych grafu,
 co~jednocześnie stanowi element badań nad~pytaniem, czy sama struktura
-grafu lineage jest wystarczająca do~predykcji zerwanych zależności.
+grafu lineage jest wystarczająca do~wykrywania zerwanych zależności.
 
 \subsection{Charakterystyka grafów}
 \label{sec:dane-opis}
@@ -176,7 +176,7 @@ DLG18 & 17\,085 & 1\,694 & duży \\
 
 Ponieważ zbiór DLG-DG-23 zawiera w~pełni zaobserwowane grafy lineage,
 zjawisko broken lineage symulowane jest poprzez kontrolowane usuwanie
-krawędzi. Podejście to jest standardowe w~literaturze predykcji
+krawędzi. Podejście to jest standardowe w~literaturze wykrywania
 krawędzi~\cite{LibenNowell2007}: dysponując kompletnym grafem
 $G^{*}$, usuwa się podzbiór krawędzi, tworząc graf obserwowany
 $G_{\mathrm{obs}}$, a~następnie sprawdza, czy algorytm potrafi
@@ -218,7 +218,7 @@ końcowym w~hierarchii przepływu danych.
 \label{sec:algorytmy}
 % ============================================================
 
-W~pracy zaimplementowano trzy grupy algorytmów predykcji
+W~pracy zaimplementowano trzy grupy algorytmów wykrywania
 brakujących krawędzi. Pierwszą grupę stanowią heurystyki grafowe
 — metody niewymagające uczenia, opierające się wyłącznie na~strukturze
 grafu. Drugą grupę tworzą klasyczne metody uczenia maszynowego,
@@ -230,7 +230,7 @@ pary węzłów. Trzecia grupa obejmuje metody zanurzeń sieciowych
 \subsection{Heurystyki grafowe}
 % ============================================================
 
-Heurystyki grafowe stanowią najprostszą klasę metod predykcji krawędzi
+Heurystyki grafowe stanowią najprostszą klasę metod wykrywania krawędzi
 (\emph{link prediction}). Wynik dla~pary węzłów $(u, v)$ wyznaczany jest
 wyłącznie na~podstawie lokalnej lub~globalnej struktury grafu, bez~etapu
 trenowania modelu. Metody te charakteryzują się niską złożonością
@@ -246,7 +246,7 @@ lub~\emph{table}--\emph{table}) nigdy nie~posiadają wspólnych sąsiadów
 bezpośrednich, ponieważ krawędzie \emph{data\_flow} łączą wyłącznie
 węzły różnych typów. W~konsekwencji wymienione miary zwracają wynik
 zerowy dla~każdej typologicznie dopuszczalnej pary kandydackiej,
-co~dyskwalifikuje je~jako metody predykcji w~omawianym scenariuszu.
+co~dyskwalifikuje je~jako metody wykrywania w~omawianym scenariuszu.
 W~implementacji uwzględniono wyłącznie heurystyki działające poprawnie
 na~grafach dwudzielnych: Preferential Attachment, L3, Katz
 oraz~Personalized PageRank.
@@ -257,7 +257,7 @@ Miara \emph{Preferential Attachment} (PA) opiera się na~obserwacji,
 że~w~sieciach rzeczywistych nowe połączenia powstają z~prawdopodobieństwem
 proporcjonalnym do~stopnia istniejących węzłów — węzły o~wielu sąsiadach
 z~większym prawdopodobieństwem pozyskują kolejne
-połączenia~\cite{Barabasi1999}. Jako heurystyka predykcji krawędzi PA
+połączenia~\cite{Barabasi1999}. Jako heurystyka wykrywania krawędzi PA
 została zastosowana przez Liben-Nowella i~Kleinberga~\cite{LibenNowell2007}.
 
 Dla~pary węzłów $(u, v)$ wynik PA definiuje się jako:
@@ -338,7 +338,7 @@ do~węzłów zbioru treningowego.
 \label{sec:ml}
 % ============================================================
 
-Klasyczne metody uczenia maszynowego traktują problem predykcji krawędzi
+Klasyczne metody uczenia maszynowego traktują problem wykrywania krawędzi
 jako binarną klasyfikację, w~której wejściem jest wektor cech opisujący
 parę węzłów $(u, v)$. Ze~względu na~anonimizację zbioru DLG-DG-23
 (nazwy węzłów w~formacie UUID) jako cechy przyjęto wyłącznie atrybuty
@@ -380,7 +380,7 @@ który skaluje wagi klas odwrotnie proporcjonalnie do~ich liczności.
 RUSBoost (\emph{Random Under-Sampling Boosting}) łączy algorytm
 boostingu AdaBoost z~losowym podpróbkowaniem klasy większościowej
 przed każdą iteracją. Metoda ta~jest szczególnie skuteczna przy silnym
-niezbalansowaniu klas, typowym dla~problemu predykcji krawędzi
+niezbalansowaniu klas, typowym dla~problemu wykrywania krawędzi
 w~rzadkich grafach. W~niniejszej pracy algorytm RUSBoost zaimplementowano
 w~celu bezpośredniego porównania z~wynikami Boińskiego
 et~al.~\cite{Boinski2025}, którzy uzyskali wartość F1~=~0{,}79
@@ -433,7 +433,7 @@ się reprezentacji par kandydackich.
 
 \subsubsection{Generowanie embeddingu krawędzi}
 
-Predykcja krawędzi wymaga przekształcenia pary zanurzeń węzłów
+Wykrywanie krawędzi wymaga przekształcenia pary zanurzeń węzłów
 $(\mathbf{z}_u, \mathbf{z}_v)$ w~pojedynczy wektor reprezentujący
 potencjalną krawędź $(u, v)$. Zastosowano iloczyn Hadamarda:
 %
