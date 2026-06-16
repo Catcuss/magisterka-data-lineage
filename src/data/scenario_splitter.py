@@ -31,6 +31,8 @@ from collections import defaultdict
 
 import networkx as nx
 
+from .splitter import _rejection_sample_negatives
+
 
 _VALID_TYPE_PAIRS = {
     "DATA_FLOW": [("Data Table", "Data Job"), ("Data Job", "Data Table")],
@@ -217,26 +219,16 @@ def _sample_negatives(
     n_needed: int,
     rng: random.Random,
 ) -> list[tuple]:
-    """Losuje n_needed par (Table,Job) lub (Job,Table) których nie ma w G."""
-    if n_needed == 0:
-        return []
+    """
+    Losuje n_needed par (Table,Job) lub (Job,Table) których nie ma w G.
 
-    nodes_by_type = defaultdict(list)
-    for node, data in G.nodes(data=True):
-        nodes_by_type[data.get("asset_type", "")].append(node)
-
-    candidates = []
-    for src_type, tgt_type in [("Data Table", "Data Job"), ("Data Job", "Data Table")]:
-        for u in nodes_by_type[src_type]:
-            for v in nodes_by_type[tgt_type]:
-                if u != v and (u, v) not in existing:
-                    candidates.append((u, v))
-
-    if len(candidates) < n_needed:
-        n_needed = len(candidates)  # weź ile możemy, nie rzucaj błędu
-
-    rng.shuffle(candidates)
-    return candidates[:n_needed]
+    Korzysta ze współdzielonego rejection samplera (splitter.py) — ta sama
+    logika i obsługa niedoboru puli (ostrzeżenie) co w podziale losowym.
+    """
+    return _rejection_sample_negatives(
+        G, existing, _VALID_TYPE_PAIRS["DATA_FLOW"], n_needed, rng,
+        context="scenario DATA_FLOW",
+    )
 
 
 def scenario_summary(splits: dict) -> str:

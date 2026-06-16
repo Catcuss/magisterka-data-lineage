@@ -14,6 +14,7 @@ Zasady generowania negatywnych próbek:
 """
 
 import random
+import warnings
 from copy import deepcopy
 from collections import defaultdict
 
@@ -149,36 +150,79 @@ def _sample_negatives(
     Losuje n_needed par węzłów, które:
     - mają typy zgodne z edge_type,
     - nie istnieją jako krawędź w G.
+
+    Używa rejection sampling: losuje pary i odrzuca te istniejące/zduplikowane.
+    Pełna enumeracja par (kosztowna na dużych grafach, O(|src|×|tgt|)) jest
+    wykonywana wyłącznie awaryjnie, gdy rejection sampling nie wypełni puli.
     """
-    if n_needed == 0:
+    return _rejection_sample_negatives(
+        G, existing, _VALID_TYPE_PAIRS[edge_type], n_needed, rng,
+        context=f"edge_type='{edge_type}'",
+    )
+
+
+def _rejection_sample_negatives(
+    G: nx.DiGraph,
+    existing: set,
+    valid_pairs: list[tuple],
+    n_needed: int,
+    rng: random.Random,
+    context: str = "",
+) -> list[tuple]:
+    """
+    Wspólny generator negatywów (rejection sampling z awaryjną enumeracją).
+
+    Zwraca n_needed par (lub mniej, z ostrzeżeniem, gdy pula jest za mała).
+    """
+    if n_needed <= 0:
         return []
 
-    valid_pairs = _VALID_TYPE_PAIRS[edge_type]
-
-    # Pogrupuj węzły według typu
     nodes_by_type = defaultdict(list)
     for node, data in G.nodes(data=True):
         nodes_by_type[data.get("asset_type", "")].append(node)
 
-    # Zbuduj pulę kandydatów dla każdej pary typów
-    candidates = []
-    for src_type, tgt_type in valid_pairs:
-        src_nodes = nodes_by_type[src_type]
-        tgt_nodes = nodes_by_type[tgt_type]
+    type_pairs = [
+        (nodes_by_type[s], nodes_by_type[t])
+        for s, t in valid_pairs
+        if nodes_by_type[s] and nodes_by_type[t]
+    ]
+    if not type_pairs:
+        warnings.warn(f"Brak węzłów dla negatywów ({context}).")
+        return []
+
+    seen: set = set()
+    result: list[tuple] = []
+    # Budżet prób proporcjonalny do potrzeb; chroni przed pętlą gdy pula gęsta.
+    max_attempts = max(n_needed * 20, 2000)
+    attempts = 0
+    while len(result) < n_needed and attempts < max_attempts:
+        attempts += 1
+        src_nodes, tgt_nodes = rng.choice(type_pairs)
+        u = rng.choice(src_nodes)
+        v = rng.choice(tgt_nodes)
+        if u == v or (u, v) in existing or (u, v) in seen:
+            continue
+        seen.add((u, v))
+        result.append((u, v))
+
+    if len(result) >= n_needed:
+        return result[:n_needed]
+
+    # Awaryjnie: pełna enumeracja brakujących kandydatów (pula okazała się mała).
+    for src_nodes, tgt_nodes in type_pairs:
         for u in src_nodes:
             for v in tgt_nodes:
-                if u != v and (u, v) not in existing:
-                    candidates.append((u, v))
-
-    if len(candidates) < n_needed:
-        raise ValueError(
-            f"Za mała pula kandydatów ({len(candidates)}) "
-            f"dla {n_needed} negatywnych próbek (edge_type='{edge_type}'). "
-            f"Zmniejsz neg_ratio."
+                if u != v and (u, v) not in existing and (u, v) not in seen:
+                    seen.add((u, v))
+                    result.append((u, v))
+    if len(result) < n_needed:
+        warnings.warn(
+            f"Za mała pula kandydatów ({len(result)}) dla {n_needed} "
+            f"negatywnych próbek ({context}). Zwrócono {len(result)}."
         )
-
-    rng.shuffle(candidates)
-    return candidates[:n_needed]
+        return result
+    rng.shuffle(result)
+    return result[:n_needed]
 
 
 def split_summary(splits: dict) -> dict:

@@ -4,7 +4,9 @@
       "Bash(find c:UsersMariaDesktopMAGISTERKAdata -type f -name *.json -o -name *.pkl -o -name *.npz)",
       "Bash(git -C \"c:\\\\Users\\\\Maria\\\\Desktop\\\\MAGISTERKA\" status --porcelain)",
       "WebSearch",
-      "Bash(C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe run_experiments.py --dlg 4 --scenarios)"
+      "Bash(C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe run_experiments.py --dlg 4 --scenarios)",
+      "Bash(C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe -c ' *)",
+      "Bash(\"C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe\" -m pytest -q)"
     ]
   }
 }
