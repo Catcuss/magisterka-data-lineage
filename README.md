@@ -6,21 +6,31 @@ Promotor: prof. dr hab. inż. Robert Wrembel, 2026
 
 ## Temat
 
-Implementacja i ewaluacja algorytmów predykcji brakujących krawędzi
-(*link prediction*) w grafach pochodzenia danych (*data lineage*). Problem
-"broken lineage" — zerwanie ciągłości grafu zależności przez tabele
-tymczasowe i UDF — sprowadzony do binarnej klasyfikacji krawędzi w
-heterogenicznym grafie skierowanym.
+Wykrywanie zjawiska *broken lineage* — zerwania ciągłości grafu pochodzenia
+danych (*data lineage*) przez tabele tymczasowe i UDF — w heterogenicznym
+grafie skierowanym, wyłącznie na podstawie jego topologii.
+
+Praca przeszła **zmianę koncepcji** (po konsultacji z dr. P. Misiorkiem):
+
+- **Podejście aktualne — detekcja chorych węzłów** (`src/detection/`): zamiast
+  zgadywać konkretne brakujące krawędzie, wykrywamy **zainfekowane tabele** —
+  te, które po usunięciu zadania (joba) straciły producenta lub konsumenta
+  danych. Zadanie = ranking węzłów wg prawdopodobieństwa zerwanego lineage.
+- **Podejście wstępne — predykcja krawędzi** (`src/algorithms/`, `src/data/`):
+  klasyfikacja binarna brakujących krawędzi. Okazało się zbyt trudne na rzadkich
+  grafach DLG-DG-23 (AUC-ROC ≈ 0.5–0.7), co umotywowało zmianę kierunku.
+  Zachowane jako badanie wstępne; pełny snapshot pod tagiem `magisterka_old`
+  i gałęzią `edge-prediction-archive`.
 
 ## Środowisko
 
 - Python 3.10
 - Główne zależności: `networkx`, `numpy`, `scikit-learn`, `imbalanced-learn`,
-  `lightgbm`, `node2vec`, `tensorflow` (Node2Vec+MLP), `pytest`.
+  `lightgbm`, `node2vec`, `pytest`.
 
 ```bash
 pip install -r requirements.txt
-pytest tests/                 # 55 testów jednostkowych
+pytest tests/                 # 71 testów jednostkowych
 ```
 
 ## Dataset
@@ -43,115 +53,113 @@ git clone https://github.com/csuvis/DataAssetGraphData.git \
 # następnie wypakuj Node.rar i Edge.rar do data/raw/DataAssetGraphData/extracted/
 ```
 
-Skutek: `data/raw/DataAssetGraphData/.git/` jest świadomie pozostawiony —
-pozwala zaciągnąć aktualizacje upstream przez `git -C data/raw/DataAssetGraphData pull`.
+---
 
-## Implementowane algorytmy
+# Podejście aktualne — detekcja chorych węzłów
 
-### Heurystyki grafowe (bezparametryczne)
+## Sformułowanie zadania
 
-| Algorytm | Plik | Uwagi |
+Usunięcie zadania `J` (joba łączącego: `in_df>0 ∧ out_df>0`) zrywa lineage
+tabel z nim incydentnych — *poprzedników* (`u → J`) i *następników* (`J → w`).
+Te tabele stają się **zainfekowane**. Z grafu budujemy instancję klasyfikacji
+węzłów: usuwamy podzbiór jobów, a zadaniem algorytmu jest wskazać ranking tabel
+wg prawdopodobieństwa, że są zainfekowane (`src/detection/job_removal.py`).
+
+**Protokół główny — indukcyjny cross-graph** (leave-one-graph-out): trening na
+puli pozostałych grafów, test na grafie *niewidzianym* w treningu — zgodnie z
+kierunkiem prac zespołu (Dutkiewicz, Misiorek, Wrembel 2026).
+
+## Pułapka metodologiczna — przeciek izolacji
+
+Po usunięciu joba ~29% chorych tabel staje się DATA_FLOW-izolowanych
+(`in_df=0 ∧ out_df=0`), a 0% czystych — więc trywialna reguła „izolowana ⟹ chora"
+zawyża wynik. Flaga `--exclude-isolated` daje **wariant uczciwy**: detekcja
+chorych tabel, które *wciąż mają połączenia* (częściowy broken lineage).
+
+## Algorytmy i cechy (`src/detection/`)
+
+| Komponent | Plik | Opis |
 |---|---|---|
-| Common Neighbors, Jaccard, Adamic-Adar | `src/algorithms/heuristics.py` | Zawsze 0 w grafie bipartytowym Table↔Job — celowo pozostawione jako baseline |
-| Preferential Attachment | `src/algorithms/heuristics.py` | Iloczyn stopni węzłów |
-| L3 — paths length 3 | `src/algorithms/heuristics.py` | Wersja CN dla grafów bipartytowych |
-| Katz | `src/algorithms/heuristics.py` | Skrócony szereg Neumanna |
-| PPR — Personalized PageRank | `src/algorithms/heuristics.py` | Random walks z restartem |
+| Symulacja usuwania jobów | `job_removal.py` | infected ground-truth, podział indukcyjny |
+| Cechy węzła (~13) | `node_features.py` | pozycja w DAG: in/out_df, rola, `flow_depth`/`flow_reach`, is_root/leaf, sąsiedzi-joby |
+| Heurystyki anomalii | `node_classifier.py` | `degree_anomaly`, `boundary`, `low_job_connectivity` |
+| Klasyczne ML | `node_classifier.py` | Random Forest, RUSBoost, LightGBM na cechach węzła |
+| Metryki rankingowe | `node_metrics.py` | AUC-ROC, AUC-PR, Precision@k, Recall@k, Hits@k |
 
-### Klasyczne uczenie maszynowe
+> Node2Vec jest **transduktywny** (embeddingi nieporównywalne między grafami),
+> więc nie wchodzi do protokołu indukcyjnego — co samo w sobie jest wynikiem
+> motywującym indukcyjne GNN.
 
-| Algorytm | Plik | Cechy |
-|---|---|---|
-| Random Forest | `src/algorithms/classical_ml.py` | 11 cech topologicznych (stopnie, CN, Jaccard, AA, długość ścieżki) |
-| RUSBoost | `src/algorithms/classical_ml.py` | Boosting + Random Under-Sampling — bezpośrednio porównywalny z Boiński et al. (ISD2025) |
-| LightGBM | `src/algorithms/classical_ml.py` | Gradient boosting na tych samych cechach |
-
-### Embeddingi sieciowe
-
-| Algorytm | Plik | Uwagi |
-|---|---|---|
-| Node2Vec + MLP | `src/algorithms/node2vec_ml.py` | Random-walk embeddings + binarny klasyfikator MLP nad konkatenacją wektorów (u,v) |
-
-## Pipeline ewaluacji
-
-1. **Podział danych:** 60/20/20 train/val/test (`src/data/splitter.py`,
-   `src/data/scenario_splitter.py`).
-2. **Strojenie progu:** próg binaryzacji dobierany na zbiorze walidacyjnym
-   przez maksymalizację F1 (`tune_and_evaluate` w `src/evaluation/metrics.py`).
-   Wszystkie algorytmy traktowane identycznie — brak przecieku informacji
-   ze zbioru testowego.
-3. **Metryki raportowane na teście:** Precision, Recall, F1, AUC-ROC, AUC-PR.
-   AUC-ROC i AUC-PR są niezależne od progu i stanowią metryki główne.
-
-### Scenariusze broken lineage
-
-`src/data/scenario_splitter.py` implementuje trzy strukturalne podziały
-krawędzi testowych (zamiast losowego splita):
-
-- **A — Staging table removed:** ukryte krawędzie wyjściowe *intermediate*
-  Table → Job (symuluje usunięcie tabeli tymczasowej).
-- **B — UDF hidden source:** losowe 20% krawędzi wyjściowych *source*
-  Table → Job (symuluje zależność ukrytą za UDF).
-- **C — Sink dependency hidden:** krawędzie wejściowe Job → *sink* Table
-  (symuluje ukrytą zależność do data martu).
-
-## Uruchomienie eksperymentów
-
-Skrypty wejściowe znajdują się w `scripts/` i uruchamiane są z katalogu głównego:
+## Uruchomienie
 
 ```bash
-# Losowy split 60/20/20 — szybki podgląd na DLG1-DLG4
-python scripts/run_experiments.py
+# Protokół główny (indukcyjny), wariant uczciwy, 18 grafów
+python src/detection/run_detection_experiments.py --all --exclude-isolated
 
-# Wszystkie 18 grafów, scenariusze A/B/C
-python scripts/run_scenario_experiments.py --all
+# Porównanie 1: generalizacja do skali (małe+średnie → duże)
+python src/detection/run_scale_generalization.py --exclude-isolated
 
-# Wybrane grafy, tylko scenariusz A, bez ML
-python scripts/run_scenario_experiments.py --dlg 1 4 --scenario A --no-ml
+# Porównanie 2: transduktywny (podział węzłów w obrębie grafu) vs indukcyjny
+python src/detection/run_transductive.py --exclude-isolated
 ```
 
-Wyniki zapisywane są w `results/`. Przekierowanie do pliku:
+## Wyniki wstępne (Random Forest, AUC-ROC, wariant uczciwy)
+
+| Protokół | Opis | RF | Heurystyki |
+|---|---|---|---|
+| Transduktywny | podział węzłów *tego samego* grafu | 0.82 | ~0.45 |
+| **Indukcyjny (główny)** | trening na innych grafach → test na nieznanym | **0.76** | ~0.46 |
+| Generalizacja skali | tylko małe+średnie → duże | 0.63 | ~0.43 |
+
+Heurystyki tkwią na poziomie losowym (~0.45) → sygnał niesie ML, nie trywialna
+struktura. Wyniki w `results/wyniki_detekcja*.csv`, `wyniki_skala.csv`,
+`wyniki_transduktywny.csv`.
+
+---
+
+# Podejście wstępne — predykcja krawędzi (zarchiwizowane)
+
+Klasyfikacja binarna brakujących krawędzi na trzech scenariuszach broken lineage
+(`src/data/scenario_splitter.py`): **A** staging, **B** UDF/source, **C** sink.
+Trzy grupy algorytmów: heurystyki grafowe (`src/algorithms/heuristics.py`),
+klasyczne ML (`classical_ml.py`), Node2Vec+MLP (`node2vec_ml.py`).
+Najlepszy wynik: scenariusz B, RUSBoost AUC-ROC ≈ 0.70; A/C ≈ losowo.
 
 ```bash
-python scripts/run_scenario_experiments.py --all > results/wyniki.txt 2>&1
+python scripts/run_scenario_experiments.py --all     # uruchom stare eksperymenty (scenariusze A/B/C)
+git checkout edge-prediction-archive                 # pełny snapshot sprzed pivotu
 ```
 
 ## Struktura projektu
 
 ```
 MAGISTERKA/
-├── data/
-│   └── raw/DataAssetGraphData/        # Node.json, Edge.json (18 grafów)
-├── docs/
-│   ├── thesis_draft/                  # tekst pracy magisterskiej
-│   ├── plan_dla_promotora.md
-│   └── plan_kontynuacji.md
-├── references/                        # PDF-y artykułów źródłowych
-├── results/                           # wyniki eksperymentów (CSV/TXT)
+├── data/raw/DataAssetGraphData/        # Node.json, Edge.json (18 grafów, gitignore)
+├── docs/thesis_draft/                  # tekst pracy magisterskiej
+├── references/                         # PDF-y artykułów źródłowych
+├── results/                            # wyniki eksperymentów (CSV/TXT)
 ├── src/
-│   ├── data/                          # loader, splitter, scenario_splitter
-│   ├── algorithms/                    # heuristics, classical_ml, node2vec_ml
-│   └── evaluation/                    # metrics
-├── scripts/
-│   ├── run_experiments.py             # losowy split 60/20/20
-│   ├── run_scenario_experiments.py    # scenariusze A/B/C
-│   ├── build_and_run.py               # pełny pipeline (testy + wiz + eksp)
-│   └── visualize_graphs.py            # wizualizacje grafów
-├── tests/                             # testy jednostkowe (pytest)
+│   ├── data/                           # loader, splitter, scenario_splitter (wstępne)
+│   ├── algorithms/                     # heuristics, classical_ml, node2vec_ml (wstępne)
+│   ├── evaluation/                     # metrics (predykcja krawędzi)
+│   └── detection/                      # AKTUALNE: job_removal, node_features,
+│                                       #   node_classifier, node_metrics, runnery
+├── scripts/                            # runnery predykcji krawędzi (wstępne)
+├── tests/                              # testy jednostkowe (pytest, 71)
 ├── requirements.txt
-└── 151851_SLR.pdf                     # raport Systematic Literature Review
+└── 151851_SLR.pdf                      # raport Systematic Literature Review
 ```
 
 ## Status pracy
 
 - [x] Zadanie 1 — Systematic Literature Review (`151851_SLR.pdf`)
-- [x] Zadanie 2 — Implementacja 3 grup algorytmów (heurystyki, ML, embedding)
+- [x] Zadanie 2 — Implementacja algorytmów (predykcja krawędzi + detekcja węzłów)
 - [x] Zadanie 3 — Zastosowanie do datasetu DLG-DG-23 (18 grafów)
-- [x] Zadanie 4 — Testy jednostkowe (55 testów)
-- [~] Zadanie 5 — Ewaluacja eksperymentalna (w toku)
+- [x] Zadanie 4 — Testy jednostkowe (71 testów)
+- [~] Zadanie 5 — Ewaluacja eksperymentalna (pivot na detekcję węzłów; wyniki wstępne)
 
 ## Reproducibility
 
 Wszystkie eksperymenty są deterministyczne przy `--seed 42` (domyślny).
-Negatywne próbki, splity train/val/test i inicjalizacja modeli używają
-tego samego ziarna.
+Usuwanie jobów, podziały i inicjalizacja modeli używają tego samego ziarna;
+powtórzenia (`--repeats`) agregowane z odrzuceniem skrajnych wartości.
