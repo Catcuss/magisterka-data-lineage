@@ -49,12 +49,14 @@ def _trimmed_mean(values: list[float]) -> float:
     return float(np.mean(vals))
 
 
-def build_datasets(graphs: dict, removal_ratio: float, seed: int, side: str) -> dict:
+def build_datasets(graphs: dict, removal_ratio: float, seed: int, side: str,
+                   exclude_isolated: bool = False) -> dict:
     """Buduje instancję (usunięcie jobów) dla każdego grafu przy danym seed."""
     datasets = {}
     for gid, G in graphs.items():
         try:
-            datasets[gid] = build_node_dataset(G, removal_ratio, seed, side)
+            datasets[gid] = build_node_dataset(
+                G, removal_ratio, seed, side, exclude_isolated=exclude_isolated)
         except ValueError:
             pass  # graf bez jobów łączących — pomijamy
     return datasets
@@ -202,6 +204,9 @@ def main():
     p.add_argument("--repeats", type=int, default=3)
     p.add_argument("--removal-ratio", type=float, default=0.2)
     p.add_argument("--side", choices=["both", "pred", "succ"], default="both")
+    p.add_argument("--exclude-isolated", action="store_true",
+                   help="Wyklucz trywialnie izolowane (DATA_FLOW) tabele z kandydatów "
+                        "— uczciwy wariant bez przecieku 'izolowana ⟹ chora'.")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--csv", type=Path,
                    default=_PROJECT_ROOT / "results" / "wyniki_detekcja.csv")
@@ -213,7 +218,8 @@ def main():
 
     print(f"Grafy:        {[f'DLG{i}' for i in dlg_ids]}")
     print(f"Powtórzenia:  {len(seeds)} (seedy {seeds[0]}-{seeds[-1]})")
-    print(f"removal_ratio={args.removal_ratio}, side={args.side}, MIN_POS={MIN_POS}")
+    print(f"removal_ratio={args.removal_ratio}, side={args.side}, "
+          f"exclude_isolated={args.exclude_isolated}, MIN_POS={MIN_POS}")
     print()
 
     graphs = {f"DLG{i}": load_graph(f"DLG{i}") for i in dlg_ids}
@@ -222,7 +228,8 @@ def main():
     all_rows = []
     for seed in seeds:
         print(f"Seed {seed}...", flush=True)
-        datasets = build_datasets(graphs, args.removal_ratio, seed, args.side)
+        datasets = build_datasets(graphs, args.removal_ratio, seed, args.side,
+                                  exclude_isolated=args.exclude_isolated)
         if len(datasets) < 2:
             print("  Za mało grafów z jobami łączącymi — pomijam seed.")
             continue

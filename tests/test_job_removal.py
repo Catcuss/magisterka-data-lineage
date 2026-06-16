@@ -100,6 +100,27 @@ class TestRealGraph:
         assert a["removed_jobs"] != b["removed_jobs"]
 
 
+class TestExcludeIsolated:
+    def test_isolated_candidates_removed(self, G5):
+        """exclude_isolated usuwa tabele DATA_FLOW-izolowane z kandydatów."""
+        full = build_node_dataset(G5, removal_ratio=0.2, seed=42)
+        honest = build_node_dataset(G5, removal_ratio=0.2, seed=42,
+                                    exclude_isolated=True)
+        # Wariant uczciwy ma nie więcej kandydatów i raportuje wykluczone pozytywy.
+        assert len(honest["candidates"]) <= len(full["candidates"])
+        assert honest["n_isolated_excluded"] >= 0
+        # Żaden pozostały kandydat nie jest DATA_FLOW-izolowany.
+        G_obs = honest["G_obs"]
+        in_df = {n: 0 for n in G_obs}
+        out_df = {n: 0 for n in G_obs}
+        for u, v, d in G_obs.edges(data=True):
+            if d.get("relation_type") == "DATA_FLOW":
+                out_df[u] += 1
+                in_df[v] += 1
+        for n in honest["candidates"]:
+            assert not (in_df[n] == 0 and out_df[n] == 0)
+
+
 class TestInductiveSplit:
     def test_disjoint(self):
         train, test = inductive_split(["DLG1", "DLG2", "DLG3"], ["DLG2"])

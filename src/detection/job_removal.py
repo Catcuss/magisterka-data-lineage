@@ -78,6 +78,7 @@ def build_node_dataset(
     removal_ratio: float = 0.2,
     seed: int = 42,
     side: str = "both",
+    exclude_isolated: bool = False,
 ) -> dict:
     """
     Buduje instancję klasyfikacji węzłów przez usunięcie podzbioru jobów łączących.
@@ -92,6 +93,13 @@ def build_node_dataset(
         Ziarno losowości (powtarzalność wyboru jobów).
     side : str
         Która strona joba liczy się jako infected: "both" | "pred" | "succ".
+    exclude_isolated : bool
+        Gdy True, z kandydatów usuwane są tabele DATA_FLOW-izolowane w G_obs
+        (in_df=0 ∧ out_df=0). Takie tabele po usunięciu joba straciły WSZYSTKIE
+        połączenia przepływu — ich wykrycie jest trywialne (w oryginale nie ma
+        izolowanych tabel), więc zawyżałyby wynik. Wykluczenie ich daje uczciwe
+        zadanie: wykryj chore tabele, które WCIĄŻ mają połączenia (częściowy
+        broken lineage). Zalecane jako główny wariant ewaluacji.
 
     Returns
     -------
@@ -100,8 +108,9 @@ def build_node_dataset(
         candidates   — lista węzłów Data Table (kandydaci do oceny),
         labels       — list[int] zgodny z candidates (1 = infected, 0 = clean),
         removed_jobs — lista usuniętych jobów,
-        infected     — set zainfekowanych tabel,
-        n_infected   — liczba zainfekowanych tabel.
+        infected     — set zainfekowanych tabel (wśród kandydatów),
+        n_infected   — liczba zainfekowanych tabel,
+        n_isolated_excluded — ile trywialnie izolowanych pozytywów wykluczono.
 
     Raises
     ------
@@ -131,6 +140,17 @@ def build_node_dataset(
         n for n, data in G_obs.nodes(data=True)
         if data.get("asset_type") == "Data Table"
     ]
+
+    n_isolated_excluded = 0
+    if exclude_isolated:
+        in_df, out_df = _df_neighbors(G_obs)
+        kept = [n for n in candidates if not (in_df[n] == 0 and out_df[n] == 0)]
+        n_isolated_excluded = sum(
+            1 for n in candidates
+            if (in_df[n] == 0 and out_df[n] == 0) and n in infected
+        )
+        candidates = kept
+
     if not candidates:
         raise ValueError("Brak tabel-kandydatów po usunięciu jobów.")
 
@@ -144,6 +164,7 @@ def build_node_dataset(
         "removed_jobs": removed_jobs,
         "infected":     infected_in_obs,
         "n_infected":   len(infected_in_obs),
+        "n_isolated_excluded": n_isolated_excluded,
     }
 
 
