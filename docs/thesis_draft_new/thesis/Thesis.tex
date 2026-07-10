@@ -1,0 +1,673 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Praca magisterska — Politechnika Poznańska   %%
+%% Wydział Informatyki i Telekomunikacji        %%
+%% Autorka: Maria Nowicka (151851)              %%
+%% Promotor: prof. dr hab. inż. Robert Wrembel  %%
+%% Temat: Odkrywanie zależności między          %%
+%%        obiektami w bazie danych              %%
+%%                                              %%
+%% WERSJA: NOWA KONCEPCJA (pivot 2026-06-09)    %%
+%%   detekcja chorych węzłów (node detection),  %%
+%%   NIE predykcja krawędzi.                    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[polish,master,a4paper,oneside]{ppfcmthesis}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{csquotes}
+
+% ── Dodatkowe pakiety ────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{threeparttable}
+
+\graphicspath{{figures/}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  captionpos=b
+}
+
+% ── Strona tytułowa ─────────────────────────────────────────
+\author{Maria Nowicka \album{151851}}
+\authortitle{}
+
+\title{Odkrywanie zależności między obiektami w~bazie danych}
+
+\ppsupervisor{dr hab.~inż.~Robert Wrembel, prof.~PP.}
+
+\ppyear{2026}
+
+% ============================================================
+\begin{document}
+
+% ── Strona tytułowa ─────────────────────────────────────────
+\frontmatter\pagestyle{empty}%
+\maketitle\cleardoublepage%
+
+% ── Miejsce na kartę pracy dyplomowej ───────────────────────
+\thispagestyle{empty}\vspace*{\fill}%
+\begin{center}
+  Tutaj będzie karta pracy dyplomowej;\\
+  oryginał wstawiamy do wersji dla archiwum PP,\\
+  w pozostałych kopiach wstawiamy ksero.
+\end{center}%
+\vfill\cleardoublepage%
+
+% ── Streszczenie (PL) ───────────────────────────────────────
+\chapter*{Streszczenie}
+\addcontentsline{toc}{chapter}{Streszczenie}
+
+% TODO (WYMAGANE): Napisać streszczenie od nowa pod NOWĄ koncepcję
+%   (detekcja chorych węzłów). Cel, problem, luka (brak detekcji na
+%   poziomie węzłów w literaturze broken lineage), metodyka indukcyjna
+%   cross-graph, metryki rankingowe (AUC-ROC, AUC-PR, Precision@k, Hits@k),
+%   wynik główny: LineageDetector AUC-ROC 0.771 (wariant uczciwy).
+%   250–300 słów, bez cytowań. Bazować na mail_do_promotora.txt (_surowce/).
+\emph{[Streszczenie zostanie uzupełnione po~ukończeniu rozdziałów 4~i~5.]}
+
+% ── Abstract (EN) ───────────────────────────────────────────
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+% TODO (WYMAGANE): Angielskie tłumaczenie nowego streszczenia.
+\emph{[The abstract will be completed once chapters 4~and~5 are finished.]}
+
+% ── Spis treści ─────────────────────────────────────────────
+\pagenumbering{Roman}\pagestyle{ppfcmthesis}%
+\tableofcontents*
+\cleardoublepage
+
+% ============================================================
+%  ROZDZIAŁY GŁÓWNE
+% ============================================================
+\mainmatter
+
+% ============================================================
+%  ROZDZIAŁ 1 — WSTĘP
+% ============================================================
+\chapter{Wstęp}
+
+% [ZACHOWANE z poprzedniej wersji — akapit ogólny o data lineage,
+%  aktualny niezależnie od koncepcji.]
+Współczesne systemy bazodanowe przetwarzają dane za~pośrednictwem złożonych
+potoków przetwarzania danych. W~środowiskach korporacyjnych dane są wielokrotnie
+agregowane i~przekształcane przez sekwencje zapytań, a~wyniki pośrednie
+przechowywane w~tabelach tymczasowych. Tymczasowość tych obiektów sprawia,
+że~po~zakończeniu procesu przetwarzania ślad po~wykonanych transformacjach
+zanika, a zatem niemożliwe staje się ustalenie, skąd pochodzi dana wartość
+w~tabeli wynikowej ani jakie operacje ją~wytworzyły. Śledzenie takich zależności,
+czyli ustalanie, skąd pochodzi dana wartość i jakie operacje ją wytworzyły,
+jest przedmiotem dziedziny określanej w literaturze jako \emph{data lineage}
+lub \emph{data provenance}~\cite{Psallidas2022,Yamada2023}.
+Brak pełnej informacji o przepływie danych utrudnia audyt i kontrolę
+jakości danych.
+
+% [ZACHOWANE — formalne ujęcie grafowe i definicja broken lineage.]
+Formalnie problem ten można wyrazić w~kategoriach teorii grafów: graf
+zależności (ang. \emph{lineage graph}) reprezentuje przepływ danych między
+obiektami bazy takimi jak tabele, widoki, zapytania oraz~ich atrybutami.
+Gdy~pewne węzły lub~krawędzie zostaną utracone (np.~z~powodu usunięcia
+tabeli tymczasowej lub zastosowania funkcji definiowanej przez użytkownika),
+mówi się o~zjawisku \emph{broken lineage}~\cite{Boinski2025}.
+
+% [ZMIENIONE — cel pracy: z „predykcji brakujących krawędzi" na
+%  „detekcję zainfekowanych tabel". To sedno pivotu.]
+Celem niniejszej pracy jest \textbf{detekcja obiektów bazodanowych o~zerwanym
+lineage} — tabel, które w~wyniku broken lineage utraciły producenta
+lub~konsumenta danych. W~odróżnieniu od~dotychczasowych prac, które modelują
+broken lineage jako predykcję konkretnych brakujących krawędzi, w~pracy
+sformułowano zadanie na~poziomie \emph{węzłów}: uszeregowanie tabel według
+prawdopodobieństwa, że~ich lineage jest niekompletny. Podejście to~jest
+komplementarne wobec predykcji krawędzi i~może ją~poprzedzać: najpierw
+wskazuje się podejrzane tabele, a~dopiero potem można próbować odtwarzać
+ich zależności.
+
+% [ZACHOWANE — motywacja biznesowa: bank + RODO. Aktualna.]
+W~sektorze finansowym banki są zobowiązane do~wykazania, które transakcje
+źródłowe złożyły się na~poszczególne pozycje raportów kwartalnych; przerwanie
+grafu zależności w~warstwie ETL (\emph{Extract, Transform, Load}) uniemożliwia
+przeprowadzenie takiego audytu~\cite{Boinski2025}.
+Podobne konsekwencje niesie Rozporządzenie o~Ochronie Danych Osobowych (RODO):
+brak pełnego grafu lineage sprawia, że~dotarcie do~wszystkich kopii danych
+konkretnej osoby jest czasochłonne lub~niemożliwe, co~może skutkować
+nałożeniem kar finansowych~\cite{Boinski2025}.
+
+
+\section{Cel i~zakres pracy}
+
+% [PRZEPISANE POD NOWĄ KONCEPCJĘ.]
+Celem pracy jest zbadanie, w~jakim stopniu \emph{sama topologia} grafu lineage
+pozwala wskazać tabele o~zerwanej ciągłości pochodzenia danych, bez~dostępu
+do~semantyki nazw obiektów, schematów bazy czy~ontologii. Zadanie sformułowano
+jako ranking węzłów typu \emph{Data Table} według prawdopodobieństwa,
+że~tabela została dotknięta zjawiskiem broken lineage; tabele takie
+nazywane są~dalej \emph{zainfekowanymi} (ang. \emph{infected}).
+Zakres obejmuje:
+
+\begin{itemize}
+  \item metodykę symulacji broken lineage przez usuwanie zadań (jobów)
+        i~wyznaczanie zbioru tabel zainfekowanych jako etykiet referencyjnych,
+  \item porównanie trzech klas metod detekcji: heurystyk strukturalnych,
+        klasycznych klasyfikatorów uczenia maszynowego opartych na~cechach
+        pozycji węzła w~grafie DAG oraz~autorskiego detektora
+        \emph{LineageDetector},
+  \item ewaluację w~protokole \emph{indukcyjnym} cross-graph (trenowanie
+        na~części grafów, testowanie na~grafach niewidzianych),
+  \item analizę wrażliwości wyniku na~odsetek usuwanych jobów oraz kontrolę
+        przecieku wynikającego z~trywialnie izolowanych węzłów.
+\end{itemize}
+
+Eksperymenty przeprowadzono na~zbiorze danych DLG-DG-23, obejmującym
+18~zanonimizowanych grafów lineage ze~środowiska Huawei Cloud~\cite{Chen2024}.
+
+% [ZACHOWANE — ograniczenia zakresu, uzupełnione.]
+Zakres pracy nie~obejmuje odtworzenia rzeczywistego schematu bazy danych,
+analizy treści zanonimizowanych danych ani odtwarzania konkretnych brakujących
+krawędzi. Predykcja krawędzi została zachowana jako \emph{badanie wstępne},
+którego wyniki motywują zmianę ujęcia problemu na~poziom węzłów
+(sekcja~\ref{sec:badanie_wstepne}).
+
+
+\section{Struktura pracy}
+
+Praca składa się z~pięciu rozdziałów. Rozdział~2 zawiera przegląd pojęć
+podstawowych (data lineage, data provenance, broken lineage oraz detekcja
+anomalii w~grafach) a~także omówienie wybranych prac z~literatury i~stosowanych
+metryk ewaluacji. Rozdział~3 opisuje problem badawczy, metodykę symulacji
+broken lineage przez usuwanie jobów, architekturę zaproponowanego rozwiązania
+oraz zaimplementowane algorytmy detekcji. Rozdział~4 prezentuje wyniki
+eksperymentów przeprowadzonych na~zbiorze DLG-DG-23 wraz z~ich analizą.
+Rozdział~5 zawiera wnioski końcowe, podsumowanie uzyskanych wyników oraz
+propozycje dalszych kierunków badań.
+
+% ============================================================
+%  ROZDZIAŁ 2 — PODSTAWY TEORETYCZNE I PRZEGLĄD LITERATURY
+% ============================================================
+\chapter{Podstawy teoretyczne i~przegląd literatury}
+
+Niniejszy rozdział wprowadza pojęcia podstawowe niezbędne do~zrozumienia
+dalszych części pracy. W~sekcji~\ref{sec:lineage_def} zdefiniowano pojęcia
+data lineage i~data provenance. Sekcja~\ref{sec:graf_lineage} opisuje
+strukturę grafów lineage na~przykładzie zbioru danych DLG-DG-23.
+Sekcja~\ref{sec:broken_lineage} omawia przyczyny niekompletności grafów,
+a~sekcja~\ref{sec:node_detection} przedstawia zadanie detekcji węzłów
+o~zerwanym lineage.
+Sekcja~\ref{sec:metryki} opisuje metryki ewaluacji, a~sekcja~\ref{sec:literatura}
+zawiera przegląd wybranej literatury.
+
+\section{Data lineage i~data provenance}
+\label{sec:lineage_def}
+
+% [ZACHOWANE — definicje. Aktualne niezależnie od koncepcji.]
+Pojęcia \emph{data lineage} i~\emph{data provenance} są w~literaturze
+stosowane zarówno zamiennie, jak i~z~rozróżnieniem semantycznym~\cite{Psallidas2022}.
+W~węższym ujęciu \emph{data lineage} odnosi się do~śledzenia przepływu
+informacji przez kolejne etapy przetwarzania, opisuje, przez jakie
+transformacje przeszły dane i~jak zmieniała się ich postać. Z~kolei
+\emph{data provenance} kładzie nacisk na~pochodzenie i~autentyczność danych,
+rejestruje, skąd dane zostały pobrane i~kto je~wytworzył. W~praktyce
+granica między tymi pojęciami jest płynna i~większość opracowań traktuje je
+jako synonimy. Takie podejście przyjęto również w~niniejszej pracy.
+
+Znajomość historii danych ma~istotne znaczenie praktyczne. W~systemach
+raportowych możliwość odtworzenia ścieżki transformacji pozwala zlokalizować
+źródło błędnych wartości, bez~tej informacji ręczna weryfikacja wielkich
+zbiorów danych jest nieefektywna. Innym przykładem jest bezpieczne usuwanie
+obiektów bazy: tabela pozornie niepowiązana z~żadnym procesem może
+w~rzeczywistości dostarczać danych do~raportów końcowych, a~jej usunięcie
+spowoduje utratę danych bez~widocznego komunikatu~błędu~\cite{Boinski2025}.
+
+\section{Struktura grafu lineage w~zbiorze DLG-DG-23}
+\label{sec:graf_lineage}
+
+% [ZACHOWANE — opis struktury grafu; kluczowe dla nowej koncepcji, bo
+%  detekcja operuje na tych samych typach węzłów/krawędzi.]
+Zbiór danych DLG-DG-23, opracowany przez Chen et~al.~\cite{Chen2024},
+zawiera 18~grafów lineage pobranych ze~środowiska produkcyjnego Huawei
+Cloud. Dane zostały zanonimizowane — nie~udostępniono schematów tabel.
+Grafy różnią się skalą: liczba węzłów waha się od~278 do~17~085.
+
+Każdy graf zawiera trzy typy węzłów:
+
+\begin{itemize}
+  \item \textbf{Data Job} — zapytanie SQL lub~zadanie ETL (ang. \emph{Extract,
+        Transform, Load}),
+  \item \textbf{Data Table} — tabela lub~widok przechowujący dane,
+  \item \textbf{field} — atrybut (kolumna) należący do~tabeli.
+\end{itemize}
+
+Krawędzie grafu przyjmują dwa typy:
+
+\begin{itemize}
+  \item \textbf{DATA\_FLOW} — krawędź skierowana między tabelą a~jobem
+        lub~w~kierunku odwrotnym; reprezentuje przepływ danych,
+  \item \textbf{PARENT\_CHILD} — krawędź między tabelą a~jej atrybutem
+        (polem); wyraża relację przynależności kolumny do~tabeli.
+\end{itemize}
+
+Pełny graf DLG-DG-23 jest grafem heterogenicznym: zawiera węzły trzech
+typów połączone krawędziami dwóch typów. W~niniejszej pracy przedmiotem
+detekcji są wyłącznie węzły typu \emph{Data Table}, a~sygnał czerpany jest
+z~podgrafu przepływu danych (krawędzie \emph{DATA\_FLOW} między węzłami
+\emph{Data Table} i~\emph{Data Job}). Podgraf ten ma~strukturę dwudzielną
+i~skierowaną, co~pozwala interpretować go~jako graf DAG przepływu danych.
+
+Rysunek~\ref{rys:przed-po} przedstawia poglądowy fragment grafu przepływu
+danych przed usunięciem zadania i~po~jego usunięciu. Usunięcie zadania~J1
+pozbawia tabele T1~i~T2 konsumenta, a~tabelę~T3 — producenta; wszystkie
+trzy stają się zainfekowane, choć pozostają w~grafie (T3~zachowuje
+połączenie z~zadaniem~J2).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{rys_graf_przed_po.pdf}
+  \caption{Fragment grafu przepływu danych: (a)~graf oryginalny,
+           (b)~graf po~usunięciu zadania~J1. Tabele zainfekowane
+           oznaczono kolorem czerwonym, krawędzie utracone — linią
+           przerywaną.}
+  \label{rys:przed-po}
+\end{figure}
+
+% [Tabela statystyk 18 grafów znajduje się w rozdziale 3 (tab:dlg-stats).]
+
+\section{Niekompletność grafów lineage — broken lineage}
+\label{sec:broken_lineage}
+
+% [ZACHOWANE — przyczyny broken lineage. Aktualne.]
+Graf lineage bywa niekompletny z~kilku powodów. Tabele tymczasowe,
+tworzone na~potrzeby pojedynczej sesji lub~procesu ETL, znikają po~jego
+zakończeniu. Jeśli pośredniczyły w~przepływie danych między dwoma trwałymi
+tabelami, znika wraz z~nimi odpowiedni fragment grafu. Analogiczny skutek
+mają widoki zmaterializowane tworzone tymczasowo oraz funkcje definiowane
+przez użytkownika (ang. \emph{User-Defined Function}, UDF), które opakowują
+logikę transformacji bez~jawnego zapisu przepływu danych~\cite{Yamada2023}.
+
+% [ZMIENIONE — konsekwencja opisana na poziomie WĘZŁÓW, nie krawędzi.]
+Zjawisko to, określane jako \emph{broken lineage}, prowadzi do~sytuacji,
+w~której tabela traci część lub~całość informacji o~swoim pochodzeniu:
+przestaje mieć widocznego producenta danych (zadanie zapisujące) lub~ich
+konsumenta (zadanie czytające), mimo że~rzeczywista zależność istnieje.
+W~niniejszej pracy problem broken lineage jest modelowany jako zadanie
+\textbf{detekcji zainfekowanych węzłów} — dla~każdej tabeli algorytm ocenia
+prawdopodobieństwo, że~jej lineage został zerwany. Formalne ujęcie problemu
+przedstawiono w~rozdziale~3.
+
+\section{Detekcja węzłów o~zerwanym lineage}
+\label{sec:node_detection}
+
+% [NOWA SEKCJA — zastępuje dawną „Wykrywanie brakujących krawędzi".]
+Detekcja anomalii na~poziomie węzłów grafu polega na~przypisaniu każdemu
+węzłowi wyniku (score) wyrażającego stopień, w~jakim odbiega on~od~wzorca
+uznawanego za~poprawny, a~następnie na~uszeregowaniu węzłów według tego
+wyniku. W~kontekście grafów lineage węzłem podejrzanym jest tabela, której
+sąsiedztwo w~grafie DAG sugeruje niekompletność pochodzenia danych.
+
+W~przeciwieństwie do~predykcji krawędzi, zadanie nie~polega na~wskazaniu
+\emph{której} krawędzi brakuje, lecz~\emph{które tabele} są~dotknięte
+brakiem. Jest to~zadanie rankingowe, ocenianie metrykami czułymi
+na~uszeregowanie (sekcja~\ref{sec:metryki}), a~nie~klasyfikacji przy~ustalonym
+progu. Motywacja dla~tego ujęcia wynika z~ograniczeń danych DLG-DG-23:
+rzadkość grafów sprawia, że~sygnał o~konkretnej brakującej parze obiektów jest
+zbyt słaby (sekcja~\ref{sec:badanie_wstepne}), natomiast wskazanie
+podejrzanych tabel pozostaje wykonalne.
+
+W~pracy zastosowano trzy klasy metod detekcji:
+
+\begin{enumerate}
+  \item \textbf{Heurystyki strukturalne} — reguły oparte wyłącznie
+        na~pozycji węzła w~grafie (stopień, rola korzeń/liść) oraz~autorski
+        score kompletności \emph{peer-consistency}; nie~wymagają uczenia.
+  \item \textbf{Klasyczne metody ML} — Random Forest, RUSBoost i~LightGBM;
+        klasyfikują węzeł na~podstawie wektora cech pozycji w~DAG. Ze~względu
+        na~anonimizację (UUID) metryki podobieństwa nazw (np.~Jaro-Winkler
+        stosowane w~\cite{Boinski2025}) są~nieaplikowalne.
+  \item \textbf{Autorski detektor LineageDetector} — łączy cechy pozycji
+        w~DAG, relacyjny score kompletności oraz~kalibrację prawdopodobieństw
+        (isotonic), dając rzetelne oszacowanie $p(\text{zainfekowana})$.
+\end{enumerate}
+
+% [UWAGA: Node2Vec USUNIĘTY z tej wersji — jest transduktywny i nieporównywalny
+%  między grafami w protokole indukcyjnym; wspomniany jako future work w rozdz. 5.]
+
+\section{Metryki ewaluacji}
+\label{sec:metryki}
+
+% [ZMIENIONE — metryki rankingowe zamiast klasyfikacji przy progu 0.5.
+%  AUC-ROC/AUC-PR zachowane; F1 usunięte na rzecz Precision@k/Recall@k/Hits@k.]
+Zadanie detekcji ma~charakter rankingowy, dlatego stosuje się metryki
+oceniające jakość uszeregowania węzłów, a~nie~pojedynczej decyzji przy~progu:
+
+\begin{itemize}
+  \item \textbf{AUC-ROC} — pole pod krzywą ROC; mierzy zdolność modelu
+        do~postawienia zainfekowanej tabeli wyżej w~rankingu niż czystej,
+  \item \textbf{AUC-PR} — pole pod krzywą precyzja–czułość; szczególnie
+        istotne przy~niezrównoważonych klasach, gdy liczba tabel czystych
+        wielokrotnie przewyższa liczbę zainfekowanych,
+  \item \textbf{Precision@k} — frakcja tabel faktycznie zainfekowanych
+        wśród $k$ najwyżej sklasyfikowanych,
+  \item \textbf{Recall@k} — frakcja wszystkich zainfekowanych tabel odzyskanych
+        w~pierwszych $k$ pozycjach rankingu,
+  \item \textbf{Hits@k} — czy~wśród $k$ czołowych pozycji znajduje się
+        co~najmniej jedna tabela zainfekowana,
+  \item \textbf{Brier score} — jakość kalibracji prawdopodobieństw
+        (istotna dla~detektora zwracającego $p(\text{zainfekowana})$).
+\end{itemize}
+
+Metryki rankingowe są~szczególnie istotne w~warunkach niezrównoważonych klas,
+charakterystycznych dla~grafów rzadkich, gdzie liczba tabel czystych
+wielokrotnie przewyższa liczbę tabel zainfekowanych~\cite{Boinski2025,KohanMarzagao2023}.
+
+\section{Wyniki systematycznego przeglądu literatury}
+\label{sec:literatura}
+
+% [ZACHOWANE + ROZSZERZONE. Ramy przeglądu aktualne; dodano prace
+%  z pivotu (Dutkiewicz/Misiorek, Andrzejewski/DARLIAP, Brzeski) oraz
+%  reframing luki badawczej: nikt nie robi detekcji na poziomie węzłów.]
+Przeprowadzony systematyczny przegląd literatury (ang. \emph{Systematic
+Literature Review}, SLR) pozwolił zidentyfikować prace bezpośrednio
+odnoszące się do~postawionych pytań badawczych. Kluczowa obserwacja jest
+następująca: wszystkie dotychczasowe prace o~broken lineage między obiektami
+bazy modelują problem jako \emph{predykcję krawędzi}. Detekcji na~poziomie
+węzłów — wskazania, które tabele mają zerwany lineage — literatura
+ta~nie~podejmuje,
+i~w~tym miejscu niniejsza praca lokuje swój wkład.
+
+\subsection{Leveraging machine learning techniques for discovering broken
+lineage links}
+% [ZACHOWANE — Boiński et al. Rola ZMIENIONA: z „głównej inspiracji
+%  metodycznej" na „pracę kontrastową wykrywającą krawędzie".]
+\noindent\textbf{Autorzy:} Boiński, Andrzejewski, Grocholewski,
+Gruszczyński, Wrembel~\cite{Boinski2025}.
+
+\noindent\textbf{Problem badawczy.}
+Ciągłość grafów \emph{data lineage} ulega przerwaniu, gdy w~potokach ETL
+wykorzystywane są obiekty pośrednie — tabele tymczasowe lub~UDF. W~rezultacie
+narzędzia klasy \emph{data governance} tracą ślad przepływu danych i~błędnie
+interpretują trwałą tabelę źródłową oraz~tabelę docelową jako byty niezależne.
+
+\noindent\textbf{Zaproponowane rozwiązanie.}
+Autorzy formułują problem rekonstrukcji przerwanych zależności jako binarną
+klasyfikację par obiektów bazodanowych, z~inżynierią cech opartą na~metadanych
+i~podobieństwie nazw (Jaro–Winkler), klasyfikatorami Random Forest, RUSBoost,
+BalancedBagging i~LightGBM oraz~generowaniem etykiet metodą rekurencyjnego
+zastępowania tabel tymczasowych ich trwałymi źródłami. Ze~względu na~brak
+publicznych danych autorzy wygenerowali syntetyczne schematy baz LLM-ami.
+
+\noindent\textbf{Analiza krytyczna i~relacja do~pracy.}
+Najwyższą skuteczność osiągnął RUSBoost (F1~=~0{,}79). Praca ta~stanowi
+punkt wyjścia niniejszej pracy, jednak \emph{istotnie się~od~niej różni}:
+Boiński et~al.\ przewidują \emph{krawędzie} i~korzystają z~semantyki nazw,
+podczas gdy w~niniejszej pracy detekcja odbywa się na~poziomie \emph{węzłów}
+i~wyłącznie na~podstawie topologii (dane DLG-DG-23 są~zanonimizowane).
+Adaptowano natomiast rodzinę klasyfikatorów (RF, RUSBoost, LightGBM)
+jako~punkty odniesienia dla~autorskiego detektora.
+
+\subsection{An open dataset of data lineage graphs}
+% [ZACHOWANE w całości — Chen et al., DLG-DG-23. W pełni aktualne.]
+\noindent\textbf{Autorzy:} Chen, Zhao, Li, Zhang, Long, Zhou~\cite{Chen2024}.
+
+\noindent\textbf{Problem badawczy.}
+Rozwój metod w~obszarze \emph{data governance} jest ograniczany przez~brak
+ogólnodostępnych, rzeczywistych zbiorów danych; przedsiębiorstwa nie~udostępniają
+grafów lineage ze~względu na~poufność.
+
+\noindent\textbf{Zaproponowane rozwiązanie.}
+Autorzy opublikowali zbiór DLG-DG-23 — pierwszy otwarty zestaw rzeczywistych
+grafów pochodzenia danych: 18~grafów w~zakresie 278–17~085 węzłów,
+ze~środowiska produkcyjnego Huawei Cloud (dane zanonimizowane), z~węzłami
+trzech typów (tabela, zadanie, pole) i~relacjami przepływu oraz~hierarchii.
+
+\noindent\textbf{Analiza krytyczna i~relacja do~pracy.}
+Unikatową wartością zbioru jest jego rzeczywiste pochodzenie przemysłowe.
+Ograniczeniem jest niewielka liczba grafów oraz~anonimizacja atrybutów.
+W~niniejszej pracy DLG-DG-23 pełni rolę referencyjnego zbioru danych
+(\emph{ground truth}) we~wszystkich eksperymentach.
+
+\subsection{Data lineage discovery in databases based on knowledge graph
+link prediction}
+% [ROZSZERZONE — pełny opis SLR; kluczowa praca grupy promotora.]
+\noindent\textbf{Autorzy:} Dutkiewicz, Misiorek, Wrembel~\cite{Dutkiewicz2026}.
+
+\noindent\textbf{Problem badawczy.}
+Automatyczne odkrywanie brakujących zależności lineage między obiektami
+bazy danych jest słabo zbadane, ponieważ rzeczywiste dane biznesowe
+i~schematy baz nie~są publicznie dostępne — w~konsekwencji brakuje
+benchmarków umożliwiających rzetelną ewaluację metod odkrywania.
+
+\noindent\textbf{Zaproponowane rozwiązanie.}
+Praca wnosi trzy artefakty: (1)~procedurę generowania scenariuszy broken
+lineage za~pomocą frameworku opartego na~LLM, obejmującą dziewięć typów
+scenariuszy (m.in.~kopiowanie danych, transformacje, złączenia, deduplikację,
+widoki, zapytania rekurencyjne, partycjonowanie i~tabele tymczasowe);
+(2)~model semantyczny transformujący scenariusze do~grafu wiedzy (RDF,
+relacja \emph{valueDerivedFrom} inspirowana ontologią PROV-O);
+(3)~dostosowany do~lineage protokół ewaluacji \emph{w~pełni indukcyjnej}
+predykcji krawędzi ($\mathcal{E}_{\mathrm{train}} \cap
+\mathcal{E}_{\mathrm{test}} = \emptyset$) z~użyciem path-based GNN,
+próbkowaniem negatywów 50:1 oraz~metrykami AUROC i~Hits@10.
+
+\noindent\textbf{Analiza krytyczna i~relacja do~pracy.}
+Wyniki są~silnie zależne od~typu scenariusza: proste kopiowanie danych
+osiąga AUROC 0{,}92 (model dedykowany), lecz scenariusze złożone spadają
+do~$\approx$0{,}60, a~\emph{tabele tymczasowe} — najczęstsza praktyczna
+przyczyna broken lineage — do~AUROC 0{,}49, czyli poziomu losowego.
+Potwierdza to~trudność problemu nawet dla~zaawansowanych metod
+grafowo-semantycznych. Z~pracy tej zaadaptowano do~niniejszej pracy
+\emph{protokół indukcyjny cross-graph} oraz~zestaw metryk rankingowych.
+Zasadnicza różnica: Dutkiewicz et~al.\ przewidują krawędzie w~grafie
+wiedzy wzbogaconym semantycznie, podczas gdy niniejsza praca operuje
+na~poziomie węzłów i~czystej topologii.
+
+\subsection{On discovering provenance of data warehouse objects created
+by select-project queries}
+% [ROZSZERZONE — pełny opis SLR; praca DARLIAP grupy promotora.]
+\noindent\textbf{Autorzy:} Andrzejewski, Boiński, Wrembel~\cite{Andrzejewski2025}.
+
+\noindent\textbf{Problem badawczy.}
+W~hurtowniach danych obiekty (np.~widoki zmaterializowane) powstają
+z~innych obiektów przez zapytania select-project, a~potoki integracji danych
+tworzą obiekty tymczasowe i~ulotne (tabele tymczasowe, zmienne globalne,
+kursory), których zależności nie~są automatycznie rejestrowane i~zanikają
+po~zakończeniu zadania.
+
+\noindent\textbf{Zaproponowane rozwiązanie.}
+Podejście analityczne (niewymagające uczenia maszynowego): (1)~algorytm
+odzyskujący współczynniki (nachylenie i~wyraz wolny) funkcji liniowej
+zastosowanej w~projekcji oraz~(2)~algorytm odtwarzający warunek selekcji
+użyty w~zapytaniu. Zależność między obiektami jest wykrywana przez
+dopasowanie modelu matematycznego do~\emph{wartości} przechowywanych danych.
+
+\noindent\textbf{Analiza krytyczna i~relacja do~pracy.}
+Metoda daje dokładne, interpretowalne wyniki, lecz jej założenia
+są~restrykcyjne: wymaga dostępu do~zawartości tabel (wartości danych)
+oraz~ogranicza się do~transformacji liniowych w~zapytaniach select-project.
+W~warunkach niniejszej pracy (zanonimizowane grafy bez~dostępu do~danych
+i~schematów) podejście to~jest nieaplikowalne, co~dodatkowo motywuje
+pytanie o~granice sygnału czysto topologicznego.
+
+\subsection{Inferring missing data lineage links from schema metadata
+using transformer-based models}
+% [ROZSZERZONE — pełny opis SLR; praca kontrastowa (semantyka schematu).]
+\noindent\textbf{Autorzy:} Brzeski, Roman~\cite{Brzeski2025}.
+
+\noindent\textbf{Problem badawczy.}
+Istniejące metody ekstrakcji lineage (instrumentacja, analiza czasu
+wykonania, adnotowane potoki) zawodzą, gdy informacja o~przepływie jest
+częściowo niedostępna — np.~w~środowiskach hybrydowych, systemach
+zastanych (\emph{legacy}) lub~przy audytach post~hoc.
+
+\noindent\textbf{Zaproponowane rozwiązanie.}
+Dwustopniowa metoda wnioskowania \emph{kierunkowych} zależności lineage
+na~poziomie kolumn wyłącznie z~metadanych schematu, inspirowana technikami
+dopasowywania schematów: bi-enkoder transformerowy filtruje kandydatów,
+a~cross-enkoder wykonuje precyzyjną predykcję. Ewaluacja na~wielkoskalowych
+danych komercyjnych z~ekstremalną nierównowagą klas (1~poprawny link
+na~90\,000 par kandydackich).
+
+\noindent\textbf{Analiza krytyczna i~relacja do~pracy.}
+Praca pokazuje, że~przy~dostępnej semantyce nazw kolumn i~schematów modele
+transformerowe skutecznie odzyskują zależności mimo skrajnej nierównowagi
+klas. Warunkiem jest jednak dokładnie ta~informacja, której w~zbiorze
+DLG-DG-23 brak (identyfikatory UUID) — sygnał semantyczny i~sygnał
+topologiczny badany w~niniejszej pracy są~zatem komplementarne, a~ich
+połączenie stanowi naturalny kierunek dalszych badań.
+
+\subsection{Luka badawcza}
+% [Konkluzja przeglądu — pozycjonowanie wkładu.]
+Wszystkie omówione prace — od~klasycznego ML na~cechach
+semantyczno-topologicznych~\cite{Boinski2025}, przez metody
+analityczne~\cite{Andrzejewski2025} i~transformery na~metadanych
+schematu~\cite{Brzeski2025}, po~indukcyjne GNN na~grafach
+wiedzy~\cite{Dutkiewicz2026} — modelują broken lineage jako~odtwarzanie
+\emph{zależności} (krawędzi lub~parametrów transformacji). Żadna nie~stawia
+pytania, \emph{które tabele mają zerwany lineage}. Niniejsza praca jest
+wobec nich komplementarna i~może stanowić etap wstępny (wskazanie
+podejrzanych tabel) poprzedzający kosztowniejsze odtwarzanie konkretnych
+zależności.
+
+\subsection{Prace kontekstowe}
+% [ZACHOWANE — kontekst. Uzupełnione o anomalie węzłów w grafach provenance.]
+Spośród pozostałych prac na~uwagę zasługuje metoda \emph{Provenance Graph
+Kernel} (PGK)~\cite{KohanMarzagao2023}, definiująca miary podobieństwa
+grafów proweniencji. Detekcja anomalii na~poziomie węzłów pojawia się
+w~pokrewnej dziedzinie systemowych grafów provenance i~bezpieczeństwa
+(np.~heterogeniczne GNN~\cite{Shan2023}), nie~była jednak dotąd stosowana
+do~lineage obiektów bazodanowych. Prace dotyczące proweniencji rekurencyjnych
+zapytań SQL~\cite{Dietrich2022}, analizy logów~\cite{Psallidas2022} oraz~UDF
+\cite{Yamada2023} tworzą szerszy kontekst literaturowy.
+
+% ============================================================
+%  ROZDZIAŁ 3 — PROBLEM I SPOSÓB JEGO ROZWIĄZANIA
+% ============================================================
+% Treść rozdziału 3 w osobnym pliku (nowa koncepcja):
+\input{03_problem_i_architektura}
+
+% ============================================================
+%  ROZDZIAŁ 4 — OCENA ROZWIĄZANIA
+% ============================================================
+\chapter{Ocena rozwiązania}
+
+Niniejszy rozdział przedstawia wyniki eksperymentów przeprowadzonych
+zgodnie z~metodologią opisaną w~rozdziale~3. Dla~każdej z~metod detekcji
+podano wartości metryk rankingowych uśrednione po~grafach zbioru DLG-DG-23
+w~protokole indukcyjnym.
+
+\section{Badanie wstępne: predykcja krawędzi}
+\label{sec:badanie_wstepne}
+
+% [ZACHOWANE JAKO BADANIE WSTĘPNE — dawny główny wątek pracy (predykcja
+%  krawędzi, scenariusze A/B/C) staje się uzasadnieniem pivotu.]
+% TODO: Zwięźle zreferować wyniki predykcji krawędzi (scenariusze A/B/C):
+%   tylko jeden scenariusz nielosowy (AUC-ROC ~0.70), pozostałe ~losowo.
+%   Wniosek: rzadkość grafów uniemożliwia wiarygodną predykcję krawędzi
+%   → motywacja przejścia na detekcję węzłów. Źródła liczb: results/
+%   (wyniki_scenariusze.csv) oraz mail_do_promotora.txt (_surowce/).
+
+\section{Wyniki detekcji węzłów o~zerwanym lineage}
+\label{sec:wyniki}
+
+% TODO (WYMAGANE): Tabela zbiorcza — jeden wiersz na metodę (heurystyki,
+%   RF, RUSBoost, LightGBM, LineageDetector) × metryka (AUC-ROC, AUC-PR,
+%   Precision@k, Brier). Wariant UCZCIWY jako główny, napompowany w aneksie.
+%   ŹRÓDŁO LICZB — WYŁĄCZNIE BIEG KANONICZNY (nie mieszać z _v2!):
+%     results/README_BIEG_KANONICZNY.md (opis + ustawienia),
+%     results/agregat_detekcja.csv (agregat, 8 grafów wiarygodnych),
+%     results/tabela_detekcja.tex (gotowa tabela LaTeX do \input).
+%   Liczby (wariant uczciwy, indukcyjny):
+%     - score kompletności: AUC-ROC 0.559 (najlepsza heurystyka),
+%     - Random Forest: AUC-ROC 0.749,
+%     - LightGBM: AUC-ROC 0.720,
+%     - LineageDetector: AUC-ROC 0.771, AUC-PR 0.435, Precision@k 0.443,
+%       Brier 0.106 (najlepszy na wszystkich metrykach).
+%   Uwaga: w tym biegu P@k = R@k = Hits@k (k = liczba zainfekowanych) —
+%   opisać słownie, nie sugerować trzech niezależnych metryk.
+%   Wprowadzić tabelę zdaniem „Tabela~X przedstawia...".
+%   Rysunek gotowy: figures/rys_auc_uczciwy_napompowany.pdf.
+
+\section{Kontrola przecieku i~analiza wrażliwości}
+\label{sec:przeciek}
+
+% TODO (WYMAGANE): Opisać problem przecieku izolacji:
+%   po usunięciu joba ~29% chorych tabel staje się DATA_FLOW-izolowanych
+%   (0% czystych), co czyni regułę „izolowana ⟹ chora" trywialną i zawyża
+%   wynik. Flaga exclude_isolated daje wariant uczciwy. Porównać:
+%     - napompowany (10 grafów): RF 0.816, LightGBM 0.805, LineageDetector
+%       0.842; heurystyki boundary 0.600, low_job_connectivity 0.518,
+%     - uczciwy (8 grafów): RF 0.749, LightGBM 0.720, LineageDetector 0.771;
+%       heurystyki spadają do 0.455 / 0.324 („żyły z przecieku").
+%   ŹRÓDŁA — BIEG KANONICZNY: results/agregat_detekcja.csv (uczciwy) vs
+%   results/agregat_detekcja_napompowany.csv (napompowany).
+%   ⚠ HACZYK: warianty mają RÓŻNE zbiory grafów wiarygodnych (8 vs 10) —
+%   nie odejmować liczb 1:1; czyste porównanie tylko na wspólnym podzbiorze
+%   (patrz results/README_BIEG_KANONICZNY.md).
+
+% TODO (WYMAGANE): Analiza wrażliwości na removal_ratio
+%   (results/_faza2_runs.txt, sekcja SWEEP): LineageDetector przy ratio
+%   0.05/0.10/0.20/0.30 daje AUC-ROC 0.761/0.771/0.755/0.754 — stabilny.
+%   Rysunek gotowy: figures/rys_wrazliwosc_removal_ratio.pdf.
+
+\section{Analiza wyników}
+\label{sec:analiza}
+
+% TODO: Dlaczego LineageDetector wygrywa (score kompletności dokłada sygnał
+%   relacyjny, którego nie ma w cechach lokalnych; kalibracja poprawia Brier).
+%   Dlaczego heurystyki oparte na wspólnych sąsiadach nie działają (bipartytowość).
+%   Trudność: osierocona tabela-następnik wygląda jak prawdziwe źródło.
+
+% ============================================================
+%  ROZDZIAŁ 5 — UWAGI KOŃCOWE
+% ============================================================
+\chapter{Uwagi końcowe}
+
+Niniejszy rozdział zawiera podsumowanie uzyskanych wyników, wnioski
+dotyczące skuteczności zastosowanych metod detekcji oraz propozycje
+dalszych kierunków badań.
+
+\section{Podsumowanie}
+\label{sec:podsumowanie}
+
+% TODO: Odpowiedzieć na pytania badawcze PB1–PB4.
+%   Główny wniosek: sama topologia niesie umiarkowany, ale użyteczny sygnał
+%   o broken lineage na poziomie węzłów (LineageDetector AUC-ROC 0.771,
+%   wariant uczciwy, indukcyjny). Pozycjonowanie: topology-only baseline
+%   dla porównania z metodami KG/GNN grupy promotora.
+
+\section{Kierunki dalszych badań}
+\label{sec:dalsze_badania}
+
+% TODO: Propozycje rozszerzeń:
+%   - indukcyjne GNN (GraphSAGE, R-GCN, HGT) jako następny krok po cechach
+%     topologicznych; Node2Vec wykluczono z protokołu indukcyjnego jako
+%     transduktywny (embeddingi nieporównywalne między grafami) — to WYNIK
+%     motywujący GNN, nie luka;
+%   - ewaluacja na benchmarku KG grupy promotora (github.com/dudenzz/lineage);
+%   - uwzględnienie semantyki nazw/schematów, jeśli dane staną się dostępne;
+%   - połączenie detekcji węzłów z predykcją krawędzi w potok dwuetapowy.
+
+% ============================================================
+%  LITERATURA
+% ============================================================
+\bibliographystyle{plain}{\raggedright\sloppy\small\bibliography{bibliography}}
+
+% ============================================================
+%  STRONA PRAW AUTORSKICH (wymagana przez szablon PP)
+% ============================================================
+\ppcolophon
+
+\end{document}

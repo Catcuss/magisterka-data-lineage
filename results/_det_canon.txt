@@ -1,0 +1,213 @@
+Grafy:        ['DLG1', 'DLG2', 'DLG3', 'DLG4', 'DLG5', 'DLG6', 'DLG7', 'DLG8', 'DLG9', 'DLG10', 'DLG11', 'DLG12', 'DLG13', 'DLG14', 'DLG15', 'DLG16', 'DLG17', 'DLG18']
+Powtórzenia:  3 (seedy 42-44)
+removal_ratio=0.1, side=both, exclude_isolated=True, single_job=False, MIN_POS=5
+
+Seed 42...
+Seed 43...
+Seed 44...
+
+================================================================================================
+DETEKCJA ZAINFEKOWANYCH WĘZŁÓW — wyniki per graf (indukcyjny, leave-one-out)
+================================================================================================
+Graf     Kand.  Inf.  Algorytm                AUC-ROC  AUC-PR    P@k  Hits@k   Brier
+------------------------------------------------------------------------------------------------
+DLG1        13    1 ! degree_anomaly            0.727   0.310  0.000   0.000   0.071
+                      boundary                  0.583   0.091  0.000   0.000   0.769
+                      low_job_connectivity      0.692   0.125  0.000   0.000   0.192
+                      completeness              0.500   0.077  0.000   0.000   0.077
+                      rule_root                 0.792   0.167  0.000   0.000   0.385
+                      RandomForest              0.545   0.225  0.000   0.000   0.129
+                      RUSBoost                  0.500   0.077  0.000   0.000   0.123
+                      LightGBM                  0.591   0.250  0.000   0.000   0.181
+                      LineageDetector           0.818   0.450  0.000   0.000   0.109
+
+DLG2        21    1 ! degree_anomaly            0.556   0.139  0.000   0.000   0.086
+                      boundary                  0.583   0.077  0.000   0.000   0.750
+                      low_job_connectivity      0.079   0.074  0.000   0.000   0.228
+                      completeness              0.474   0.095  0.000   0.000   0.100
+                      rule_root                 0.461   0.089  0.000   0.000   0.571
+                      RandomForest              0.645   0.562  0.500   0.500   0.106
+                      RUSBoost                  0.750   0.548  0.500   0.500   0.050
+                      LightGBM                  0.632   0.562  0.500   0.500   0.158
+                      LineageDetector           0.763   0.591  0.500   0.500   0.073
+
+DLG3        26    3 ! degree_anomaly            0.142   0.111  0.000   0.000   0.146
+                      boundary                  0.591   0.182  0.000   0.000   0.692
+                      low_job_connectivity      0.295   0.121  0.250   0.250   0.209
+                      completeness              0.477   0.154  0.000   0.000   0.192
+                      rule_root                 0.761   0.320  0.250   0.250   0.231
+                      RandomForest              0.598   0.457  0.500   0.500   0.127
+                      RUSBoost                  0.644   0.365  0.333   0.333   0.102
+                      LightGBM                  0.659   0.404  0.500   0.500   0.163
+                      LineageDetector           0.674   0.588  0.500   0.500   0.108
+
+DLG4        16    1 ! degree_anomaly            0.475   0.083  0.000   0.000   0.058
+                      boundary                  0.567   0.056  0.000   0.000   0.812
+                      low_job_connectivity      0.050   0.050  0.000   0.000   0.245
+                      completeness              0.375   0.062  0.000   0.000   0.107
+                      rule_root                 0.750   0.091  0.000   0.000   0.476
+                      RandomForest              0.750   0.167  0.000   0.000   0.090
+                      RUSBoost                  0.967   0.500  0.000   0.000   0.050
+                      LightGBM                  0.700   0.143  0.000   0.000   0.153
+                      LineageDetector           0.933   0.500  0.000   0.000   0.054
+
+DLG5        66    9   degree_anomaly            0.405   0.284  0.273   0.273   0.132
+                      boundary                  0.340   0.127  0.111   0.111   0.815
+                      low_job_connectivity      0.233   0.097  0.000   0.000   0.243
+                      completeness              0.567   0.258  0.273   0.273   0.133
+                      rule_root                 0.590   0.168  0.444   0.444   0.385
+                      RandomForest              0.662   0.373  0.364   0.364   0.146
+                      RUSBoost                  0.703   0.323  0.444   0.444   0.155
+                      LightGBM                  0.633   0.460  0.444   0.444   0.171
+                      LineageDetector           0.745   0.469  0.444   0.444   0.115
+
+DLG6       568   82   degree_anomaly            0.439   0.140  0.138   0.138   0.133
+                      boundary                  0.480   0.140  0.138   0.138   0.694
+                      low_job_connectivity      0.309   0.105  0.068   0.068   0.221
+                      completeness              0.627   0.229  0.311   0.311   0.141
+                      rule_root                 0.567   0.170  0.191   0.191   0.460
+                      RandomForest              0.745   0.378  0.340   0.340   0.115
+                      RUSBoost                  0.619   0.234  0.338   0.338   0.151
+                      LightGBM                  0.707   0.354  0.351   0.351   0.141
+                      LineageDetector           0.790   0.427  0.432   0.432   0.099
+
+DLG7        29    1 ! degree_anomaly            0.125   0.038  0.000   0.000   0.038
+                      boundary                  0.339   0.043  0.000   0.000   0.793
+                      low_job_connectivity      0.312   0.045  0.000   0.000   0.227
+                      completeness              0.446   0.034  0.000   0.000   0.060
+                      rule_root                 0.179   0.034  0.000   0.000   0.655
+                      RandomForest              0.464   0.062  0.000   0.000   0.140
+                      RUSBoost                  0.500   0.034  0.000   0.000   0.065
+                      LightGBM                  0.625   0.130  0.000   0.000   0.395
+                      LineageDetector           0.821   0.167  0.000   0.000   0.050
+
+DLG8        18    2 ! degree_anomaly            0.382   0.083  0.000   0.000   0.106
+                      boundary                  0.400   0.086  0.000   0.000   0.778
+                      low_job_connectivity      0.422   0.085  0.000   0.000   0.244
+                      completeness              0.353   0.105  0.000   0.000   0.194
+                      rule_root                 0.515   0.108  0.000   0.000   0.474
+                      RandomForest              0.735   0.250  0.000   0.000   0.124
+                      RUSBoost                  0.500   0.167  0.000   0.000   0.099
+                      LightGBM                  0.647   0.562  0.500   0.500   0.167
+                      LineageDetector           0.789   0.567  0.333   0.333   0.078
+
+DLG9        24    3 ! degree_anomaly            0.217   0.096  0.000   0.000   0.116
+                      boundary                  0.193   0.115  0.000   0.000   0.846
+                      low_job_connectivity      0.222   0.095  0.000   0.000   0.228
+                      completeness              0.205   0.115  0.000   0.000   0.234
+                      rule_root                 0.159   0.115  0.000   0.000   0.731
+                      RandomForest              0.580   0.217  0.000   0.000   0.178
+                      RUSBoost                  0.591   0.115  0.000   0.000   0.161
+                      LightGBM                  0.625   0.248  0.000   0.000   0.214
+                      LineageDetector           0.517   0.200  0.000   0.000   0.105
+
+DLG10      213   36   degree_anomaly            0.417   0.177  0.140   0.140   0.166
+                      boundary                  0.472   0.168  0.133   0.133   0.759
+                      low_job_connectivity      0.323   0.129  0.056   0.056   0.231
+                      completeness              0.428   0.188  0.070   0.070   0.185
+                      rule_root                 0.544   0.195  0.139   0.139   0.553
+                      RandomForest              0.681   0.382  0.349   0.349   0.162
+                      RUSBoost                  0.586   0.246  0.349   0.349   0.156
+                      LightGBM                  0.588   0.370  0.361   0.361   0.161
+                      LineageDetector           0.714   0.397  0.395   0.395   0.136
+
+DLG11       65    6   degree_anomaly            0.513   0.132  0.143   0.143   0.088
+                      boundary                  0.454   0.100  0.167   0.167   0.862
+                      low_job_connectivity      0.386   0.081  0.167   0.167   0.247
+                      completeness              0.492   0.108  0.333   0.333   0.108
+                      rule_root                 0.642   0.150  0.000   0.000   0.415
+                      RandomForest              0.732   0.355  0.167   0.167   0.097
+                      RUSBoost                  0.658   0.279  0.333   0.333   0.075
+                      LightGBM                  0.776   0.327  0.333   0.333   0.122
+                      LineageDetector           0.804   0.368  0.333   0.333   0.070
+
+DLG12      197   26   degree_anomaly            0.356   0.125  0.182   0.182   0.117
+                      boundary                  0.469   0.111  0.080   0.080   0.732
+                      low_job_connectivity      0.389   0.103  0.080   0.080   0.204
+                      completeness              0.585   0.219  0.280   0.280   0.123
+                      rule_root                 0.457   0.115  0.080   0.080   0.611
+                      RandomForest              0.855   0.478  0.520   0.520   0.097
+                      RUSBoost                  0.604   0.236  0.273   0.273   0.131
+                      LightGBM                  0.837   0.342  0.406   0.406   0.131
+                      LineageDetector           0.869   0.474  0.480   0.480   0.089
+
+DLG13      100   13   degree_anomaly            0.446   0.120  0.000   0.000   0.112
+                      boundary                  0.445   0.110  0.167   0.167   0.850
+                      low_job_connectivity      0.198   0.081  0.083   0.083   0.242
+                      completeness              0.602   0.129  0.000   0.000   0.126
+                      rule_root                 0.678   0.180  0.176   0.176   0.440
+                      RandomForest              0.723   0.349  0.250   0.250   0.113
+                      RUSBoost                  0.674   0.259  0.417   0.417   0.113
+                      LightGBM                  0.697   0.300  0.333   0.333   0.180
+                      LineageDetector           0.692   0.380  0.417   0.417   0.106
+
+DLG14        9    1 ! degree_anomaly            0.000   0.056  0.000   0.000   0.054
+                      boundary                  0.000   0.056  0.000   0.000   1.000
+                      low_job_connectivity      0.000   0.056  0.000   0.000   0.261
+                      completeness              0.382   0.056  0.000   0.000   0.130
+                      rule_root                 0.059   0.056  0.000   0.000   0.889
+                      RandomForest              0.882   0.333  0.000   0.000   0.151
+                      RUSBoost                  0.500   0.056  0.000   0.000   0.086
+                      LightGBM                  0.882   0.333  0.000   0.000   0.072
+                      LineageDetector           0.088   0.059  0.000   0.000   0.086
+
+DLG15       25    2 ! degree_anomaly            0.587   0.084  0.000   0.000   0.082
+                      boundary                  0.450   0.062  0.000   0.000   0.875
+                      low_job_connectivity      0.460   0.068  0.000   0.000   0.236
+                      completeness              0.413   0.080  0.000   0.000   0.133
+                      rule_root                 0.380   0.068  0.000   0.000   0.720
+                      RandomForest              0.580   0.262  0.200   0.200   0.135
+                      RUSBoost                  0.600   0.360  0.200   0.200   0.078
+                      LightGBM                  0.670   0.302  0.200   0.200   0.162
+                      LineageDetector           0.770   0.512  0.600   0.600   0.086
+
+DLG16      246   44   degree_anomaly            0.451   0.201  0.146   0.146   0.149
+                      boundary                  0.498   0.166  0.214   0.214   0.605
+                      low_job_connectivity      0.366   0.143  0.179   0.179   0.208
+                      completeness              0.626   0.301  0.400   0.400   0.158
+                      rule_root                 0.565   0.163  0.195   0.195   0.419
+                      RandomForest              0.841   0.613  0.600   0.600   0.085
+                      RUSBoost                  0.599   0.196  0.317   0.317   0.188
+                      LightGBM                  0.783   0.506  0.500   0.500   0.117
+                      LineageDetector           0.818   0.518  0.585   0.585   0.105
+
+DLG17       24    2 ! degree_anomaly            0.000   0.042  0.000   0.000   0.046
+                      boundary                  0.043   0.042  0.000   0.000   0.917
+                      low_job_connectivity      0.043   0.043  0.000   0.000   0.239
+                      completeness              0.283   0.042  0.000   0.000   0.176
+                      rule_root                 0.217   0.042  0.000   0.000   0.583
+                      RandomForest              0.739   0.200  0.000   0.000   0.086
+                      RUSBoost                  0.478   0.042  0.000   0.000   0.078
+                      LightGBM                  0.913   0.333  0.000   0.000   0.198
+                      LineageDetector           0.957   0.500  0.250   0.250   0.046
+
+DLG18      625  110   degree_anomaly            0.386   0.143  0.117   0.117   0.170
+                      boundary                  0.481   0.177  0.157   0.157   0.643
+                      low_job_connectivity      0.389   0.155  0.117   0.117   0.215
+                      completeness              0.547   0.218  0.252   0.252   0.181
+                      rule_root                 0.549   0.199  0.214   0.214   0.470
+                      RandomForest              0.750   0.472  0.447   0.447   0.125
+                      RUSBoost                  0.601   0.223  0.252   0.252   0.249
+                      LightGBM                  0.737   0.393  0.456   0.456   0.156
+                      LineageDetector           0.733   0.448  0.456   0.456   0.128
+
+  ! = #infected < 5: metryki niewiarygodne, wyłączone z agregacji.
+  Brier: niżej = lepsze prawdopodobieństwa (sensowne dla skalibrowanych).
+
+================================================================================================
+PODSUMOWANIE — średnie metryki per algorytm (tylko grafy wiarygodne)
+================================================================================================
+  Algorytm                AUC-ROC  AUC-PR    P@k  Hits@k   Brier  n graf
+  ------------------------------------------------------------------------
+  degree_anomaly            0.427   0.165  0.142   0.142   0.134       8
+  boundary                  0.455   0.137  0.146   0.146   0.745       8
+  low_job_connectivity      0.324   0.112  0.094   0.094   0.226       8
+  completeness              0.559   0.206  0.240   0.240   0.144       8
+  rule_root                 0.574   0.168  0.180   0.180   0.469       8
+  RandomForest              0.749   0.425  0.380   0.380   0.117       8
+  RUSBoost                  0.631   0.249  0.340   0.340   0.152       8
+  LightGBM                  0.720   0.381  0.398   0.398   0.147       8
+  LineageDetector           0.771   0.435  0.443   0.443   0.106       8
+
+Wyniki zapisane: results\wyniki_detekcja_canon.csv
+Czas: 226.5s

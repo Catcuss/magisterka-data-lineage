@@ -6,7 +6,12 @@
       "WebSearch",
       "Bash(C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe run_experiments.py --dlg 4 --scenarios)",
       "Bash(C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe -c ' *)",
-      "Bash(\"C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe\" -m pytest -q)"
+      "Bash(\"C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe\" -m pytest -q)",
+      "Bash(grep -iA3 \"^I \\\\|couldn\\\\|illegal\\\\|missing\\\\|repeated\\\\|sorry\" Thesis.blg)",
+      "Bash(latexmk -pdf -g -interaction=nonstopmode Thesis.tex)",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe -c ' *)",
+      "Skill(humanizer)",
+      "Skill(humanizer:*)"
     ]
   }
 }

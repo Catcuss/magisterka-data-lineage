@@ -1,0 +1,24 @@
+% Wygenerowane przez scripts/aggregate_detection.py — nie edytuj ręcznie.
+% Wstaw w rozdziale 4 przez: \input{tabela_detekcja}
+\begin{table}[ht]
+\centering
+\caption{Wariant NAPOMPOWANY (bez wykluczenia izolowanych, z przeciekiem) -- dla kontrastu z tabela glowna. Protokol indukcyjny.}
+\label{tab:wyniki-napompowany}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Metoda} & \textbf{AUC-ROC} & \textbf{AUC-PR} & \textbf{P@k} & \textbf{R@k} & \textbf{Hits@k} & \textbf{Brier} \\
+\midrule
+Anomalia stopnia & 0.461 & 0.240 & 0.201 & 0.201 & 0.201 & 0.177 \\
+Brzeg (root/leaf) & 0.600 & 0.440 & 0.407 & 0.407 & 0.407 & 0.790 \\
+Niska łączność jobów & 0.518 & 0.429 & 0.380 & 0.380 & 0.380 & 0.214 \\
+Reguła korzenia & 0.573 & 0.227 & 0.221 & 0.221 & 0.221 & 0.500 \\
+Kompletność (peer-consistency)* & 0.482 & 0.224 & 0.204 & 0.204 & 0.204 & 0.208 \\
+\midrule
+Random Forest & 0.816 & 0.693 & 0.574 & 0.574 & 0.574 & 0.114 \\
+RUSBoost & 0.662 & 0.441 & 0.417 & 0.417 & 0.417 & 0.109 \\
+LightGBM & 0.805 & 0.656 & 0.560 & 0.560 & 0.560 & 0.128 \\
+\midrule
+LineageDetector* & \textbf{0.842} & \textbf{0.710} & \textbf{0.612} & \textbf{0.612} & \textbf{0.612} & \textbf{0.094} \\
+\bottomrule
+\end{tabular}
+\end{table}

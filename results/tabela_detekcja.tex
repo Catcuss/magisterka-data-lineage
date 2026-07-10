@@ -1,0 +1,24 @@
+% Wygenerowane przez scripts/aggregate_detection.py — nie edytuj ręcznie.
+% Wstaw w rozdziale 4 przez: \input{tabela_detekcja}
+\begin{table}[ht]
+\centering
+\caption{Średnie metryki detekcji chorych węzłów per metoda (protokół indukcyjny, wariant uczciwy z wykluczeniem izolowanych; gwiazdka -- wkład własny; najlepsza wartość w kolumnie pogrubiona).}
+\label{tab:wyniki-detekcja}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Metoda} & \textbf{AUC-ROC} & \textbf{AUC-PR} & \textbf{P@k} & \textbf{R@k} & \textbf{Hits@k} & \textbf{Brier} \\
+\midrule
+Anomalia stopnia & 0.427 & 0.165 & 0.142 & 0.142 & 0.142 & 0.134 \\
+Brzeg (root/leaf) & 0.455 & 0.137 & 0.146 & 0.146 & 0.146 & 0.745 \\
+Niska łączność jobów & 0.324 & 0.112 & 0.094 & 0.094 & 0.094 & 0.226 \\
+Reguła korzenia & 0.574 & 0.168 & 0.180 & 0.180 & 0.180 & 0.469 \\
+Kompletność (peer-consistency)* & 0.559 & 0.206 & 0.240 & 0.240 & 0.240 & 0.144 \\
+\midrule
+Random Forest & 0.749 & 0.425 & 0.380 & 0.380 & 0.380 & 0.117 \\
+RUSBoost & 0.631 & 0.249 & 0.340 & 0.340 & 0.340 & 0.152 \\
+LightGBM & 0.720 & 0.381 & 0.398 & 0.398 & 0.398 & 0.147 \\
+\midrule
+LineageDetector* & \textbf{0.771} & \textbf{0.435} & \textbf{0.443} & \textbf{0.443} & \textbf{0.443} & \textbf{0.106} \\
+\bottomrule
+\end{tabular}
+\end{table}

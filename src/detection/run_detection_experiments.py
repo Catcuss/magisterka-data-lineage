@@ -28,16 +28,25 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
 from data.loader import load_graph
-from detection.job_removal import build_node_dataset
+from detection.job_removal import build_node_dataset, iter_single_job_datasets
 from detection.node_classifier import (
     HeuristicNodeScorer, NodeMLClassifier, HEURISTICS, ML_MODELS,
 )
+from detection.node_features import extract_node_features, feature_names
+from detection.completeness import anomaly_score
+from detection.lineage_detector import LineageHealthDetector
 from detection.node_metrics import node_detection_metrics
 
 ALL_DLGS = list(range(1, 19))
 DEFAULT_DLGS = [1, 2, 3, 4, 5, 6]
 MIN_POS = 5  # minimalna liczba zainfekowanych w teście, by metryki były wiarygodne
-_METRICS = ["auc_roc", "auc_pr", "precision_at_k", "recall_at_k", "hits_at_k"]
+_METRICS = ["auc_roc", "auc_pr", "precision_at_k", "recall_at_k", "hits_at_k", "brier"]
+
+# Heurystyki dodatkowe: 'completeness' (peer-consistency) i 'rule_root' (baseline trywialny).
+EXTRA_HEURISTICS = ["completeness", "rule_root"]
+HEUR_NAMES = HEURISTICS + EXTRA_HEURISTICS
+FIT_MODELS = ML_MODELS + ["LineageDetector"]   # własny detektor obok klasycznych ML
+ALL_ALGOS = HEUR_NAMES + FIT_MODELS
 
 
 def _trimmed_mean(values: list[float]) -> float:
@@ -47,6 +56,38 @@ def _trimmed_mean(values: list[float]) -> float:
     if len(vals) >= 3:
         vals = vals[1:-1]
     return float(np.mean(vals))
+
+
+def _heuristic_score(name: str, ds: dict) -> np.ndarray:
+    """Score heurystyki/reguły bez treningu dla podanego datasetu."""
+    if name == "completeness":
+        return anomaly_score(ds["G_obs"], ds["candidates"])
+    if name == "rule_root":
+        X = extract_node_features(ds["G_obs"], ds["candidates"])
+        return X[:, feature_names().index("is_root")]
+    return HeuristicNodeScorer(name).score(ds)
+
+
+def _make_model(name: str, seed: int):
+    if name == "LineageDetector":
+        return LineageHealthDetector(seed=seed)
+    return NodeMLClassifier(name, seed=seed)
+
+
+def _avg_metrics_over(test_list: list[dict], score_fn) -> dict | None:
+    """Liczy metryki dla każdego datasetu testowego i uśrednia (tryb jednojob)."""
+    mlist = []
+    for ds in test_list:
+        if not ds["candidates"]:
+            continue
+        mlist.append(node_detection_metrics(ds["labels"], score_fn(ds)))
+    if not mlist:
+        return None
+    out = {}
+    for m in _METRICS:
+        vals = [d[m] for d in mlist if not np.isnan(d.get(m, float("nan")))]
+        out[m] = float(np.mean(vals)) if vals else float("nan")
+    return out
 
 
 def build_datasets(graphs: dict, removal_ratio: float, seed: int, side: str,
@@ -62,40 +103,54 @@ def build_datasets(graphs: dict, removal_ratio: float, seed: int, side: str,
     return datasets
 
 
-def run_seed(datasets: dict, seed: int) -> list[dict]:
-    """Leave-one-graph-out dla jednego seeda. Zwraca wiersze metryk."""
+def run_seed(datasets: dict, seed: int, single_job_graphs: dict | None = None,
+             side: str = "both", exclude_isolated: bool = False,
+             max_jobs: int = 30) -> list[dict]:
+    """
+    Leave-one-graph-out dla jednego seeda. Zwraca wiersze metryk.
+
+    single_job_graphs=None → tryb główny (test = wieloj-job dataset grafu).
+    single_job_graphs=dict → tryb kontrolny: test = wiele datasetów jednojob
+    grafu, metryki uśredniane (trening zawsze na puli wieloj-job).
+    """
     rows = []
     gids = list(datasets.keys())
 
-    # Scorery (heurystyki bez treningu; ML trenowane per fold)
-    heur = {name: HeuristicNodeScorer(name) for name in HEURISTICS}
-
     for test_g in gids:
-        ds_test = datasets[test_g]
+        ds_multi = datasets[test_g]
         train_pool = [datasets[g] for g in gids if g != test_g]
-        n_pos = ds_test["n_infected"]
-        reliable = (n_pos >= MIN_POS) and (n_pos < len(ds_test["candidates"]))
+        n_pos = ds_multi["n_infected"]
+        reliable = (n_pos >= MIN_POS) and (n_pos < len(ds_multi["candidates"]))
         base = {
             "graph": test_g, "seed": seed,
-            "n_candidates": len(ds_test["candidates"]),
+            "n_candidates": len(ds_multi["candidates"]),
             "n_infected": n_pos, "reliable": reliable,
         }
 
-        # Heurystyki
-        for name, scorer in heur.items():
-            scores = scorer.score(ds_test)
-            m = node_detection_metrics(ds_test["labels"], scores)
-            rows.append({**base, "algorithm": name, **m})
+        if single_job_graphs is None:
+            test_list = [ds_multi]
+        else:
+            test_list = list(iter_single_job_datasets(
+                single_job_graphs[test_g], side, exclude_isolated, max_jobs, seed))
+            if not test_list:
+                continue
 
-        # ML — trening na puli pozostałych grafów
-        for name in ML_MODELS:
-            try:
-                clf = NodeMLClassifier(name, seed=seed).fit(train_pool)
-                scores = clf.score(ds_test)
-                m = node_detection_metrics(ds_test["labels"], scores)
+        # Heurystyki i reguły (bez treningu)
+        for name in HEUR_NAMES:
+            m = _avg_metrics_over(test_list, lambda ds, n=name: _heuristic_score(n, ds))
+            if m:
                 rows.append({**base, "algorithm": name, **m})
+
+        # Modele uczone (klasyczne ML + własny LineageDetector) — trening na puli
+        for name in FIT_MODELS:
+            try:
+                clf = _make_model(name, seed).fit(train_pool)
             except (ValueError, ImportError) as e:
                 print(f"  [{test_g}] {name} pominięto: {e}")
+                continue
+            m = _avg_metrics_over(test_list, lambda ds, c=clf: c.score(ds))
+            if m:
+                rows.append({**base, "algorithm": name, **m})
     return rows
 
 
@@ -132,7 +187,7 @@ def print_report(agg: list[dict], algorithms: list[str]):
     print("DETEKCJA ZAINFEKOWANYCH WĘZŁÓW — wyniki per graf (indukcyjny, leave-one-out)")
     print(f"{'='*96}")
     print(f"{'Graf':<7} {'Kand.':>6} {'Inf.':>5}  {'Algorytm':<22} "
-          f"{'AUC-ROC':>8} {'AUC-PR':>7} {'P@k':>6} {'R@k':>6} {'Hits@k':>7}")
+          f"{'AUC-ROC':>8} {'AUC-PR':>7} {'P@k':>6} {'Hits@k':>7} {'Brier':>7}")
     print("-" * 96)
 
     def fmt(v):
@@ -149,17 +204,18 @@ def print_report(agg: list[dict], algorithms: list[str]):
                     if i == 0 else " " * 21)
             print(f"{head} {r['algorithm']:<22} "
                   f"{fmt(r['auc_roc']):>8} {fmt(r['auc_pr']):>7} "
-                  f"{fmt(r['precision_at_k']):>6} {fmt(r['recall_at_k']):>6} "
-                  f"{fmt(r['hits_at_k']):>7}")
+                  f"{fmt(r['precision_at_k']):>6} {fmt(r['hits_at_k']):>7} "
+                  f"{fmt(r['brier']):>7}")
         print()
 
-    print(f"  ! = #infected < {MIN_POS}: metryki niewiarygodne, wyłączone z agregacji.\n")
+    print(f"  ! = #infected < {MIN_POS}: metryki niewiarygodne, wyłączone z agregacji.")
+    print("  Brier: niżej = lepsze prawdopodobieństwa (sensowne dla skalibrowanych).\n")
     print(f"{'='*96}")
     print("PODSUMOWANIE — średnie metryki per algorytm (tylko grafy wiarygodne)")
     print(f"{'='*96}")
-    print(f"  {'Algorytm':<22} {'AUC-ROC':>8} {'AUC-PR':>7} {'P@k':>6} {'R@k':>6} "
-          f"{'Hits@k':>7} {'n graf':>7}")
-    print("  " + "-" * 70)
+    print(f"  {'Algorytm':<22} {'AUC-ROC':>8} {'AUC-PR':>7} {'P@k':>6} "
+          f"{'Hits@k':>7} {'Brier':>7} {'n graf':>7}")
+    print("  " + "-" * 72)
     for alg in algorithms:
         cells = [r for r in agg if r["algorithm"] == alg and r["reliable"]]
         aucs = [r["auc_roc"] for r in cells if not np.isnan(r["auc_roc"])]
@@ -170,13 +226,13 @@ def print_report(agg: list[dict], algorithms: list[str]):
             xs = [r[m] for r in cells if not np.isnan(r[m])]
             return np.mean(xs) if xs else float("nan")
         print(f"  {alg:<22} {np.mean(aucs):>8.3f} {mean_of('auc_pr'):>7.3f} "
-              f"{mean_of('precision_at_k'):>6.3f} {mean_of('recall_at_k'):>6.3f} "
-              f"{mean_of('hits_at_k'):>7.3f} {len(aucs):>7}")
+              f"{mean_of('precision_at_k'):>6.3f} {mean_of('hits_at_k'):>7.3f} "
+              f"{mean_of('brier'):>7.3f} {len(aucs):>7}")
 
 
 _CSV_FIELDS = ["graph", "algorithm", "n_candidates", "n_infected", "reliable",
                "n_runs", "auc_roc", "auc_pr", "precision_at_k", "recall_at_k",
-               "hits_at_k"]
+               "hits_at_k", "brier"]
 
 
 def save_csv(agg: list[dict], path: Path):
@@ -186,7 +242,8 @@ def save_csv(agg: list[dict], path: Path):
         w.writeheader()
         for r in agg:
             row = {k: r.get(k, "") for k in _CSV_FIELDS}
-            for k in ("auc_roc", "auc_pr", "precision_at_k", "recall_at_k", "hits_at_k"):
+            for k in ("auc_roc", "auc_pr", "precision_at_k", "recall_at_k",
+                      "hits_at_k", "brier"):
                 if isinstance(row.get(k), float) and np.isnan(row[k]):
                     row[k] = ""
             w.writerow(row)
@@ -202,11 +259,16 @@ def main():
     p.add_argument("--all", action="store_true")
     p.add_argument("--dlg", nargs="+", type=int)
     p.add_argument("--repeats", type=int, default=3)
-    p.add_argument("--removal-ratio", type=float, default=0.2)
+    p.add_argument("--removal-ratio", type=float, default=0.10)
     p.add_argument("--side", choices=["both", "pred", "succ"], default="both")
     p.add_argument("--exclude-isolated", action="store_true",
                    help="Wyklucz trywialnie izolowane (DATA_FLOW) tabele z kandydatów "
                         "— uczciwy wariant bez przecieku 'izolowana ⟹ chora'.")
+    p.add_argument("--single-job", action="store_true",
+                   help="Protokół kontrolny: test = wiele prób usunięcia 1 joba "
+                        "(metryki uśredniane). Trening nadal na puli wieloj-job.")
+    p.add_argument("--max-jobs", type=int, default=30,
+                   help="Limit prób jednojob na graf testowy (tryb --single-job).")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--csv", type=Path,
                    default=_PROJECT_ROOT / "results" / "wyniki_detekcja.csv")
@@ -214,15 +276,17 @@ def main():
 
     dlg_ids = args.dlg if args.dlg else (ALL_DLGS if args.all else DEFAULT_DLGS)
     seeds = [args.seed + i for i in range(max(1, args.repeats))]
-    algorithms = HEURISTICS + ML_MODELS
+    algorithms = ALL_ALGOS
 
     print(f"Grafy:        {[f'DLG{i}' for i in dlg_ids]}")
     print(f"Powtórzenia:  {len(seeds)} (seedy {seeds[0]}-{seeds[-1]})")
     print(f"removal_ratio={args.removal_ratio}, side={args.side}, "
-          f"exclude_isolated={args.exclude_isolated}, MIN_POS={MIN_POS}")
+          f"exclude_isolated={args.exclude_isolated}, "
+          f"single_job={args.single_job}, MIN_POS={MIN_POS}")
     print()
 
     graphs = {f"DLG{i}": load_graph(f"DLG{i}") for i in dlg_ids}
+    sj_graphs = graphs if args.single_job else None
 
     t0 = time.time()
     all_rows = []
@@ -233,7 +297,10 @@ def main():
         if len(datasets) < 2:
             print("  Za mało grafów z jobami łączącymi — pomijam seed.")
             continue
-        all_rows.extend(run_seed(datasets, seed))
+        all_rows.extend(run_seed(datasets, seed, single_job_graphs=sj_graphs,
+                                 side=args.side,
+                                 exclude_isolated=args.exclude_isolated,
+                                 max_jobs=args.max_jobs))
 
     if not all_rows:
         print("Brak wyników (żaden graf nie miał jobów łączących).")

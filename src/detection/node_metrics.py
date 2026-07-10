@@ -16,6 +16,18 @@ import numpy as np
 from sklearn.metrics import roc_auc_score, average_precision_score
 
 
+def brier_score(y_true: np.ndarray, scores: np.ndarray) -> float:
+    """
+    Brier score = średnia (p - y)^2. Mierzy JAKOŚĆ PRAWDOPODOBIEŃSTW
+    (im niżej, tym lepiej). Sensowny tylko dla skalibrowanych score'ów p∈[0,1].
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    scores = np.asarray(scores, dtype=float)
+    if len(scores) == 0:
+        return float("nan")
+    return float(np.mean((scores - y_true) ** 2))
+
+
 def _rank_topk_indices(scores: np.ndarray, k: int) -> np.ndarray:
     """Indeksy k najwyższych score (stabilnie, malejąco)."""
     k = min(k, len(scores))
@@ -91,6 +103,7 @@ def node_detection_metrics(
         "recall_at_k":    r_at_k,
         "hits_at_k":      hits_at_k(y_true, scores, k),
         "map":            auc_pr,  # average_precision_score = MAP dla jednego rankingu
+        "brier":          brier_score(y_true, scores),
         "k":              int(k),
         "n_pos":          n_pos,
     }

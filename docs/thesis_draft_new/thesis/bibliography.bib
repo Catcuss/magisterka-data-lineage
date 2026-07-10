@@ -1,0 +1,164 @@
+% ============================================================
+%  Bibliografia — Thesis.tex (NOWA KONCEPCJA: detekcja chorych węzłów)
+%  Format: BibTeX (plain.bst)
+%  Bazuje na bibliografii z thesis_draft, rozszerzona o prace z pivotu.
+% ============================================================
+
+% ------------------------------------------------------------
+%  POZYCJE ZACHOWANE z poprzedniej wersji (nadal aktualne)
+% ------------------------------------------------------------
+
+% [1] Boiński et al. (ISD2025) — ML dla broken lineage, RUSBoost, F1=0.79
+% NOWA ROLA: praca kontrastowa — wykrywa KRAWĘDZIE; motywuje ujęcie węzłowe.
+@inproceedings{Boinski2025,
+  author    = {Boi{\'n}ski, Pawe{\l} and Andrzejewski, Witold and Grocholewski, Mi{\l}osz
+               and Gruszczy{\'n}ski, Tobiasz and Wrembel, Robert},
+  title     = {{Leveraging machine learning techniques for discovering broken lineage links
+               between database objects}},
+  booktitle = {Proceedings of the 33rd International Conference on Information Systems
+               Development (ISD2025)},
+  year      = {2025},
+  address   = {Belgrade, Serbia},
+}
+
+% [2] Chen et al. — Dataset DLG-DG-23 (18 grafów, Huawei Cloud) — GROUND TRUTH
+@article{Chen2024,
+  author    = {Chen, Yunpeng and Zhao, Ying and Li, Xuanjing and Zhang, Jiang
+               and Long, Jiang and Zhou, Fangfang},
+  title     = {{An open dataset of data lineage graphs for data governance research}},
+  journal   = {Visual Informatics},
+  volume    = {8},
+  pages     = {1--5},
+  year      = {2024},
+  publisher = {Elsevier},
+}
+
+% [3] Dietrich et al. — Data provenance dla rekurencyjnych SQL (kontekst)
+@inproceedings{Dietrich2022,
+  author    = {Dietrich, Benjamin and M{\"u}ller, Tobias and Grust, Torsten},
+  title     = {{Data Provenance for Recursive SQL Queries}},
+  booktitle = {Proceedings of the 14th Workshop on the Theory and Practice of Provenance
+               (TaPP '22)},
+  year      = {2022},
+  address   = {Philadelphia, PA, USA},
+  publisher = {ACM},
+  doi       = {10.1145/3530800.3534536}
+}
+
+% [4] Kohan Marzagão et al. — Provenance Graph Kernel (PGK) — metryki podobieństwa grafów
+@article{KohanMarzagao2023,
+  author    = {Kohan Marzag{\~a}o, David and Huynh, Trung Dong and Helal, Ayah
+               and Baccas, Sean and Moreau, Luc},
+  title     = {{Provenance Graph Kernel}},
+  journal   = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year      = {2023},
+}
+
+% [5] Psallidas et al. — OneProvenance (log analysis, kontekst)
+@article{Psallidas2022,
+  author    = {Psallidas, Fotis and Agrawal, Ashvin and Sugunan, Chandru
+               and Ibrahim, Khaled and Karanasos, Konstantinos
+               and Camacho-Rodr{\'i}guez, Jes{\'u}s and Floratou, Avrilia
+               and Curino, Carlo and Ramakrishnan, Raghu},
+  title     = {{ONEPROVENANCE: Efficient Extraction of Dynamic Coarse-Grained
+               Provenance From Database Query Event Logs}},
+  journal   = {CoRR},
+  volume    = {abs/2210.14047},
+  year      = {2022},
+  note      = {Technical Report; deployed in Microsoft Purview}
+}
+
+% [6] Shan et al. — KPI-HGNN (heterogeniczne GNN; kontekst dla anomalii węzłów w grafach provenance)
+@article{Shan2023,
+  author    = {Shan, Dibin and Du, Xuehui and Wang, Wenjuan and Wang, Na and Liu, Aodi},
+  title     = {{KPI-HGNN: Key Provenance Identification Based on a Heterogeneous
+               Graph Neural Network for Big Data Access Control}},
+  journal   = {Information Sciences},
+  year      = {2023},
+  publisher = {Elsevier},
+}
+
+% [7] Yamada et al. — Augmented lineage (UDF, przyczyny broken lineage)
+@article{Yamada2023,
+  author    = {Yamada, Masaya and Kitagawa, Hiroyuki and Amagasa, Toshiyuki
+               and Matono, Akiyoshi},
+  title     = {{Augmented lineage: traceability of data analysis including complex
+               UDF processing}},
+  journal   = {The VLDB Journal},
+  volume    = {32},
+  pages     = {963--983},
+  year      = {2023},
+  doi       = {10.1007/s00778-022-00769-7}
+}
+
+% Barabási & Albert — preferential attachment (jeśli PA zostaje jako heurystyka węzłowa/baseline stopnia)
+@article{Barabasi1999,
+  author  = {Barab{\'a}si, Albert-L{\'a}szl{\'o} and Albert, R{\'e}ka},
+  title   = {{Emergence of Scaling in Random Networks}},
+  journal = {Science},
+  volume  = {286},
+  number  = {5439},
+  pages   = {509--512},
+  year    = {1999},
+  doi     = {10.1126/science.286.5439.509}
+}
+
+% Liben-Nowell & Kleinberg — klasyczny link prediction (kontekst; badanie wstępne)
+@article{LibenNowell2007,
+  author    = {Liben-Nowell, David and Kleinberg, Jon},
+  title     = {{The Link-Prediction Problem for Social Networks}},
+  journal   = {Journal of the American Society for Information Science and Technology},
+  volume    = {58},
+  number    = {7},
+  pages     = {1019--1031},
+  year      = {2007},
+  doi       = {10.1002/asi.20591}
+}
+
+% ------------------------------------------------------------
+%  NOWE POZYCJE — kluczowe dla nowej koncepcji (pivot 2026-06-09)
+%  UWAGA: pola do uzupełnienia/weryfikacji oznaczono TODO.
+% ------------------------------------------------------------
+
+% Dutkiewicz, Misiorek, Wrembel — KG + indukcyjny GNN do predykcji linków lineage
+% Grupa promotora; bezpośredni punkt odniesienia dla protokołu indukcyjnego.
+@inproceedings{Dutkiewicz2026,
+  author    = {Dutkiewicz, Jakub and Misiorek, Pawe{\l} and Wrembel, Robert},
+  title     = {{Data Lineage Discovery in Databases Based on Knowledge Graph
+               Link Prediction}},
+  booktitle = {Proceedings of the Workshops of the EDBT/ICDT 2026 Joint
+               Conference},
+  address   = {Tampere, Finland},
+  publisher = {CEUR-WS.org},
+  series    = {CEUR Workshop Proceedings},
+  year      = {2026},
+}
+
+% Andrzejewski, Boiński, Wrembel — odzyskiwanie funkcji liniowej i warunku
+% selekcji dla obiektów select-project (warsztat DARLI-AP, EDBT/ICDT 2026).
+@inproceedings{Andrzejewski2025,
+  author    = {Andrzejewski, Witold and Boi{\'n}ski, Pawe{\l} and Wrembel, Robert},
+  title     = {{On Discovering Provenance of Data Warehouse Objects Created
+               by Select-Project Queries}},
+  booktitle = {Proceedings of the Workshops of the EDBT/ICDT 2026 Joint
+               Conference},
+  address   = {Tampere, Finland},
+  publisher = {CEUR-WS.org},
+  series    = {CEUR Workshop Proceedings},
+  year      = {2026},
+}
+
+% Brzeski, Roman — transformer (bi-encoder + cross-encoder) wnioskujący
+% kierunkowe linki lineage z metadanych schematu (VLDB AIDB 2025).
+@inproceedings{Brzeski2025,
+  author    = {Brzeski, Maciej and Roman, Adam},
+  title     = {{Inferring Missing Data Lineage Links from Schema Metadata
+               Using Transformer-Based Models}},
+  booktitle = {Proceedings of the VLDB 2025 Workshop: Applied AI for Database
+               Systems and Applications (AIDB 2025)},
+  publisher = {VLDB Endowment},
+  year      = {2025},
+}
+
+% (Opcjonalnie) referencja do kalibracji prawdopodobieństw — jeśli opisujesz kalibrację w LineageDetector.
+% TODO: dodać właściwe źródło (np. Platt scaling / isotonic regression), jeśli będzie potrzebne.

@@ -1,0 +1,77 @@
+Temat: Praca magisterska: zmiana koncepcji i prośba o akceptację
+
+Szanowny Panie Profesorze,
+
+po konsultacji z dr. Pawłem Misiorkiem zmieniłam koncepcję pracyi chciałabym
+prosić o jej akceptację, zanim zacznę pisać. Poniżej streszczam, na czym polega
+zmiana, jak nowe podejście wygląda na tle literatury i co pokazują wyniki wstępne.
+
+1. Problem z dotychczasowym podejściem
+Broken lineage modelowałam jako predykcję konkretnych brakujących krawędzi.
+Eksperymenty na zbiorze DLG-DG-23 pokazały jednak, że grafy są zbyt rzadkie, żeby
+nieść sygnał o tym, która para obiektów się łączy. Tylko jeden z trzech scenariuszy
+okazał się nielosowy (AUC-ROC 0.70), pozostałe wyszły mniej więcej na poziomie
+losowym. Dr Misiorek potwierdził, że to ograniczenie danych, a nie metody.
+
+2. Nowa koncepcja: detekcja chorych węzłów
+Zamiast zgadywać krawędzie, wykrywam zainfekowane tabele, czyli te, które po
+usunięciu zadania (joba) straciły producenta lub konsumenta. Zadanie polega na
+uszeregowaniu węzłów według prawdopodobieństwa, że ich lineage jest zerwany.
+Ewaluację prowadzę w protokole indukcyjnym cross-graph: trenuję na części grafów,
+a testuję na grafach niewidzianych.
+
+Świadomie pracuję na jak najmniejszej próbce informacji. W praktyce firmy rzadko
+zgadzają się udostępniać pełne dane lineage, bo to zbyt duże ryzyko z punktu
+widzenia poufności. Metoda, która radzi sobie przy minimalnym wglądzie w graf,
+ma więc dużo większą szansę na realne zastosowanie niż podejścia wymagające
+kompletnych zależności.
+
+3. Pozycja względem literatury
+Przejrzałam dotychczasowe prace o broken lineage między obiektami bazy i wszystkie
+wykrywają krawędzie:
+- Boiński i in. (ISD 2025): klasyfikacja ML brakujących linków;
+- Andrzejewski, Boiński, Wrembel, "On fixing broken lineage": metoda statystyczna;
+- Dutkiewicz, Misiorek, Wrembel: ontologia, graf wiedzy i GNN do indukcyjnej
+  predykcji linków;
+- Brzeski, Roman (VLDB 2025): transformer wnioskujący linki z metadanych schematu.
+Detekcji na poziomie węzłów (które tabele są chore) ta literatura nie podejmuje
+i tu widzę lukę. Nie odtwarzam samych zależności, bo na to danych jest za mało.
+Sprawdzam raczej, czy mając graf z minimalną ilością informacji, da się w ogóle
+wskazać chore tabele. Moje podejście jest więc komplementarne wobec predykcji
+krawędzi i może ją poprzedzać: najpierw wskazuję podejrzane tabele, a dopiero
+potem można próbować odtwarzać ich zależności. Analizy anomalii węzłów pojawiają
+się w innej dziedzinie (systemowe grafy provenance, bezpieczeństwo), ale nie były
+stosowane do lineage obiektów bazodanowych.
+
+4. Wkład własny: detektor LineageDetector
+Zaproponowałam detektor, który łączy trzy elementy: cechy pozycji węzła w grafie
+DAG, autorski score kompletności "peer-consistency" (tabela niespójna ze swoimi
+sąsiadami w grafie, co realizuje ideę oceny kompletności rozwijaną w Pańskim
+zespole) oraz kalibrację prawdopodobieństw, dzięki której wyjście jest rzetelnym
+p(chora).
+
+5. Wyniki wstępne
+Liczby pochodzą z 18 grafów, z ewaluacji indukcyjnej, w wariancie uczciwym, bez
+przecieku izolacji:
+- sam score kompletności daje AUC-ROC 0.559, czyli więcej niż pozostałe heurystyki
+  (od 0.32 do 0.46);
+- LineageDetector osiąga AUC-ROC 0.771, AUC-PR 0.435, Precision@k 0.443 i Brier
+  0.106, najlepszy wynik na wszystkich metrykach, powyżej Random Forest (0.749)
+  i LightGBM (0.720).
+Dodatkowo protokół jest odporny na zarzut przecieku, bo wyklucza trywialnie
+izolowane węzły, a analiza wrażliwości na odsetek usuwanych jobów pokazuje, że
+wynik jest stabilny.
+
+6. Co pozostaje bez zmian
+Zbiór DLG-DG-23, infrastruktura kodu i przegląd literatury. Predykcję krawędzi
+zachowuję jako badanie wstępne, które motywuje zmianę kierunku.
+
+Będę wdzięczna za informację, czy akceptuje Pan ten kierunek. Chętnie omówię
+szczegóły na konsultacji.
+
+Mam jeszcze jedno pytanie organizacyjne. Chodzi o ocenę z przedmiotu
+"Przygotowanie pracy magisterskiej". Czy orientuje się Pan, do
+kiedy musi zostać wystawiona, i czy wpisuje się ją dopiero po oddaniu pracy?
+
+Z wyrazami szacunku,
+Maria Nowicka 151851

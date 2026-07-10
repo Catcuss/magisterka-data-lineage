@@ -129,6 +129,16 @@ def build_node_dataset(
     n_remove = max(1, round(len(connecting) * removal_ratio))
     removed_jobs = connecting[:n_remove]
 
+    return _build_from_removed(G, removed_jobs, side, exclude_isolated)
+
+
+def _build_from_removed(
+    G: nx.DiGraph,
+    removed_jobs: list,
+    side: str,
+    exclude_isolated: bool,
+) -> dict:
+    """Buduje dataset dla zadanego zbioru usuniętych jobów (wspólna logika)."""
     infected: set = set()
     for job in removed_jobs:
         infected |= incident_tables(G, job, side=side)
@@ -166,6 +176,37 @@ def build_node_dataset(
         "n_infected":   len(infected_in_obs),
         "n_isolated_excluded": n_isolated_excluded,
     }
+
+
+def iter_single_job_datasets(
+    G: nx.DiGraph,
+    side: str = "both",
+    exclude_isolated: bool = False,
+    max_jobs: int | None = None,
+    seed: int = 42,
+):
+    """
+    Generator datasetów kontrolnych: KAŻDY usuwa dokładnie JEDEN job łączący.
+
+    Czysta interpretacja przyczynowa (1 zdarzenie broken lineage = 1 brakujący job).
+    Dla dużych grafów ogranicz liczbę prób przez max_jobs (losowa próbka).
+
+    Yields
+    ------
+    dict — jak build_node_dataset, z pojedynczym elementem removed_jobs.
+    """
+    rng = random.Random(seed)
+    connecting = list_connecting_jobs(G)
+    if not connecting:
+        return
+    rng.shuffle(connecting)
+    if max_jobs is not None:
+        connecting = connecting[:max_jobs]
+    for job in connecting:
+        try:
+            yield _build_from_removed(G, [job], side, exclude_isolated)
+        except ValueError:
+            continue
 
 
 def inductive_split(graph_ids: list, test_ids: list) -> tuple[list, list]:
