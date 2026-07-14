@@ -15,6 +15,32 @@ from sklearn.metrics import (
 )
 
 
+def hits_at_k(y_true: np.ndarray, scores: np.ndarray, k: int = 10) -> float:
+    """
+    Hits@k — udział pozytywów wśród k par o najwyższym score.
+
+    Metryka rankingowa, niezależna od progu klasyfikacji (jak AUC-ROC/AUC-PR).
+    Stosowana m.in. w pracach o indukcyjnej predykcji krawędzi w grafach wiedzy
+    (np. Dutkiewicz, Misiorek, Wrembel 2026), co pozwala na porównywalność wyników.
+
+    Definicja: spośród k par o najwyższych scores liczymy, ile jest pozytywami,
+    i normalizujemy przez min(k, liczba pozytywów) — wartość w [0, 1].
+
+    Returns
+    -------
+    float — nan, gdy brak pozytywów lub pusty wektor scores.
+    """
+    y_true = np.asarray(y_true)
+    scores = np.asarray(scores, dtype=float)
+    n_pos = int(y_true.sum())
+    if len(scores) == 0 or n_pos == 0:
+        return float("nan")
+    k_eff = min(k, len(scores))
+    top_idx = np.argsort(-scores, kind="stable")[:k_eff]
+    hits = int(y_true[top_idx].sum())
+    return hits / min(k, n_pos)
+
+
 def best_threshold_f1(y_true: np.ndarray, scores: np.ndarray) -> float:
     """Zwraca próg maksymalizujący F1 na podanych danych."""
     best_t, best_f1 = 0.5, 0.0
@@ -30,6 +56,7 @@ def compute_metrics(
     y_true: list | np.ndarray,
     scores: np.ndarray,
     threshold: float = 0.5,
+    k: int = 10,
 ) -> dict:
     """
     Oblicza metryki klasyfikacji krawędzi.
@@ -66,6 +93,7 @@ def compute_metrics(
         "f1":        f1_score(y_true, y_pred, zero_division=0),
         "auc_roc":   auc_roc,
         "auc_pr":    auc_pr,
+        "hits_at_k": hits_at_k(y_true, scores, k=k),
     }
 
 
