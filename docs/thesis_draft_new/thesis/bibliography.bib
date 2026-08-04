@@ -162,3 +162,42 @@
 
 % (Opcjonalnie) referencja do kalibracji prawdopodobieństw — jeśli opisujesz kalibrację w LineageDetector.
 % TODO: dodać właściwe źródło (np. Platt scaling / isotonic regression), jeśli będzie potrzebne.
+
+% ------------------------------------------------------------
+%  BIBLIOTEKI NARZĘDZIOWE (pochodzenie klasycznych klasyfikatorów, sekcja 3.6)
+% ------------------------------------------------------------
+
+% scikit-learn — Random Forest, CalibratedClassifierCV
+@article{scikit-learn,
+  author  = {Pedregosa, F. and Varoquaux, G. and Gramfort, A. and Michel, V.
+             and Thirion, B. and Grisel, O. and Blondel, M. and Prettenhofer, P.
+             and Weiss, R. and Dubourg, V. and Vanderplas, J. and Passos, A.
+             and Cournapeau, D. and Brucher, M. and Perrot, M. and Duchesnay, E.},
+  title   = {{Scikit-learn: Machine Learning in Python}},
+  journal = {Journal of Machine Learning Research},
+  volume  = {12},
+  pages   = {2825--2830},
+  year    = {2011}
+}
+
+% imbalanced-learn — RUSBoost i inne metody dla niezbalansowanych klas
+@article{imblearn,
+  author  = {Lema{\^i}tre, Guillaume and Nogueira, Fernando and Aridas, Christos K.},
+  title   = {{Imbalanced-learn: A Python Toolbox to Tackle the Curse of
+             Imbalanced Datasets in Machine Learning}},
+  journal = {Journal of Machine Learning Research},
+  volume  = {18},
+  number  = {17},
+  pages   = {1--5},
+  year    = {2017}
+}
+
+% LightGBM — gradientowy boosting drzew decyzyjnych
+@inproceedings{lightgbm,
+  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng
+               and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
+  title     = {{LightGBM: A Highly Efficient Gradient Boosting Decision Tree}},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {30},
+  year      = {2017}
+}

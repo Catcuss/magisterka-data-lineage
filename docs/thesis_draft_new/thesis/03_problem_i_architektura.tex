@@ -6,7 +6,7 @@
 
 \chapter{Problem i~sposób jego rozwiązania}
 
-Niniejszy rozdział precyzuje formalną definicję problemu detekcji węzłów
+Rozdział precyzuje formalną definicję problemu detekcji węzłów
 o~zerwanym lineage (sekcja~\ref{sec:sformulowanie}). Sekcja~\ref{sec:dane} charakteryzuje
 zastosowany zbiór danych, sekcja~\ref{sec:symulacja} — metodykę symulacji
 broken lineage przez usuwanie jobów, a~sekcja~\ref{sec:architektura} opisuje
@@ -42,7 +42,7 @@ do~co~najmniej jednego usuniętego zadania. Zbiór kandydatów ograniczono
 do~węzłów typu \emph{Data Table} — węzły typu pole (\emph{field}) łączy
 z~tabelami wyłącznie relacja \emph{PARENT\_CHILD} i~nie~podlegają one detekcji.
 
-Kluczowa trudność zadania polega na~tym, że~osierocona tabela-następnik
+Zasadnicza trudność zadania polega na~tym, że~osierocona tabela-następnik
 po~usunięciu zadania wygląda jak~prawdziwa tabela źródłowa
 ($\mathrm{in\_df} = 0$). Rozróżnienie tych~dwóch przypadków wymaga cech
 opisujących pozycję węzła w~grafie DAG oraz~uczenia \emph{indukcyjnego}
@@ -61,18 +61,33 @@ zastąpiono identyfikatorami w~formacie UUID, a~schematy bazy danych
 nie~zostały udostępnione. Zbiór opublikowano w~2024~roku jako pierwszy
 otwarty zestaw rzeczywistych grafów lineage.
 
+% [SCALONE — pełny opis struktury zbioru (przeniesiony z rozdz. 2), aby
+%  zbiór był opisany w jednym miejscu.]
+Każdy graf zawiera węzły trzech typów — \textbf{Data Job} (zapytanie SQL
+lub~zadanie ETL, ang. \emph{Extract, Transform, Load}), \textbf{Data Table}
+(tabela lub~widok przechowujący dane) oraz~\textbf{field} (atrybut/kolumna
+należąca do~tabeli) — połączone krawędziami dwóch typów: \textbf{DATA\_FLOW}
+(skierowana krawędź przepływu danych między tabelą a~zadaniem)
+oraz~\textbf{PARENT\_CHILD} (relacja przynależności pola do~tabeli). Pełny
+graf jest zatem \emph{heterogeniczny}. Przedmiotem detekcji są~wyłącznie
+węzły typu \emph{Data Table}, a~sygnał czerpany jest z~podgrafu przepływu
+danych (krawędzie \emph{DATA\_FLOW} między węzłami \emph{Data Table}
+i~\emph{Data Job}); podgraf ten~ma~strukturę dwudzielną i~skierowaną,
+interpretowaną jako graf DAG. Grafy różnią się skalą: liczba węzłów waha się
+od~278 do~17~085.
+
 % [ZMIENIONE — uzasadnienie doboru: teraz „topology-only", pod detekcję.]
-Zbiór DLG-DG-23 wybrano ze~względu na~jego unikatowy charakter: jest to~jedyny
-publicznie dostępny zestaw rzeczywistych grafów lineage. Anonimizacja nazw
+Zbiór DLG-DG-23 wybrano, ponieważ jest jedynym publicznie dostępnym
+zestawem rzeczywistych grafów lineage. Anonimizacja nazw
 węzłów ma~bezpośredni wpływ na~dobór metod: metryki podobieństwa oparte
 na~nazwach obiektów (np.~Jaro–Winkler stosowana przez Boińskiego
 et~al.~\cite{Boinski2025}) są~nieaplikowalne. W~niniejszej pracy sygnał
-ograniczono zatem do~atrybutów \emph{topologicznych} grafu, co~jednocześnie
-stanowi element badań nad~pytaniem, czy~sama struktura grafu lineage jest
-wystarczająca do~wskazania tabel o~zerwanym pochodzeniu danych. Praca
-świadomie operuje na~minimalnej ilości informacji — metoda skuteczna
-przy~ograniczonym wglądzie w~graf ma~większą szansę na~zastosowanie
-praktyczne niż~podejścia wymagające pełnych metadanych.
+ograniczono zatem do~atrybutów \emph{topologicznych} grafu. Ograniczenie
+to~jest zarazem częścią pytania badawczego: czy~sama struktura grafu
+lineage wystarcza do~wskazania tabel o~zerwanym pochodzeniu danych.
+Metoda skuteczna przy~tak ograniczonym wglądzie w~graf ma~przy~tym większą
+szansę na~zastosowanie praktyczne niż~podejścia wymagające pełnych
+metadanych.
 
 \subsection{Charakterystyka grafów}
 \label{sec:dane-opis}
@@ -226,12 +241,23 @@ są~po~grafach testowych w~protokole indukcyjnym; stosuje się powtórzenia
 z~różnymi ziarnami i~trymowanie wartości skrajnych (min/max) dla~stabilności
 oszacowań.
 
+Ewaluację prowadzi się~w~protokole \emph{indukcyjnym} cross-graph:
+model trenuje się~na~podzbiorze grafów, a~testuje na~grafach niewidzianych
+(leave-one-graph-out lub~podział zbioru 18~grafów). Zbiory treningowy
+i~testowy są~rozłączne, co~sprawdza zdolność metody do~generalizacji
+na~nowe grafy, a~nie~jedynie do~zapamiętania jednego. Konsekwencją tego
+protokołu jest~wykluczenie metody Node2Vec: uczy ona~zanurzeń węzłów
+transduktywnie, dla~konkretnego grafu, przez~co~embeddingi są~geometrycznie
+nieporównywalne między grafami. Nie~jest to~luka, lecz~\emph{wynik}: motywuje
+zastosowanie indukcyjnych grafowych sieci neuronowych (GraphSAGE, R-GCN, HGT),
+wskazanych w~rozdziale~5 jako~kierunek dalszych badań.
+
 % ============================================================
 \section{Zaimplementowane metody detekcji}
 \label{sec:algorytmy}
 % ============================================================
 
-W~pracy zaimplementowano trzy klasy metod detekcji zainfekowanych tabel:
+Zaimplementowano trzy grupy metod detekcji zainfekowanych tabel:
 heurystyki strukturalne, klasyczne klasyfikatory ML oraz~autorski detektor
 LineageDetector.
 
@@ -243,8 +269,8 @@ LineageDetector.
 %  heurystyk krawędziowych (Katz, PPR, L3) można zachować jako baseline
 %  scoringu węzła po agregacji — patrz TODO. Główny wkład: peer-consistency.]
 Heurystyki strukturalne przypisują tabeli wynik podejrzliwości wyłącznie
-na~podstawie jej pozycji w~grafie, bez~etapu uczenia. Stanowią naturalny
-punkt odniesienia (\emph{baseline}) dla~metod uczonych. Miary oparte
+na~podstawie jej pozycji w~grafie, bez~etapu uczenia. Są~naturalnym
+punktem odniesienia (\emph{baseline}) dla~metod uczonych. Miary oparte
 na~wspólnych sąsiadach (Common Neighbors, Jaccard, Adamic-Adar) są~w~grafie
 dwudzielnym nieskuteczne, ponieważ węzły tego~samego typu nigdy nie~mają
 wspólnych sąsiadów bezpośrednich; wykluczono je~z~implementacji.
@@ -271,43 +297,10 @@ W~pracy zaimplementowano cztery heurystyki bazowe:
 \end{itemize}
 
 Heurystyki te~mierzą wyłącznie \emph{lokalny} symptom (stopień, rola);
-ich~ograniczenia — w~szczególności nieodróżnianie osieroconej tabeli
-od~prawdziwego źródła — motywują score kompletności opisany poniżej
-oraz~metody uczone.
-
-\subsubsection{Score kompletności — peer-consistency (wkład własny)}
-
-% [NOWY — sedno autorskiej heurystyki; realizacja sugestii dr. Misiorka.]
-Autorski score kompletności opiera się na~założeniu, że~tabela o~zerwanym
-lineage jest~\emph{strukturalnie niespójna} ze~swoimi sąsiadami (peerami)
-w~grafie DAG. Dla~tabeli-korzenia ($\mathrm{in\_df} = 0$) rozważa się
-zbiór peerów-wejść — inne tabele wpadające do~tych~samych zadań
-downstream. Jeśli~peerzy \emph{mają} producenta, a~rozpatrywana tabela
-nie, to~jej brak producenta jest~podejrzany: prawdziwe źródło danych
-sąsiaduje zwykle z~innymi źródłami. Symetrycznie dla~tabeli-liścia
-($\mathrm{out\_df} = 0$) i~jej peerów po~stronie konsumpcji.
-
-Formalnie dla~tabeli $t$ definiuje się:
-%
-\[
-  \mathrm{prod}(t) = \frac{1}{|P(t)|}\sum_{p \in P(t)} \mathbf{1}[\mathrm{in\_df}(p) > 0],
-  \qquad
-  \mathrm{cons}(t) = \frac{1}{|C(t)|}\sum_{p \in C(t)} \mathbf{1}[\mathrm{out\_df}(p) > 0],
-\]
-%
-gdzie $P(t)$ i~$C(t)$ oznaczają zbiory peerów odpowiednio po~stronie
-producenta i~konsumenta, a~$\mathbf{1}[\cdot]$ — funkcję wskaźnikową.
-Bramkowany sygnał anomalii aktywuje się~wyłącznie na~brzegu grafu:
-%
-\[
-  \mathrm{anomaly}(t) =
-  \max\bigl(\mathbf{1}[\mathrm{in\_df}(t)=0]\cdot\mathrm{prod}(t),\;
-            \mathbf{1}[\mathrm{out\_df}(t)=0]\cdot\mathrm{cons}(t)\bigr).
-\]
-%
-Jest to~sygnał relacyjno-propagacyjny, jakościowo różny od~lokalnego
-stopnia węzła, dzięki czemu dokłada informację niedostępną klasyfikatorowi
-korzystającemu wyłącznie z~cech lokalnych.
+ich~ograniczenie — w~szczególności nieodróżnianie osieroconej tabeli
+od~prawdziwego źródła — motywuje metody uczone oraz~autorski detektor
+LineageDetector (sekcja~\ref{sec:lineage-detector}), który wzbogaca opis
+węzła o~relacyjny \emph{score kompletności} (peer-consistency).
 
 % ============================================================
 \subsection{Klasyczne metody uczenia maszynowego}
@@ -368,7 +361,7 @@ prawdziwą tabelę źródłową od~tabeli osieroconej po~usunięciu zadania.
 \end{tabular}
 \end{table}
 
-Autorski detektor LineageDetector (sekcja~\ref{sec:lineage-detector})
+Detektor LineageDetector (sekcja~\ref{sec:lineage-detector})
 rozszerza ten wektor o~trzy cechy kompletności
 (\texttt{peer\_producer\_score}, \texttt{peer\_consumer\_score},
 \texttt{completeness\_anomaly}), opisane w~sekcji~\ref{sec:algorytmy}.
@@ -408,12 +401,46 @@ model:
 \begin{enumerate}
   \item \textbf{cechy pozycji w~DAG} (z~modułu \texttt{node\_features}) —
         lokalny opis węzła,
-  \item \textbf{score kompletności peer-consistency}
-        (sekcja~\ref{sec:algorytmy}) — sygnał relacyjny,
+  \item \textbf{score kompletności peer-consistency} (opisany poniżej) —
+        sygnał relacyjny stanowiący sedno wkładu własnego pracy,
   \item \textbf{kalibrację prawdopodobieństw} metodą izotoniczną
         (\texttt{CalibratedClassifierCV}) — wyjście jest~rzetelnym
         $p(\text{zainfekowana})$, a~nie~dowolnym wynikiem.
 \end{enumerate}
+
+\paragraph{Score kompletności — peer-consistency.}
+Zaproponowany w~pracy score kompletności opiera się na~założeniu,
+że~tabela o~zerwanym lineage jest~\emph{strukturalnie niespójna}
+ze~swoimi sąsiadami (peerami) w~grafie DAG. Dla~tabeli-korzenia
+($\mathrm{in\_df} = 0$) rozważa się zbiór peerów-wejść — inne tabele
+wpadające do~tych~samych zadań downstream. Jeśli~peerzy \emph{mają}
+producenta, a~rozpatrywana tabela nie, to~jej brak producenta jest~podejrzany:
+prawdziwe źródło danych sąsiaduje zwykle z~innymi źródłami. Symetrycznie
+dla~tabeli-liścia ($\mathrm{out\_df} = 0$) i~jej peerów po~stronie konsumpcji.
+Formalnie dla~tabeli $t$ definiuje się:
+%
+\[
+  \mathrm{prod}(t) = \frac{1}{|P(t)|}\sum_{p \in P(t)} \mathbf{1}[\mathrm{in\_df}(p) > 0],
+  \qquad
+  \mathrm{cons}(t) = \frac{1}{|C(t)|}\sum_{p \in C(t)} \mathbf{1}[\mathrm{out\_df}(p) > 0],
+\]
+%
+gdzie $P(t)$ i~$C(t)$ oznaczają zbiory peerów odpowiednio po~stronie
+producenta i~konsumenta, a~$\mathbf{1}[\cdot]$ — funkcję wskaźnikową.
+Bramkowany sygnał anomalii aktywuje się~wyłącznie na~brzegu grafu:
+%
+\[
+  \mathrm{anomaly}(t) =
+  \max\bigl(\mathbf{1}[\mathrm{in\_df}(t)=0]\cdot\mathrm{prod}(t),\;
+            \mathbf{1}[\mathrm{out\_df}(t)=0]\cdot\mathrm{cons}(t)\bigr).
+\]
+%
+Sygnał ten ma~charakter relacyjny — jest jakościowo różny od~lokalnego
+stopnia węzła i~dostarcza informacji niedostępnej klasyfikatorowi
+korzystającemu wyłącznie z~cech lokalnych. Trzy wynikające z~niego cechy
+(\texttt{peer\_producer\_score}, \texttt{peer\_consumer\_score},
+\texttt{completeness\_anomaly}) rozszerzają wektor cech z~tabeli~\ref{tab:cechy}
+i~są~dostępne wyłącznie detektorowi LineageDetector.
 
 Bazowym estymatorem jest~Random Forest (domyślnie; wariant alternatywny —
 LightGBM). Interfejs \texttt{fit}/\texttt{score} jest~zgodny z~pozostałymi
@@ -424,19 +451,52 @@ cech kompletności (\texttt{use\_completeness=False}) — wpływ sygnału
 relacyjnego na~AUC.
 
 % ============================================================
-\subsection{Protokół ewaluacji indukcyjnej}
-\label{sec:protokol}
+\section{Dostępność implementacji i~pochodzenie algorytmów}
+\label{sec:repozytorium}
 % ============================================================
 
-% [NOWA SEKCJA — indukcyjność cross-graph; wyklucza Node2Vec.]
-Ewaluację prowadzi się~w~protokole \emph{indukcyjnym} cross-graph:
-model trenuje się~na~podzbiorze grafów, a~testuje na~grafach niewidzianych
-(leave-one-graph-out lub~podział zbioru 18~grafów). Zbiory treningowy
-i~testowy są~rozłączne, co~sprawdza zdolność metody do~generalizacji
-na~nowe grafy, a~nie~jedynie do~zapamiętania jednego.
+% [NOWA SEKCJA 3.6 — repozytorium + provenance/adaptacja algorytmów.]
+Całość implementacji opisanej w~niniejszej pracy — moduły wczytywania
+danych, symulacji broken lineage, ekstrakcji cech, metod detekcji oraz~
+ewaluacji, wraz z~testami jednostkowymi i~skryptami odtwarzającymi
+eksperymenty z~rozdziału~4 — udostępniono w~publicznym repozytorium Git
+pod~adresem \texttt{https://github.com/<uzupełnić>}\footnote{Dostęp
+zweryfikowano w~dniu obrony pracy.}. Repozytorium zawiera instrukcję
+uruchomienia oraz~pliki konfiguracyjne biegu kanonicznego, co~zapewnia
+odtwarzalność raportowanych wyników.
 
-Konsekwencją protokołu jest~wykluczenie metody Node2Vec: uczy ona~zanurzeń
-węzłów transduktywnie, dla~konkretnego grafu, przez~co~embeddingi są~geometrycznie
-nieporównywalne między grafami. Nie~jest to~luka, lecz~\emph{wynik}: motywuje
-zastosowanie indukcyjnych grafowych sieci neuronowych (GraphSAGE, R-GCN, HGT),
-wskazanych w~rozdziale~5 jako~kierunek dalszych badań.
+Metody z~grupy heurystyk oraz~klasyczne klasyfikatory nie~są~oryginalnym
+wkładem pracy — stanowią \emph{punkty odniesienia} (baseline) zaczerpnięte
+z~literatury i~z~publicznych bibliotek, a~wkładem własnym jest~ich~
+\emph{adaptacja} do~zadania detekcji zainfekowanych węzłów w~grafie lineage
+oraz~autorski detektor LineageDetector. Pochodzenie i~zakres adaptacji
+poszczególnych składników zestawiono poniżej:
+
+\begin{itemize}
+  \item \textbf{Heurystyki strukturalne} — inspirowane rodziną miar
+        predykcji krawędzi w~grafach (Common Neighbors, Jaccard, Adamic–Adar,
+        Preferential Attachment)~\cite{KohanMarzagao2023}. Ponieważ graf
+        przepływu danych jest~dwudzielny, miary oparte na~wspólnych sąsiadach
+        są~w~nim nieskuteczne; zaadaptowano je~do~postaci \emph{scoringu
+        pojedynczego węzła} opartego na~stopniu i~roli w~DAG.
+  \item \textbf{Random Forest} — implementacja z~biblioteki
+        \texttt{scikit-learn}~\cite{scikit-learn}. Adaptacja: wejściem jest~
+        autorski wektor cech topologicznych węzła (tab.~\ref{tab:cechy})
+        zamiast cech pary obiektów; niezbalansowanie klas obsłużono przez
+        \texttt{class\_weight}.
+  \item \textbf{RUSBoost} — implementacja z~biblioteki
+        \texttt{imbalanced-learn}~\cite{imblearn}, wybrana dla~bezpośredniego
+        nawiązania do~pracy Boińskiego et~al.~\cite{Boinski2025}. Adaptacja:
+        klasyfikacja \emph{węzła} zamiast pary, na~cechach topologicznych.
+  \item \textbf{LightGBM} — biblioteka gradientowego boostingu
+        firmy Microsoft~\cite{lightgbm}. Adaptacja: strojenie
+        \texttt{scale\_pos\_weight} pod~rozkład klas w~zadaniu detekcji węzłów.
+  \item \textbf{LineageDetector} — \emph{wkład własny}: łączy powyższe cechy
+        z~autorskim relacyjnym score kompletności peer-consistency
+        (sekcja~\ref{sec:lineage-detector}) i~kalibracją izotoniczną;
+        nie~ma~bezpośredniego odpowiednika w~literaturze.
+\end{itemize}
+
+Takie rozgraniczenie — komponenty zapożyczone z~jawnie wskazanym źródłem
+kontra elementy autorskie — pozwala jednoznacznie ocenić rzeczywisty wkład
+pracy i~odróżnić go~od~narzędzi ogólnego przeznaczenia.

@@ -11,7 +11,9 @@
       "Bash(latexmk -pdf -g -interaction=nonstopmode Thesis.tex)",
       "Bash(PYTHONIOENCODING=utf-8 /c/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe -c ' *)",
       "Skill(humanizer)",
-      "Skill(humanizer:*)"
+      "Skill(humanizer:*)",
+      "Bash(latexmk -pdf -interaction=nonstopmode -halt-on-error Thesis.tex)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }
