@@ -1,22 +1,27 @@
 # Przegląd pracy magisterskiej — status i lista zadań
 
-> Stan na **2026-08-04**. Praca: „Odkrywanie zależności między obiektami w bazie danych"
-> (Maria Nowicka, 151851, promotor prof. R. Wrembel). Dokument roboczy — mapa tego, co
-> zrobione i co zostało. Praca kompiluje się czysto: **25 stron, 0 nierozwiązanych
-> odwołań/cytowań**; testy: **77 passed** (`pytest`).
+> **UWAGA: ten dokument jest archiwalny (stan 2026-08-04).**
+> Aktualną mapę pracy zawiera [`../_PLAN_KOMPLETNEJ_PRACY.md`](../_PLAN_KOMPLETNEJ_PRACY.md).
+>
+> Stan bieżący (2026-08-19): **62 strony**, 0 nierozwiązanych odwołań, 0 przepełnionych
+> pudełek, **43 pozycje bibliografii** (wszystkie cytowane), **83 testy** przechodzą.
+> Od czasu powstania tego dokumentu doszły: sekcje o istotności statystycznej,
+> badaniu ablacyjnym, wynikach per graf i zagrożeniach trafności (rozdz. 4);
+> implementacja i testy (rozdz. 3); metodyka SLR i rozbudowane podstawy (rozdz. 2);
+> pytania badawcze i wkład własny (rozdz. 1); spisy, wykaz skrótów i trzy dodatki.
 
 ---
 
-## 1. Skrót — gdzie jesteśmy
+## 1. Skrót — gdzie byliśmy 2026-08-04
 
 | Element | Stan |
 |---|:---:|
 | Rozdz. 1 Wstęp | ✅ gotowe |
 | Rozdz. 2 Podstawy + SLR | ✅ gotowe (pogrupowany SLR) |
 | Rozdz. 3 Problem i architektura | ✅ gotowe (2 tabele-TODO) |
-| Rozdz. 4 Ocena rozwiązania | 🟡 szkielet w .tex, **treść gotowa w `DALSZA_CZESC_PRACY.md`** |
-| Rozdz. 5 Uwagi końcowe | 🟡 szkielet w .tex, **treść gotowa w `DALSZA_CZESC_PRACY.md`** |
-| Streszczenie / Abstract | 🟡 placeholder w .tex, **treść gotowa w `DALSZA_CZESC_PRACY.md`** |
+| Rozdz. 4 Ocena rozwiązania | ✅ **wpisany do .tex** (4.1–4.4, 3 tabele, 2 rysunki) |
+| Rozdz. 5 Uwagi końcowe | ✅ **wpisany do .tex** (PB1–PB4 + 5 kierunków) |
+| Streszczenie / Abstract | ✅ **wpisane do .tex** (PL + EN) |
 | Implementacja (`src/`) | ✅ gotowe, 77 testów przechodzi |
 | Wyniki (bieg kanoniczny) | ✅ gotowe (`results/agregat_detekcja.csv`) |
 | Rysunki (`figures/`) | ✅ wszystkie 4 pliki istnieją |
@@ -69,18 +74,16 @@ Legenda: ✅ zrobione · 🟡 do dokończenia · ❌ brak.
 ## 3. CO ZOSTAŁO DO ZROBIENIA (priorytetowo)
 
 ### 🔴 P0 — konieczne do złożenia
-1. **Wkleić rozdz. 4 i 5 z `DALSZA_CZESC_PRACY.md` do `.tex`** i zamienić 8 znaczników
-   `% TODO` w rozdz. 4–5 na gotową treść. Tabele wyników wstawić jako LaTeX.
-2. **Streszczenie (PL) i Abstract (EN)** — zamienić placeholdery w `Thesis.tex`
-   (linie 82, 89) treścią z `DALSZA_CZESC_PRACY.md`.
-3. **Wstawić 2 rysunki rozdz. 4** — `rys_auc_uczciwy_napompowany.pdf` oraz
-   `rys_wrazliwosc_removal_ratio.pdf` (istnieją w `figures/`, ale nie są jeszcze
-   referowane w tekście).
-4. **URL repozytorium w sekcji 3.6** — zamienić placeholder `github.com/<uzupełnić>`
-   na właściwy adres.
-5. **Tabela wyników detekcji** — użyć wersji BEZ osobnego wiersza „Kompletność"
-   (z `DALSZA_CZESC_PRACY.md`, zgodnie z uwagą promotora). Uwaga: autogenerowana
-   `results/tabela_detekcja.tex` wciąż ten wiersz zawiera.
+1. ~~Wkleić rozdz. 4 i 5 do `.tex`~~ ✅ **ZROBIONE** — wszystkie znaczniki `% TODO`
+   w rozdz. 4–5 zamienione na treść; tabele jako LaTeX.
+2. ~~Streszczenie (PL) i Abstract (EN)~~ ✅ **ZROBIONE** — wpisane do `Thesis.tex`.
+3. ~~Wstawić 2 rysunki rozdz. 4~~ ✅ **ZROBIONE** — `rys_auc_uczciwy_napompowany.pdf`
+   (rys. w 4.2) i `rys_wrazliwosc_removal_ratio.pdf` (rys. w 4.3) referowane.
+4. **URL repozytorium w sekcji 3.6** — ⬜ **DO ZROBIENIA:** zamienić placeholder
+   `github.com/<uzupełnić>` na właściwy adres (wymaga Twojego adresu repo).
+5. ~~Tabela wyników bez wiersza „Kompletność"~~ ✅ **ZROBIONE** (zgodnie z uwagą
+   promotora). Uwaga: autogenerowana `results/tabela_detekcja.tex` wciąż go zawiera —
+   nie jest już używana w pracy (tabela wpisana ręcznie w 4.2).
 
 ### 🟠 P1 — jakość i kompletność
 6. **2 tabele-TODO w rozdz. 3/4**:
@@ -94,9 +97,13 @@ Legenda: ✅ zrobione · 🟡 do dokończenia · ❌ brak.
 9. **Strona tytułowa / karta pracy** — placeholder w szablonie (linie 66–69 `Thesis.tex`).
 
 ### 🟡 P2 — opcjonalne wzmocnienia
-10. **Zewnętrzny zbiór testowy Dutkiewicza** — opisany jako kierunek dalszych badań
-    (rozdz. 5). Opcjonalnie: minimalny adapter RDF/CSV → tabela–zadanie–DATA_FLOW,
-    by uruchomić DLG-DG-23→Northwind jako test cross-dataset (patrz sekcja 5).
+10. ~~Zewnętrzny zbiór testowy Dutkiewicza~~ ✅ **ZROBIONE** — adapter
+    (`src/data/dutkiewicz_adapter.py`), skrypt `run_cross_dataset.py`, wynik wpisany
+    do pracy jako **sekcja 4.4** (test cross-dataset). Model uczony na DLG-DG-23
+    przenosi się na graf Northwind bez załamania (LineageDetector AUC-ROC 0.641
+    uczciwy / 0.773 napompowany, najlepszy Brier). Dane: `data/external/dutkiewicz/`,
+    wyniki: `results/wyniki_cross_dataset*.csv`, opis: `results/README_CROSS_DATASET.md`.
+    6 nowych testów (łącznie **83 passed**). Pozostał większy graf zewnętrzny (rozdz. 5).
 11. **Badania ablacyjne** — wyłączenie kalibracji / cech kompletności w LineageDetector
     (`calibrate=False`, `use_completeness=False`) jako osobny akapit w analizie wyników.
 12. **Korekta językowa całości** — jednolitość terminologii (np. „zainfekowana" vs

@@ -40,4 +40,6 @@ references
 *.run.xml
 *.nav
 *.snm
-*.vrb*.lol
+*.vrb
+*.lol
+

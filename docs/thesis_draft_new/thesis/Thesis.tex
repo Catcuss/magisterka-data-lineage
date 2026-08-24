@@ -80,20 +80,97 @@
 \chapter*{Streszczenie}
 \addcontentsline{toc}{chapter}{Streszczenie}
 
-% TODO (WYMAGANE): Napisać streszczenie od nowa pod NOWĄ koncepcję
-%   (detekcja chorych węzłów). Cel, problem, luka (brak detekcji na
-%   poziomie węzłów w literaturze broken lineage), metodyka indukcyjna
-%   cross-graph, metryki rankingowe (AUC-ROC, AUC-PR, Precision@k, Hits@k),
-%   wynik główny: LineageDetector AUC-ROC 0.771 (wariant uczciwy).
-%   250–300 słów, bez cytowań. Bazować na mail_do_promotora.txt (_surowce/).
-\emph{[Streszczenie zostanie uzupełnione po~ukończeniu rozdziałów 4~i~5.]}
+Ciągłość grafów pochodzenia danych (\emph{data lineage}) ulega przerwaniu,
+gdy w~potokach przetwarzania wykorzystywane są~obiekty pośrednie — tabele
+tymczasowe oraz~funkcje definiowane przez użytkownika. Zjawisko to, określane
+jako \emph{broken lineage}, pozbawia tabele informacji o~ich producencie
+lub~konsumencie danych i~utrudnia audyt oraz~kontrolę jakości danych.
+Dotychczasowe prace modelują ten~problem wyłącznie jako predykcję brakujących
+krawędzi; nie~stawiają natomiast pytania, \emph{które tabele} mają zerwane
+pochodzenie danych. Niniejsza praca wypełnia tę~lukę, formułując zadanie
+na~poziomie \emph{węzłów} — jako ranking tabel według prawdopodobieństwa
+zainfekowania zjawiskiem broken lineage.
+
+Celem pracy jest zbadanie, w~jakim stopniu \emph{sama topologia} grafu lineage
+pozwala wskazać takie tabele, bez~dostępu do~semantyki nazw obiektów
+i~schematów bazy. Zjawisko broken lineage symulowano przez~kontrolowane
+usuwanie zadań ze~zbioru DLG-DG-23 — 18~zanonimizowanych,
+rzeczywistych grafów lineage ze~środowiska Huawei Cloud. Porównano trzy klasy
+metod: heurystyki strukturalne, klasyczne klasyfikatory uczenia maszynowego
+oparte na~cechach pozycji węzła w~grafie DAG oraz~autorski detektor
+\emph{LineageDetector}, łączący cechy topologiczne ze~scorem kompletności
+\emph{peer-consistency} i~kalibracją izotoniczną prawdopodobieństw.
+Ewaluację przeprowadzono w~protokole indukcyjnym cross-graph, z~kontrolą
+przecieku wynikającego z~trywialnie izolowanych węzłów.
+
+W~wariancie uczciwym (z~wykluczeniem węzłów izolowanych) LineageDetector
+osiągnął najwyższe wartości wszystkich czterech stosowanych metryk:
+AUC-ROC 0{,}771, AUC-PR 0{,}435, Precision@k 0{,}443 oraz~Brier 0{,}106.
+Test kolejności par Wilcoxona, sparowany po~grafach, potwierdził istotność
+tej~przewagi nad~heurystykami oraz~nad~metodami boostingowymi; różnica wobec
+Random Forest pozostała w~granicach szumu. Badanie ablacyjne wskazało
+score kompletności jako~składnik odpowiadający za~przewagę detektora
+i~ujawniło zarazem, że~kalibracja izotoniczna poprawia rzetelność oszacowań
+prawdopodobieństwa kosztem niewielkiego pogorszenia jakości rankingu.
+
+Skuteczność okazała się~stabilna względem odsetka usuwanych zadań i~utrzymała
+się~na~grafie pochodzącym spoza~zbioru treningowego. Ujawniono natomiast
+istotne ograniczenie: model uczony wyłącznie na~grafach małych traci
+około~0{,}15 AUC-ROC przy~ocenie grafów o~rząd wielkości większych. Główny
+wniosek: sama topologia grafu niesie umiarkowany, lecz~użyteczny sygnał
+o~broken lineage na~poziomie węzłów, stanowiący punkt odniesienia
+(\emph{topology-only baseline}) dla~metod grafowo-semantycznych.
+
+\vspace{1em}\noindent\textbf{Słowa kluczowe:} data lineage, broken lineage,
+detekcja anomalii w~grafach, uczenie indukcyjne, kalibracja prawdopodobieństw.
 
 % ── Abstract (EN) ───────────────────────────────────────────
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-% TODO (WYMAGANE): Angielskie tłumaczenie nowego streszczenia.
-\emph{[The abstract will be completed once chapters 4~and~5 are finished.]}
+The continuity of data lineage graphs is disrupted whenever processing
+pipelines rely on~intermediate objects — temporary tables and~user-defined
+functions. This phenomenon, known as~\emph{broken lineage}, deprives tables
+of~information about their data producer or~consumer and~hampers auditing
+and~data-quality control. Existing work models the~problem exclusively
+as~missing-edge prediction; it~does not~ask \emph{which tables} have broken
+lineage. This thesis fills that~gap by~formulating the~task at~the~\emph{node}
+level — as~a~ranking of~tables by~their probability of~being affected by~broken
+lineage.
+
+The~goal is~to~investigate to~what extent the~\emph{topology alone} of~a~lineage
+graph allows such tables to~be identified, without access to~the~semantics
+of~object names or~database schemas. Broken lineage was simulated by~the
+controlled removal of~jobs from~the~DLG-DG-23 dataset — 18~anonymised,
+real-world lineage graphs from~the~Huawei Cloud environment. Three classes
+of~methods were compared: structural heuristics, classical machine-learning
+classifiers based on~DAG-position features, and~the~proposed
+\emph{LineageDetector}, which combines topological features with~a~relational
+peer-consistency completeness score and~isotonic probability calibration.
+Evaluation followed an~inductive cross-graph protocol, with~control for~the
+leakage caused by~trivially isolated nodes.
+
+In~the~fair variant (excluding isolated nodes), LineageDetector achieved
+the~highest value of~all four metrics used: AUC-ROC 0.771, AUC-PR 0.435,
+Precision@k 0.443, and~Brier 0.106. A~Wilcoxon signed-rank test, paired
+across graphs, confirmed that this~advantage is~significant over~the
+heuristics and~over~the~boosting-based classifiers; the~difference
+with~respect to~Random Forest remained within noise. An~ablation study
+identified the~completeness score as~the~component responsible
+for~the~detector's advantage, while also revealing that isotonic calibration
+improves the~reliability of~probability estimates at~the~cost of~a~slight
+loss in~ranking quality.
+
+Performance proved stable with~respect to~the~fraction of~removed jobs
+and~carried over to~a~graph originating outside the~training set.
+One substantial limitation was~identified: a~model trained solely
+on~small graphs loses about 0.15 AUC-ROC when evaluated on~graphs an~order
+of~magnitude larger. The~main conclusion: graph topology alone carries
+a~moderate yet useful signal about broken lineage at~the~node level, providing
+a~topology-only baseline for~graph-semantic methods.
+
+\vspace{1em}\noindent\textbf{Keywords:} data lineage, broken lineage, graph
+anomaly detection, inductive learning, probability calibration.
 
 % ── Spis treści ─────────────────────────────────────────────
 \pagenumbering{Roman}\pagestyle{ppfcmthesis}%
@@ -105,6 +182,83 @@
 % i akapity zostają nienumerowanymi nagłówkami w tekście i nie trafiają do
 % spisu treści (usuwa pozycje „bez numerka" typu Random Forest, LightGBM).
 \settocdepth{subsection}
+
+% ── Spis rysunków i spis tabel ──────────────────────────────
+\listoffigures
+\addcontentsline{toc}{chapter}{Spis rysunków}
+\cleardoublepage
+
+\listoftables
+\addcontentsline{toc}{chapter}{Spis tabel}
+\cleardoublepage
+
+\renewcommand{\lstlistlistingname}{Spis listingów}
+\lstlistoflistings
+\addcontentsline{toc}{chapter}{Spis listingów}
+\cleardoublepage
+
+% ── Wykaz skrótów i oznaczeń ────────────────────────────────
+\chapter*{Wykaz skrótów i~oznaczeń}
+\addcontentsline{toc}{chapter}{Wykaz skrótów i~oznaczeń}
+
+\noindent\textbf{Skróty}
+\vspace{0.5em}
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+AUC-PR    & pole pod krzywą precyzja–czułość (\emph{Area Under the
+             Precision–Recall Curve}) \\
+AUC-ROC   & pole pod krzywą ROC (\emph{Area Under the Receiver Operating
+             Characteristic Curve}) \\
+CTE       & wspólne wyrażenie tablicowe (\emph{Common Table Expression}) \\
+DAG       & skierowany graf acykliczny (\emph{Directed Acyclic Graph}) \\
+DLG-DG-23 & zbiór danych grafów lineage opublikowany przez Chen
+             et~al.~\cite{Chen2024} \\
+ETL       & proces ekstrakcji, transformacji i~ładowania danych
+             (\emph{Extract, Transform, Load}) \\
+GNN       & grafowa sieć neuronowa (\emph{Graph Neural Network}) \\
+HGT       & heterogeniczny transformer grafowy (\emph{Heterogeneous Graph
+             Transformer}) \\
+LOGO      & protokół „jeden graf wyłączony'' (\emph{leave-one-graph-out}) \\
+P@k       & precyzja na~$k$ czołowych pozycjach rankingu
+             (\emph{Precision@k}) \\
+PGK       & jądro grafów proweniencji (\emph{Provenance Graph Kernel}) \\
+PROV-O    & ontologia proweniencji W3C (\emph{W3C Provenance Ontology}) \\
+RDF       & model opisu zasobów (\emph{Resource Description Framework}) \\
+R-GCN     & relacyjna grafowa sieć konwolucyjna (\emph{Relational Graph
+             Convolutional Network}) \\
+RODO      & Rozporządzenie o~Ochronie Danych Osobowych \\
+RUSBoost  & boosting z~losowym podpróbkowaniem (\emph{Random Under-Sampling
+             Boosting}) \\
+SLR       & systematyczny przegląd literatury (\emph{Systematic Literature
+             Review}) \\
+SQL       & strukturalny język zapytań (\emph{Structured Query Language}) \\
+UDF       & funkcja definiowana przez użytkownika (\emph{User-Defined
+             Function}) \\
+UUID      & uniwersalny unikatowy identyfikator (\emph{Universally Unique
+             Identifier}) \\
+\end{tabularx}
+
+\vspace{1.5em}
+\noindent\textbf{Oznaczenia}
+\vspace{0.5em}
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+$G = (V, E)$ & graf lineage: zbiór węzłów $V$ i~krawędzi $E$ \\
+$V_{T}, V_{J}, V_{F}$ & zbiory węzłów typu tabela, zadanie i~pole \\
+$G_{\mathrm{obs}}$ & graf obserwowany, powstały przez~usunięcie zadań z~$G$ \\
+$s(t)$    & wynik detekcji przypisany tabeli $t$, interpretowany
+             jako~$p(\text{$t$ zainfekowana})$ \\
+$P(t), C(t)$ & zbiory peerów tabeli $t$ po~stronie producenta i~konsumenta \\
+$\mathrm{in\_df}$, $\mathrm{out\_df}$ & liczba wejściowych i~wyjściowych
+             krawędzi \emph{DATA\_FLOW} węzła \\
+$k$       & liczba czołowych pozycji rankingu branych pod~uwagę;
+             w~pracy $k$ równa się~liczbie tabel zainfekowanych \\
+$m$       & liczba usuniętych zadań \\
+$\alpha$  & poziom istotności statystycznej \\
+$\Delta$  & mediana różnicy między porównywanymi metodami \\
+\end{tabularx}
+
+\cleardoublepage
 
 % ============================================================
 %  ROZDZIAŁY GŁÓWNE
@@ -173,7 +327,7 @@ nazywane są~dalej \emph{zainfekowanymi} (ang. \emph{infected}).
 Zakres obejmuje:
 
 \begin{itemize}
-  \item metodykę symulacji broken lineage przez usuwanie zadań (jobów)
+  \item metodykę symulacji broken lineage przez usuwanie zadań
         i~wyznaczanie zbioru tabel zainfekowanych jako etykiet referencyjnych,
   \item porównanie trzech klas metod detekcji: heurystyk strukturalnych,
         klasycznych klasyfikatorów uczenia maszynowego opartych na~cechach
@@ -181,7 +335,7 @@ Zakres obejmuje:
         \emph{LineageDetector},
   \item ewaluację w~protokole \emph{indukcyjnym} cross-graph (trenowanie
         na~części grafów, testowanie na~grafach niewidzianych),
-  \item analizę wrażliwości wyniku na~odsetek usuwanych jobów oraz kontrolę
+  \item analizę wrażliwości wyniku na~odsetek usuwanych zadań oraz kontrolę
         przecieku wynikającego z~trywialnie izolowanych węzłów.
 \end{itemize}
 
@@ -196,13 +350,93 @@ którego wyniki motywują zmianę ujęcia problemu na~poziom węzłów
 (sekcja~\ref{sec:badanie_wstepne}).
 
 
+\section{Pytania badawcze}
+\label{sec:pytania}
+
+Na~podstawie systematycznego przeglądu literatury (sekcja~\ref{sec:literatura})
+sformułowano cztery pytania badawcze, na~które praca odpowiada
+w~sekcji~\ref{sec:podsumowanie}:
+
+\begin{itemize}
+  \item[\textbf{PB1}] Jakie techniki algorytmiczne są~wykorzystywane
+        do~ekstrakcji i~rekonstrukcji grafów pochodzenia danych ze~źródeł
+        nieustrukturyzowanych, takich jak logi zapytań lub~częściowe
+        metadane systemowe?
+  \item[\textbf{PB2}] W~jaki sposób metody uczenia maszynowego mogą~zostać
+        zaadaptowane do~wykrywania niekompletności grafu zależności
+        bazodanowych?
+  \item[\textbf{PB3}] Jakie są~ograniczenia obecnych metod w~obsłudze
+        struktur niestandardowych — zapytań rekurencyjnych (CTE) oraz~funkcji
+        definiowanych przez użytkownika (UDF), stanowiących „czarne skrzynki''
+        przetwarzania?
+  \item[\textbf{PB4}] Jakie metryki jakości oraz~zbiory danych referencyjnych
+        są~właściwe do~obiektywnej ewaluacji algorytmów odkrywania lineage?
+\end{itemize}
+
+Pytanie PB2 zostało w~toku prac \emph{przeformułowane}. W~przeglądzie
+literatury postawiono je~w~postaci węższej — jako~pytanie o~adaptację metod
+uczenia maszynowego do~\emph{predykcji brakujących krawędzi}, zgodnie
+z~dominującym w~literaturze ujęciem problemu. Badanie wstępne
+(sekcja~\ref{sec:badanie_wstepne}) wykazało jednak, że~przy~rzadkości grafów
+zbioru DLG-DG-23 predykcja krawędzi nie~daje wyników odbiegających
+od~poziomu losowego. Pytanie rozszerzono zatem do~ogólniejszej postaci
+przytoczonej wyżej, obejmującej również ujęcie węzłowe — i~to~właśnie
+przeformułowanie wyznacza zasadniczy wkład niniejszej pracy.
+
+\section{Wkład własny}
+\label{sec:wklad}
+
+Praca wnosi następujące elementy:
+
+\begin{enumerate}
+  \item \textbf{Sformułowanie problemu broken lineage na~poziomie węzłów.}
+        Zamiast pytać, \emph{która krawędź} została utracona, praca pyta,
+        \emph{które tabele} są~dotknięte brakiem, i~formalizuje to~zadanie
+        jako~ranking tabel według prawdopodobieństwa zainfekowania
+        (sekcja~\ref{sec:sformulowanie}). Ujęcie to~nie~występuje
+        w~dotychczasowej literaturze o~lineage bazodanowym
+        (sekcja~\ref{sec:slr-synteza}).
+  \item \textbf{Metodyka symulacji broken lineage przez usuwanie zadań.}
+        Usunięcie całego węzła-zadania wiernie odwzorowuje mechanizm
+        zjawiska i~pozwala automatycznie wyznaczyć etykiety referencyjne,
+        bez~ręcznego znakowania danych (sekcja~\ref{sec:symulacja}).
+  \item \textbf{Kontrola przecieku izolacji jako element protokołu
+        ewaluacji.} Zidentyfikowano i~zmierzono trywialny przeciek
+        „tabela izolowana $\Rightarrow$ zainfekowana", obejmujący 19--35\%
+        pozytywów, oraz~wprowadzono wariant ewaluacji, który go~usuwa
+        (sekcja~\ref{sec:exclude-isolated}). Element ten~jest~nieobecny
+        w~dotychczasowych pracach o~broken lineage.
+  \item \textbf{Autorski detektor LineageDetector.} Łączy cechy pozycji
+        węzła w~grafie DAG z~relacyjnym score'em kompletności
+        \emph{peer-consistency} i~kalibracją prawdopodobieństw
+        (sekcja~\ref{sec:lineage-detector}). Badanie ablacyjne wykazało,
+        że~to~właśnie sygnał relacyjny odpowiada za~przewagę detektora
+        nad~klasyfikatorem bazowym (sekcja~\ref{sec:ablacja}).
+  \item \textbf{Ewaluacja o~kontrolowanej rzetelności.} Zastosowano protokół
+        indukcyjny cross-graph, testy istotności statystycznej sparowane
+        po~grafach, analizę wrażliwości, badanie ablacyjne oraz~test
+        na~grafie spoza zbioru treningowego. Wyniki raportowane są~wraz
+        z~przypadkami, w~których przewagi wykazać się~nie~udało
+        (sekcja~\ref{sec:istotnosc}).
+  \item \textbf{Odtwarzalna implementacja.} Kod, testy jednostkowe
+        i~skrypty odtwarzające każdy eksperyment udostępniono w~publicznym
+        repozytorium (sekcja~\ref{sec:repozytorium}, dodatek~\ref{dod:uruchomienie}).
+\end{enumerate}
+
+Do~wkładu pracy zaliczyć należy również wynik \emph{negatywny}: wykazanie,
+że~na~rzeczywistych, rzadkich grafach lineage pozbawionych semantyki nazw
+predykcja brakujących krawędzi nie~przewyższa poziomu losowego
+(sekcja~\ref{sec:badanie_wstepne}). Obserwacja ta~jest~zbieżna z~wynikami
+uzyskanymi niezależnie metodami grafowo-semantycznymi~\cite{Dutkiewicz2026}
+i~stanowi bezpośrednie uzasadnienie zmiany ujęcia problemu.
+
 \section{Struktura pracy}
 
 Praca składa się z~pięciu rozdziałów. Rozdział~2 zawiera przegląd pojęć
 podstawowych (data lineage, data provenance, broken lineage oraz detekcja
 anomalii w~grafach), a~także omówienie wybranych prac z~literatury i~stosowanych
 metryk ewaluacji. Rozdział~3 opisuje problem badawczy, metodykę symulacji
-broken lineage przez usuwanie jobów, architekturę zaproponowanego rozwiązania
+broken lineage przez usuwanie zadań, architekturę zaproponowanego rozwiązania
 oraz zaimplementowane algorytmy detekcji. Rozdział~4 prezentuje wyniki
 eksperymentów przeprowadzonych na~zbiorze DLG-DG-23 wraz z~ich analizą.
 Rozdział~5 zawiera wnioski końcowe, podsumowanie uzyskanych wyników oraz
@@ -244,6 +478,37 @@ zbiorów danych jest nieefektywna. Innym przykładem jest bezpieczne usuwanie
 obiektów bazy: tabela pozornie niepowiązana z~żadnym procesem może
 w~rzeczywistości dostarczać danych do~raportów końcowych, a~jej usunięcie
 spowoduje utratę danych bez~widocznego komunikatu~błędu~\cite{Boinski2025}.
+
+\subsection{Rodzaje proweniencji}
+
+W~literaturze wyróżnia się~trzy klasyczne rodzaje proweniencji, wprowadzone
+przez Bunemana et~al.~\cite{Buneman2001} i~rozwinięte w~kolejnych
+pracach~\cite{Green2007,Herschel2017}. Proweniencja typu \emph{why}
+odpowiada na~pytanie, które krotki danych źródłowych przyczyniły się
+do~powstania danej krotki wynikowej. Proweniencja \emph{where} wskazuje,
+z~których konkretnie komórek pochodzi wartość. Proweniencja \emph{how}
+opisuje natomiast \emph{sposób}, w~jaki wynik powstał — kombinację operacji,
+którym poddano dane źródłowe; jej~formalizacją są~półpierścienie
+proweniencji~\cite{Green2007}.
+
+Podział ten~odnosi się do~poziomu pojedynczych wartości i~krotek, określanego
+jako~proweniencja \emph{drobnoziarnista} (ang.~\emph{fine-grained}).
+W~praktyce systemów zarządzania danymi stosuje się~częściej ujęcie
+\emph{gruboziarniste} (ang.~\emph{coarse-grained}), operujące na~poziomie
+całych obiektów: tabel, widoków i~zadań przetwarzania~\cite{Psallidas2022}.
+Powodem jest~koszt: śledzenie pochodzenia każdej wartości wymaga
+instrumentacji silnika bazodanowego i~generuje wolumen metadanych
+porównywalny z~samymi danymi~\cite{CuiWidom2003}. Niniejsza praca operuje
+na~poziomie gruboziarnistym — przedmiotem analizy są~zależności między
+tabelami a~zadaniami, nie~zaś~pochodzenie poszczególnych wartości.
+
+Standaryzację zapisu proweniencji wprowadza ontologia
+\emph{PROV-O}~\cite{ProvO2013}, rekomendacja W3C definiująca trzy podstawowe
+klasy — \emph{Entity} (dana), \emph{Activity} (proces) i~\emph{Agent}
+(podmiot odpowiedzialny) — oraz~relacje między nimi. Model tabela–zadanie
+stosowany w~niniejszej pracy odpowiada podzbiorowi tej~ontologii: tabele
+pełnią rolę encji, zadania — aktywności, a~krawędzie \emph{DATA\_FLOW}
+odpowiadają relacjom \emph{used} i~\emph{wasGeneratedBy}.
 
 \section{Struktura grafu lineage}
 \label{sec:graf_lineage}
@@ -303,6 +568,99 @@ W~niniejszej pracy problem broken lineage jest modelowany jako zadanie
 prawdopodobieństwo, że~jej lineage został zerwany. Formalne ujęcie problemu
 przedstawiono w~rozdziale~3.
 
+\subsection{Taksonomia przyczyn}
+\label{sec:taksonomia}
+
+Tabela~\ref{tab:taksonomia} systematyzuje mechanizmy prowadzące
+do~niekompletności grafu lineage. Wspólny im~jest~schemat: transformacja
+zachodzi, lecz~pozostaje niewidoczna dla~narzędzi zbierających metadane,
+przez~co~w~grafie brakuje węzła pośredniczącego albo~krawędzi.
+
+\begin{table}[ht]
+\centering
+\caption{Przyczyny broken lineage i~ich~konsekwencje dla~grafu zależności.}
+\label{tab:taksonomia}
+\small
+\begin{tabular}{@{}p{3.1cm}p{5.3cm}p{4.4cm}@{}}
+\toprule
+\textbf{Przyczyna} & \textbf{Mechanizm} & \textbf{Skutek w~grafie} \\
+\midrule
+Tabela tymczasowa &
+  obiekt pośredniczący usuwany po~zakończeniu sesji lub~procesu ETL &
+  znika węzeł pośredni; tabela źródłowa i~docelowa stają się~rozłączne \\
+Funkcja definiowana przez użytkownika (UDF) &
+  logika transformacji ukryta w~kodzie proceduralnym, nieanalizowanym
+  przez parser SQL~\cite{Yamada2023} &
+  krawędź istnieje w~rzeczywistości, lecz~nie~jest~rejestrowana \\
+Zapytanie rekurencyjne (CTE) &
+  wielokrotne odwołanie do~tej~samej relacji utrudnia jednoznaczne
+  przypisanie pochodzenia~\cite{Dietrich2022} &
+  zależność zapisana niepełnie lub~pominięta \\
+Widok zmaterializowany &
+  tworzony tymczasowo na~potrzeby jednego procesu &
+  jak~przy~tabeli tymczasowej \\
+Przetwarzanie zewnętrzne &
+  transformacja wykonana poza silnikiem bazy (skrypt, zadanie Spark) &
+  brak jakiegokolwiek śladu w~metadanych bazy \\
+Partycjonowanie i~kopiowanie &
+  dane rozdzielane lub~replikowane bez~jawnego zapisu relacji &
+  rozerwanie pojedynczej zależności na~wiele nieudokumentowanych \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+W~niniejszej pracy wszystkie te~mechanizmy modelowane są~jednolicie —
+jako~usunięcie węzła-zadania wraz z~jego krawędziami (sekcja~\ref{sec:symulacja}).
+Uproszczenie to~jest~celowe: detekcja opiera się~na~\emph{skutku} zerwania
+widocznym w~topologii, a~nie~na~jego~przyczynie, dzięki czemu metoda
+nie~wymaga osobnej obsługi każdego mechanizmu.
+
+\section{Narzędzia zarządzania lineage w~praktyce}
+\label{sec:narzedzia}
+
+Zagadnienie omawiane w~pracy ma~bezpośrednie odzwierciedlenie w~narzędziach
+przemysłowych klasy \emph{data governance}. Tabela~\ref{tab:narzedzia}
+zestawia najczęściej stosowane rozwiązania wraz ze~sposobem pozyskiwania
+przez nie~informacji o~pochodzeniu danych.
+
+\begin{table}[ht]
+\centering
+\caption{Wybrane narzędzia zarządzania lineage i~stosowane przez nie~metody
+akwizycji metadanych.}
+\label{tab:narzedzia}
+\small
+\begin{tabular}{@{}lp{4.4cm}p{4.6cm}@{}}
+\toprule
+\textbf{Narzędzie} & \textbf{Metoda akwizycji} & \textbf{Podatność
+na~broken lineage} \\
+\midrule
+Apache Atlas~\cite{ApacheAtlas} &
+  wtyczki (\emph{hooks}) do~silników Hive, Spark, Kafka &
+  brak śladu przy~przetwarzaniu poza zintegrowanym silnikiem \\
+OpenLineage / Marquez~\cite{OpenLineage} &
+  otwarty standard zdarzeń emitowanych przez zadania &
+  wymaga instrumentacji każdego zadania; zadania nieobsługiwane
+  pozostają niewidoczne \\
+Spline &
+  przechwytywanie planów wykonania Apache Spark &
+  ograniczone do~jednego silnika przetwarzania \\
+DataHub, Collibra &
+  parsowanie SQL oraz~import metadanych z~katalogów &
+  parser nie~sięga do~wnętrza UDF ani~kodu proceduralnego \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Wspólne ograniczenie tych~rozwiązań jest~istotne dla~uzasadnienia niniejszej
+pracy: wszystkie zbierają lineage \emph{prospektywnie} — w~chwili wykonania
+zadania i~tylko dla~zadań objętych instrumentacją. Nie~oferują natomiast
+mechanizmu \emph{retrospektywnego} wskazania miejsc, w~których zebrany graf
+jest~niekompletny. Tam, gdzie instrumentacja zawiodła albo~nie~istniała
+(systemy zastane, przetwarzanie poza silnikiem bazy, audyt post~hoc),
+narzędzie nie~sygnalizuje braku — po~prostu pokazuje graf uboższy
+od~rzeczywistego. Detekcja tabel o~zerwanym lineage, będąca przedmiotem
+pracy, adresuje właśnie tę~lukę.
+
 \section{Detekcja węzłów o~zerwanym lineage}
 \label{sec:node_detection}
 
@@ -312,6 +670,28 @@ węzłowi wyniku (score) wyrażającego stopień, w~jakim odbiega on~od~wzorca
 uznawanego za~poprawny, a~następnie na~uszeregowaniu węzłów według tego
 wyniku. W~kontekście grafów lineage węzłem podejrzanym jest tabela, której
 sąsiedztwo w~grafie DAG sugeruje niekompletność pochodzenia danych.
+
+Dziedzina detekcji anomalii w~grafach dysponuje ustaloną taksonomią
+metod~\cite{Akoglu2015,Ma2023}. Metody \emph{oparte na~cechach} opisują
+węzeł wektorem statystyk strukturalnych (stopień, współczynnik gronowania,
+miary centralności), a~następnie stosują klasyfikator lub~detektor wartości
+odstających. Metody \emph{spektralne} i~oparte na~faktoryzacji wykrywają
+węzły odbiegające od~struktury niskiego rzędu przybliżającej graf. Metody
+\emph{oparte na~głębokim uczeniu} — w~szczególności grafowe sieci neuronowe —
+uczą reprezentacji węzła z~propagacją komunikatów między sąsiadami.
+Niniejsza praca sytuuje się~w~pierwszej z~tych~rodzin: węzeł opisywany
+jest~wektorem cech pozycji w~grafie DAG, uzupełnionym o~sygnał relacyjny,
+a~decyzję podejmuje klasyfikator uczony indukcyjnie. Wybór ten~podyktowany
+jest~rozmiarem zbioru — 18~grafów to~zbyt mało, by~trenować model głęboki
+bez~ryzyka przeuczenia — oraz~celem pracy, którym jest~wyznaczenie punktu
+odniesienia dla~metod bogatszych, a~nie~maksymalizacja skuteczności.
+
+Zasadnicza różnica względem klasycznej detekcji anomalii polega tu~na~tym,
+że~anomalia nie~jest~własnością wewnętrzną węzła, lecz~skutkiem
+\emph{usunięcia} innego węzła. Tabela zainfekowana nie~wygląda dziwnie
+sama w~sobie — wygląda jak~poprawna tabela innego rodzaju (źródłowa
+lub~końcowa). Odróżnienie wymaga zatem porównania z~kontekstem, nie~zaś~
+wykrycia wartości odstającej.
 
 W~przeciwieństwie do~predykcji krawędzi, zadanie nie~polega na~wskazaniu
 \emph{której} krawędzi brakuje, lecz~\emph{które tabele} są~dotknięte
@@ -340,6 +720,58 @@ W~pracy zastosowano trzy klasy metod detekcji:
 % [UWAGA: Node2Vec USUNIĘTY z tej wersji — jest transduktywny i nieporównywalny
 %  między grafami w protokole indukcyjnym; wspomniany jako future work w rozdz. 5.]
 
+\section{Wykorzystane metody uczenia maszynowego}
+\label{sec:metody-ml}
+
+Sekcja przedstawia podstawy teoretyczne metod zastosowanych w~rozdziale~3.
+Ich~wspólnym mianownikiem jest~zdolność do~pracy przy~silnie
+niezrównoważonym rozkładzie klas, charakterystycznym dla~zadania detekcji.
+
+\subsection{Metody zespołowe}
+
+\noindent\textbf{Random Forest}~\cite{Breiman2001} buduje zespół drzew
+decyzyjnych, z~których każde uczy się~na~losowej podpróbce obserwacji
+(\emph{bagging}) i~rozważa w~każdym podziale losowy podzbiór cech.
+Uśrednienie predykcji redukuje wariancję pojedynczego drzewa, zachowując
+jego~zdolność do~modelowania nieliniowych interakcji między cechami.
+Niezrównoważenie klas kompensuje się~wagami odwrotnie proporcjonalnymi
+do~ich~liczności.
+
+\noindent\textbf{Boosting gradientowy} buduje drzewa sekwencyjnie: każde
+kolejne minimalizuje błąd resztkowy poprzedników.
+\emph{LightGBM}~\cite{Ke2017} wprowadza dwa usprawnienia obniżające koszt
+obliczeniowy — próbkowanie obserwacji o~dużym gradiencie oraz~łączenie cech
+wzajemnie wykluczających się — oraz~rozrost drzewa liściami zamiast
+poziomami, co~przy~tej~samej liczbie węzłów daje mniejszy błąd.
+
+\noindent\textbf{RUSBoost}~\cite{Seiffert2010} łączy boosting typu AdaBoost
+z~losowym podpróbkowaniem klasy większościowej przed~każdą iteracją. Metoda
+powstała specjalnie dla~danych niezrównoważonych i~jest~tańsza obliczeniowo
+od~podejść opartych na~generowaniu obserwacji syntetycznych. W~niniejszej
+pracy zastosowano ją~przede wszystkim dla~bezpośredniej porównywalności
+z~wynikami Boińskiego et~al.~\cite{Boinski2025}, u~których osiągnęła
+najlepszy rezultat.
+
+\subsection{Kalibracja prawdopodobieństw}
+
+Klasyfikator zwracający poprawny \emph{ranking} nie~musi zwracać poprawnych
+\emph{prawdopodobieństw}. Metody zespołowe oparte na~drzewach są~pod~tym
+względem systematycznie obciążone: przesuwają oszacowania ku~środkowi
+przedziału, rzadko wskazując wartości bliskie 0 lub~1~\cite{Niculescu2005}.
+Ponieważ zadanie postawione w~niniejszej pracy wymaga oszacowania
+$p(\text{tabela zainfekowana})$, a~nie~tylko uszeregowania, zastosowano
+kalibrację.
+
+\emph{Regresja izotoniczna}~\cite{Zadrozny2002} dopasowuje niemalejącą
+funkcję schodkową przekształcającą surowy wynik klasyfikatora
+w~prawdopodobieństwo, minimalizując błąd kwadratowy na~zbiorze
+kalibracyjnym. W~odróżnieniu od~kalibracji Platta nie~zakłada określonej
+postaci funkcyjnej, jest~jednak bardziej podatna na~przeuczenie przy~małej
+liczbie obserwacji. Jej~istotną własnością — mającą znaczenie dla~wyników
+rozdziału~4 — jest~schodkowy charakter: obserwacjom o~zbliżonych wynikach
+przypisywane jest~identyczne prawdopodobieństwo, co~wprowadza do~rankingu
+remisy nieobecne w~wyniku surowym.
+
 \section{Metryki ewaluacji}
 \label{sec:metryki}
 
@@ -367,25 +799,131 @@ oceniające jakość uszeregowania węzłów, a~nie~pojedynczej decyzji przy~pro
 Metryki rankingowe są~szczególnie istotne w~warunkach niezrównoważonych klas,
 charakterystycznych dla~grafów rzadkich, gdzie liczba tabel czystych
 wielokrotnie przewyższa liczbę tabel zainfekowanych~\cite{Boinski2025,KohanMarzagao2023}.
+Spośród wymienionych miar AUC-ROC jest~w~takich warunkach najbardziej
+optymistyczna: pozostaje niewrażliwa na~rozkład klas, przez~co~może~sugerować
+dobrą skuteczność również wtedy, gdy bezwzględna liczba trafień w~czołówce
+rankingu jest~niewielka. Dlatego jako~miarę uzupełniającą raportuje się~AUC-PR,
+która wprost odzwierciedla udział klasy pozytywnej i~w~zadaniach
+niezrównoważonych rozdziela metody wyraźniej niż~AUC-ROC~\cite{Davis2006,Saito2015}.
+Brier score~\cite{Brier1950}, zdefiniowany jako~średni kwadrat różnicy między
+oszacowanym prawdopodobieństwem a~etykietą, jest~natomiast jedyną
+ze~stosowanych metryk oceniającą nie~kolejność, lecz~rzetelność samych
+oszacowań.
 
-\section{Wyniki systematycznego przeglądu literatury}
+\section{Systematyczny przegląd literatury}
 \label{sec:literatura}
 
 % [ZACHOWANE + ROZSZERZONE. Ramy przeglądu aktualne; dodano prace
 %  z pivotu (Dutkiewicz/Misiorek, Andrzejewski/DARLIAP, Brzeski) oraz
 %  reframing luki badawczej: nikt nie robi detekcji na poziomie węzłów.]
-Przeprowadzony systematyczny przegląd literatury (ang. \emph{Systematic
-Literature Review}, SLR) pozwolił zidentyfikować prace bezpośrednio
-odnoszące się do~postawionych pytań badawczych. Wszystkie dotychczasowe
-prace o~broken lineage między obiektami bazy modelują problem jako
-\emph{predykcję krawędzi}; detekcji na~poziomie węzłów — wskazania, które
-tabele mają zerwany lineage — literatura ta~nie~podejmuje. Tę~lukę
-wypełnia niniejsza praca.
+Stan wiedzy rozpoznano systematycznym przeglądem literatury (ang.
+\emph{Systematic Literature Review}, SLR), przeprowadzonym zgodnie
+z~wytycznymi Kitchenham i~Chartersa~\cite{Kitchenham2007}. Sekcja~\ref{sec:slr-metodyka}
+opisuje protokół przeglądu i~przebieg selekcji, sekcje kolejne — wyniki:
+omówienie prac wybranych do~analizy pełnotekstowej oraz~wynikającą z~nich
+lukę badawczą.
 
-Omówione prace pogrupowano w~dwie kategorie: prace \emph{bazowe}, stanowiące
-bezpośredni fundament niniejszej pracy (metoda kontrastowa oraz~wykorzystany
-zbiór danych referencyjnych), a~następnie \emph{metody pokrewne} odkrywania
-zależności lineage, wyznaczające szerszy kontekst metodyczny.
+Wyprzedzając szczegóły: wszystkie zidentyfikowane prace dotyczące broken
+lineage między obiektami bazy modelują problem jako~\emph{predykcję
+krawędzi}; detekcji na~poziomie węzłów — wskazania, \emph{które tabele}
+mają~zerwany lineage — literatura ta~nie~podejmuje. Tę~lukę wypełnia
+niniejsza praca. Omówione dalej prace pogrupowano w~dwie kategorie: prace
+\emph{bazowe}, stanowiące bezpośredni fundament niniejszej pracy (metoda
+kontrastowa oraz~wykorzystany zbiór danych referencyjnych), oraz~\emph{metody
+pokrewne} odkrywania zależności lineage, wyznaczające szerszy kontekst
+metodyczny.
+
+\subsection{Metodyka przeglądu}
+\label{sec:slr-metodyka}
+
+\subsubsection{Strategia wyszukiwania}
+
+Wyszukiwanie przeprowadzono w~bazie \emph{DBLP Computer Science
+Bibliography} — uznanym źródle indeksującym recenzowane publikacje
+informatyczne, obejmującym zarówno czasopisma, jak i~materiały konferencyjne.
+Ze~względu na~specyfikę tematu zapytanie ograniczono do~dwóch terminów
+kluczowych, połączonych alternatywą, co~zapewnia szerokie pokrycie dziedziny
+przy~zachowaniu precyzji:
+
+\begin{center}
+\texttt{"data provenance" OR "data lineage"}
+\end{center}
+
+Terminy te~dobrano celowo szeroko. Węższe zapytanie, zawierające wprost
+frazę \emph{broken lineage} lub~\emph{missing lineage}, pomijałoby prace
+opisujące to~samo zjawisko innym słownictwem (np.~\emph{lineage
+reconstruction}, \emph{provenance completion}); przesunięto zatem ciężar
+selekcji z~zapytania na~etap przesiewania.
+
+\subsubsection{Kryteria selekcji}
+
+\noindent\textbf{Zakres czasowy.} Analizie poddano publikacje z~lat
+2022--2025. Ograniczenie to~wynika z~tempa rozwoju metod uczenia maszynowego
+w~inżynierii danych: prace wcześniejsze opisują w~większości podejścia
+oparte na~statycznej analizie schematów, nieprzystające do~współczesnych
+architektur przetwarzania.
+
+\noindent\textbf{Kryteria włączenia.} Publikacje w~języku angielskim,
+proponujące konkretny algorytm lub~architekturę możliwą do~zaimplementowania
+i~zweryfikowania eksperymentalnie.
+
+\noindent\textbf{Kryteria wyłączenia.} Prace spoza domeny inżynierii
+oprogramowania i~baz danych (termin \emph{lineage} występuje licznie
+m.in.~w~biologii — \emph{cell lineage tracing}); publikacje dotyczące
+wyłącznie wizualizacji grafów pochodzenia, bez~wkładu algorytmicznego;
+prace skupione wyłącznie na~aspektach bezpieczeństwa (szyfrowanie,
+blockchain), bez~analizy struktury zależności między danymi.
+
+\subsubsection{Przebieg selekcji}
+
+Selekcję przeprowadzono dwuetapowo — najpierw na~podstawie tytułów,
+następnie abstraktów — a~na~końcu wykonano analizę pełnotekstową prac,
+które przeszły oba~etapy. Tabela~\ref{tab:slr-selekcja} przedstawia liczby
+publikacji na~poszczególnych etapach.
+
+\begin{table}[ht]
+\centering
+\caption{Przebieg selekcji literatury w~bazie DBLP dla~zapytania
+\texttt{"data provenance" OR "data lineage"}.}
+\label{tab:slr-selekcja}
+\begin{tabular}{llr}
+\toprule
+\textbf{Etap} & \textbf{Zastosowane działanie} & \textbf{Publikacji} \\
+\midrule
+Wyniki surowe   & wyszukiwanie bez~ograniczeń czasowych      & 1256 \\
+Filtrowanie     & lata 2022--2025, język angielski           &  288 \\
+Przesiewanie~1  & selekcja na~podstawie tytułów              &   24 \\
+Przesiewanie~2  & selekcja na~podstawie abstraktów           &   17 \\
+Wybór końcowy   & analiza pełnotekstowa                      &    7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Największy ubytek następuje na~etapie przesiewania tytułów (288~$\to$~24)
+i~wynika z~wieloznaczności terminu \emph{lineage} poza informatyką.
+Drugie przesiewanie (24~$\to$~17) usunęło prace czysto teoretyczne
+oraz~pozbawione opisu technicznego pozwalającego na~odtworzenie metody.
+Analiza pełnotekstowa zawęziła zbiór do~siedmiu prac reprezentujących
+odmienne podejścia algorytmiczne: klasyczne uczenie maszynowe, analizę
+logów zapytań, grafowe sieci neuronowe, metody jądrowe oraz~przetwarzanie
+zapytań rekurencyjnych i~funkcji definiowanych przez użytkownika.
+
+\subsubsection{Uzupełnienie przeglądu o~prace spoza bazy}
+\label{sec:slr-uzupelnienie}
+
+Systematyczny przegląd przeprowadzono na~początku prac nad~pracą magisterską.
+W~jego~trakcie nie~zostały uwzględnione trzy publikacje, które omówiono
+w~dalszej części rozdziału: Dutkiewicz et~al.~\cite{Dutkiewicz2026},
+Andrzejewski et~al.~\cite{Andrzejewski2025} oraz~Brzeski
+i~Roman~\cite{Brzeski2025}. Pochodzą one~z~lat 2025--2026 i~w~chwili
+wykonywania zapytania nie~były jeszcze zaindeksowane w~bazie DBLP; dotarto
+do~nich później, w~drodze wyszukiwania ukierunkowanego oraz~konsultacji
+z~zespołem badawczym promotora. Uzupełnienie zbioru prac o~pozycje
+wskazane przez ekspertów dziedzinowych jest~praktyką dopuszczalną
+w~przeglądach systematycznych, wymaga jednak jawnego zadeklarowania —
+prace te~nie~przeszły bowiem opisanej wyżej procedury selekcji. Ich~rola
+w~niniejszej pracy jest~przy~tym istotna: wyznaczają one~bezpośredni
+kontekst metodyczny, w~którym plasuje się~postawione pytanie badawcze.
 
 \subsection{Prace bazowe: metoda kontrastowa i~zbiór danych}
 
@@ -533,6 +1071,63 @@ DLG-DG-23 brak (identyfikatory UUID) — sygnał semantyczny i~sygnał
 topologiczny badany w~niniejszej pracy są~zatem komplementarne, a~ich
 połączenie jest naturalnym kierunkiem dalszych badań.
 
+\subsection{Synteza porównawcza}
+\label{sec:slr-synteza}
+
+Tabela~\ref{tab:slr-synteza} zestawia omówione prace według czterech wymiarów
+rozstrzygających o~ich~relacji do~niniejszej pracy: poziomu, na~którym
+formułowany jest~problem, źródła wykorzystywanego sygnału, rodzaju danych
+ewaluacyjnych oraz~zastosowanego protokołu oceny.
+
+\begin{table}[ht]
+\centering
+\caption{Zestawienie porównawcze omówionych prac. Ostatni wiersz —
+niniejsza praca.}
+\label{tab:slr-synteza}
+\footnotesize
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Praca} & \textbf{Poziom} & \textbf{Źródło sygnału} &
+\textbf{Dane} & \textbf{Protokół} \\
+\midrule
+Boiński et~al.~\cite{Boinski2025}
+  & krawędź (para) & nazwy + metadane & syntetyczne (LLM) & klasyfikacja \\
+Chen et~al.~\cite{Chen2024}
+  & --- (zbiór danych) & --- & rzeczywiste & --- \\
+Dutkiewicz et~al.~\cite{Dutkiewicz2026}
+  & krawędź & graf wiedzy (RDF) & syntetyczne & indukcyjny \\
+Andrzejewski et~al.~\cite{Andrzejewski2025}
+  & parametry zapytania & wartości danych & --- & analityczny \\
+Brzeski, Roman~\cite{Brzeski2025}
+  & krawędź (kolumny) & metadane schematu & komercyjne & klasyfikacja \\
+Psallidas et~al.~\cite{Psallidas2022}
+  & ekstrakcja & logi zapytań & rzeczywiste & --- \\
+Yamada et~al.~\cite{Yamada2023}
+  & ekstrakcja (UDF) & analiza kodu & rzeczywiste & --- \\
+Dietrich et~al.~\cite{Dietrich2022}
+  & ekstrakcja (CTE) & przepisywanie zapytań & --- & --- \\
+Kohan Marzagão et~al.~\cite{KohanMarzagao2023}
+  & podobieństwo grafów & topologia & rzeczywiste & --- \\
+Shan et~al.~\cite{Shan2023}
+  & węzeł & heterogeniczny GNN & systemowe & --- \\
+\midrule
+\textbf{Niniejsza praca}
+  & \textbf{węzeł (tabela)} & \textbf{wyłącznie topologia} &
+    \textbf{rzeczywiste} & \textbf{indukcyjny} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Zestawienie uwidacznia dwie rzeczy. Po~pierwsze, kolumna „poziom" jest~niemal
+w~całości wypełniona wartością \emph{krawędź} lub~\emph{ekstrakcja} — jedynym
+podejściem węzłowym jest~praca Shana et~al.~\cite{Shan2023}, dotycząca jednak
+systemowych grafów provenance w~kontekście bezpieczeństwa, nie~zaś~obiektów
+bazodanowych. Po~drugie, żadna z~prac operujących na~lineage bazodanowym
+nie~ogranicza się~do~sygnału czysto topologicznego: wszystkie korzystają
+z~nazw, metadanych schematu, wartości danych lub~semantyki grafu wiedzy.
+Skrzyżowanie tych~dwóch wymiarów — poziom węzła i~wyłącznie topologia —
+pozostaje niezajęte.
+
 \subsection{Luka badawcza}
 % [Konkluzja przeglądu — pozycjonowanie wkładu.]
 Wszystkie omówione prace — od~klasycznego ML na~cechach
@@ -577,95 +1172,1142 @@ w~protokole indukcyjnym.
 
 % [ZACHOWANE JAKO BADANIE WSTĘPNE — dawny główny wątek pracy (predykcja
 %  krawędzi, scenariusze A/B/C) staje się uzasadnieniem pivotu.]
-% TODO: Zwięźle zreferować wyniki predykcji krawędzi (scenariusze A/B/C):
-%   tylko jeden scenariusz nielosowy (AUC-ROC ~0.70), pozostałe ~losowo.
-%   Wniosek: rzadkość grafów uniemożliwia wiarygodną predykcję krawędzi
-%   → motywacja przejścia na detekcję węzłów. Źródła liczb: results/
-%   (wyniki_scenariusze.csv) oraz mail_do_promotora.txt (_surowce/).
+Punktem wyjścia pracy było ujęcie broken lineage jako~\emph{predykcji
+brakujących krawędzi} — zgodne z~dotychczasową literaturą. W~badaniu wstępnym
+każdy z~18~grafów poddano trzem scenariuszom usuwania krawędzi (oznaczonym
+A,~B,~C, różniącym się sposobem doboru krawędzi usuwanych i~próbkowaniem
+negatywów), a~następnie oceniono zdolność metod do~odtworzenia usuniętych
+powiązań. Testowano heurystyki predykcji krawędzi wywodzące się~z~analizy sieci
+złożonych~\cite{LibenNowell2007,Martinez2016} —
+Preferential Attachment~\cite{Barabasi1999},
+L3~\cite{Kovacs2019}, Katz oraz~Personalized PageRank — klasyczne
+klasyfikatory (Random Forest, RUSBoost, LightGBM) oraz~zanurzenia sieciowe (Node2Vec~\cite{Grover2016} + MLP), w~tym~samym
+protokole indukcyjnym cross-graph.
+
+Wyniki okazały się~niesatysfakcjonujące i~niestabilne. Na~grafach wiarygodnych
+(dostatecznie liczna klasa pozytywna w~zbiorze testowym) średnie AUC-ROC
+utrzymywało się~w~pobliżu poziomu losowego (0{,}5), przy~bardzo wysokiej
+wariancji między grafami i~scenariuszami. Jedynie pojedyncze pary
+(graf,~scenariusz) osiągały AUC-ROC rzędu~0{,}70, lecz~bez~powtarzalności —
+żadna metoda nie~generalizowała się~w~sposób spójny na~grafy niewidziane.
+Obserwacja ta~jest zbieżna z~wynikami Dutkiewicza et~al.~\cite{Dutkiewicz2026},
+u~których scenariusz tabel tymczasowych — najczęstsza praktyczna przyczyna
+broken lineage — osiągał AUROC 0{,}49, czyli poziom losowy, nawet dla~
+zaawansowanych metod grafowo-semantycznych.
+
+Przyczyną jest~\emph{rzadkość} grafów DLG-DG-23: liczba krawędzi przepływu
+danych jest~o~rząd wielkości mniejsza od~liczby węzłów (tab.~\ref{tab:dlg-stats}),
+przez~co~sygnał o~konkretnej brakującej parze obiektów jest~zbyt słaby,
+aby~umożliwić wiarygodną predykcję krawędzi bez~dostępu do~semantyki nazw.
+Wynik ten~stanowi bezpośrednią motywację \emph{zmiany ujęcia problemu}
+na~poziom węzłów (sekcja~\ref{sec:node_detection}): zamiast pytać, \emph{która
+krawędź} została utracona, pyta się, \emph{które tabele} są~dotknięte brakiem —
+zadanie słabiej uzależnione od~pojedynczej krawędzi, a~przez~to~wykonalne
+mimo rzadkości grafu.
 
 \section{Wyniki detekcji węzłów o~zerwanym lineage}
 \label{sec:wyniki}
 
-% TODO (WYMAGANE): Tabela zbiorcza — jeden wiersz na metodę (heurystyki,
-%   RF, RUSBoost, LightGBM, LineageDetector) × metryka (AUC-ROC, AUC-PR,
-%   Precision@k, Brier). Wariant UCZCIWY jako główny, napompowany w aneksie.
-%   ŹRÓDŁO LICZB — WYŁĄCZNIE BIEG KANONICZNY (nie mieszać z _v2!):
-%     results/README_BIEG_KANONICZNY.md (opis + ustawienia),
-%     results/agregat_detekcja.csv (agregat, 8 grafów wiarygodnych),
-%     results/tabela_detekcja.tex (gotowa tabela LaTeX do \input).
-%   Liczby (wariant uczciwy, indukcyjny):
-%     - score kompletności: AUC-ROC 0.559 (najlepsza heurystyka),
-%     - Random Forest: AUC-ROC 0.749,
-%     - LightGBM: AUC-ROC 0.720,
-%     - LineageDetector: AUC-ROC 0.771, AUC-PR 0.435, Precision@k 0.443,
-%       Brier 0.106 (najlepszy na wszystkich metrykach).
-%   Uwaga: w tym biegu P@k = R@k = Hits@k (k = liczba zainfekowanych) —
-%   opisać słownie, nie sugerować trzech niezależnych metryk.
-%   Wprowadzić tabelę zdaniem „Tabela~X przedstawia...".
-%   Rysunek gotowy: figures/rys_auc_uczciwy_napompowany.pdf.
+Tabela~\ref{tab:wyniki-detekcja} przedstawia średnie metryki rankingowe
+wszystkich metod detekcji w~protokole indukcyjnym, w~wariancie uczciwym
+(z~wykluczeniem węzłów izolowanych, sekcja~\ref{sec:exclude-isolated}),
+uśrednione po~ośmiu grafach wiarygodnych. Wariant ten~przyjęto jako~główny,
+ponieważ nie~korzysta z~trywialnego przecieku „tabela izolowana $\Rightarrow$
+zainfekowana" (por.~sekcja~\ref{sec:przeciek}).
+
+\begin{table}[ht]
+\centering
+\caption{Średnie metryki detekcji zainfekowanych tabel per~metoda (protokół
+indukcyjny, wariant uczciwy), wraz z~odchyleniem standardowym po~ośmiu grafach
+wiarygodnych; gwiazdka — wkład własny, najlepsza wartość w~kolumnie pogrubiona.}
+\label{tab:wyniki-detekcja}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metoda} & \textbf{AUC-ROC} & \textbf{AUC-PR} & \textbf{P@k} & \textbf{Brier} \\
+\midrule
+\multicolumn{5}{l}{\emph{Heurystyki strukturalne}} \\
+Anomalia stopnia      & 0{,}427 $\pm$ 0{,}045 & 0{,}165 $\pm$ 0{,}052 & 0{,}142 $\pm$ 0{,}070 & 0{,}134 $\pm$ 0{,}026 \\
+Brzeg (root/leaf)     & 0{,}455 $\pm$ 0{,}046 & 0{,}137 $\pm$ 0{,}028 & 0{,}146 $\pm$ 0{,}038 & 0{,}745 $\pm$ 0{,}088 \\
+Niska łączność zadań  & 0{,}324 $\pm$ 0{,}069 & 0{,}112 $\pm$ 0{,}026 & 0{,}094 $\pm$ 0{,}055 & 0{,}226 $\pm$ 0{,}016 \\
+Reguła korzenia       & 0{,}574 $\pm$ 0{,}062 & 0{,}168 $\pm$ 0{,}025 & 0{,}180 $\pm$ 0{,}120 & 0{,}469 $\pm$ 0{,}071 \\
+\midrule
+\multicolumn{5}{l}{\emph{Klasyczne metody uczenia maszynowego}} \\
+Random Forest         & 0{,}749 $\pm$ 0{,}064 & 0{,}425 $\pm$ 0{,}085 & 0{,}380 $\pm$ 0{,}131 & 0{,}117 $\pm$ 0{,}024 \\
+RUSBoost              & 0{,}631 $\pm$ 0{,}040 & 0{,}249 $\pm$ 0{,}036 & 0{,}340 $\pm$ 0{,}061 & 0{,}152 $\pm$ 0{,}048 \\
+LightGBM              & 0{,}720 $\pm$ 0{,}077 & 0{,}381 $\pm$ 0{,}065 & 0{,}398 $\pm$ 0{,}059 & 0{,}147 $\pm$ 0{,}022 \\
+\midrule
+\multicolumn{5}{l}{\emph{Autorski detektor}} \\
+LineageDetector\textsuperscript{*} & \textbf{0{,}771} $\pm$ 0{,}056 & \textbf{0{,}435} $\pm$ 0{,}049 & \textbf{0{,}443} $\pm$ 0{,}068 & \textbf{0{,}106} $\pm$ 0{,}020 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+W~przyjętym biegu $k$ równa się~liczbie tabel faktycznie zainfekowanych
+w~grafie testowym, przez~co~Precision@k, Recall@k i~Hits@k przyjmują tę~samą
+wartość; w~tabeli podano zatem jedną kolumnę (P@k), a~relację tę~opisano
+słownie, aby~nie~sugerować trzech niezależnych metryk.
+
+LineageDetector uzyskał najwyższą wartość średnią na~wszystkich czterech
+metrykach jednocześnie. Skala tej~przewagi jest~jednak bardzo różna w~zależności
+od~punktu odniesienia: nad~LightGBM wynosi $+0{,}051$ AUC-ROC i~$+0{,}054$ AUC-PR,
+lecz~nad~Random Forest już~tylko $+0{,}022$ i~$+0{,}010$ — czyli mniej niż~połowę
+odchylenia standardowego obu~metod. Sama różnica średnich nie~wystarcza zatem
+do~orzeczenia o~przewadze; jej~istotność statystyczną zbadano
+w~sekcji~\ref{sec:istotnosc}, a~udział poszczególnych składników detektora
+w~tym~wyniku — w~badaniu ablacyjnym w~sekcji~\ref{sec:ablacja}.
+
+Heurystyki strukturalne oparte na~lokalnym symptomie wypadają słabo: żadna
+nie~przekracza AUC-ROC 0{,}58, a~trzy z~czterech plasują się~poniżej poziomu
+losowego. Wynika to~z~natury zadania w~wariancie uczciwym — po~wykluczeniu
+tabel w~pełni izolowanych symptom lokalny (niski stopień, pozycja na~brzegu)
+przestaje wystarczać, ponieważ osierocona tabela-następnik jest~strukturalnie
+nieodróżnialna od~prawdziwej tabeli źródłowej (sekcja~\ref{sec:sformulowanie}).
+Rozróżnienie tych~przypadków wymaga sygnału relacyjnego oraz~uczenia
+indukcyjnego — obecnych dopiero w~klasycznych klasyfikatorach
+i~w~LineageDetectorze.
+
+Relacyjny score kompletności — sedno wkładu LineageDetectora — użyty
+samodzielnie jako~heurystyka osiąga AUC-ROC 0{,}559, AUC-PR 0{,}206 i~P@k 0{,}240,
+a~więc~wyraźnie powyżej pozostałych heurystyk lokalnych po~stronie AUC-PR
+i~P@k. Potwierdza to, że~informacja relacyjna (spójność tabeli z~jej peerami)
+jest~jakościowo bogatsza od~samego stopnia węzła; jej~pełną wartość realizuje
+jednak dopiero LineageDetector, łącząc ją~z~cechami pozycji w~DAG i~kalibracją.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{rys_auc_uczciwy_napompowany.pdf}
+  \caption{Porównanie AUC-ROC metod detekcji w~wariancie uczciwym
+           (z~wykluczeniem węzłów izolowanych) i~napompowanym. Metody uczone
+           zachowują przewagę w~obu wariantach; heurystyki lokalne tracą
+           najwięcej po~usunięciu przecieku izolacji.}
+  \label{rys:auc-warianty}
+\end{figure}
+
+\section{Wyniki w~rozbiciu na~poszczególne grafy}
+\label{sec:per-graf}
+
+Średnie z~tabeli~\ref{tab:wyniki-detekcja} ukrywają rozrzut między grafami,
+który jest~w~tym~zadaniu istotny — a~zarazem stanowi podstawę sparowanego testu
+z~sekcji~\ref{sec:istotnosc}. Tabela~\ref{tab:per-graf} przedstawia AUC-ROC
+osobno dla~każdego z~ośmiu grafów wiarygodnych, wraz z~liczbą kandydatów
+i~liczbą tabel zainfekowanych.
+
+\begin{table}[ht]
+\centering
+\caption{AUC-ROC w~rozbiciu na~grafy testowe (protokół indukcyjny, wariant
+uczciwy). Kand.~—~liczba tabel-kandydatów, Zainf.~—~liczba tabel zainfekowanych;
+najlepsza wartość w~wierszu pogrubiona.}
+\label{tab:per-graf}
+\small
+\begin{tabular}{lrrcccccc}
+\toprule
+\textbf{Graf} & \textbf{Kand.} & \textbf{Zainf.} & \textbf{Reguła} & \textbf{Score} &
+\textbf{Random} & \textbf{RUS-} & \textbf{Light-} & \textbf{Lineage-} \\
+ & & & \textbf{korzenia} & \textbf{kompl.} & \textbf{Forest} & \textbf{Boost} &
+\textbf{GBM} & \textbf{Detector\textsuperscript{*}} \\
+\midrule
+DLG5  &  66 &   9 & 0{,}590 & 0{,}567 & 0{,}662 & 0{,}703 & 0{,}633 & \textbf{0{,}745} \\
+DLG6  & 568 &  82 & 0{,}567 & 0{,}627 & 0{,}745 & 0{,}619 & 0{,}707 & \textbf{0{,}790} \\
+DLG10 & 213 &  36 & 0{,}544 & 0{,}428 & 0{,}681 & 0{,}586 & 0{,}588 & \textbf{0{,}714} \\
+DLG11 &  65 &   6 & 0{,}642 & 0{,}492 & 0{,}732 & 0{,}658 & 0{,}776 & \textbf{0{,}804} \\
+DLG12 & 197 &  26 & 0{,}457 & 0{,}585 & 0{,}855 & 0{,}604 & 0{,}837 & \textbf{0{,}869} \\
+DLG13 & 100 &  13 & 0{,}678 & 0{,}602 & \textbf{0{,}723} & 0{,}674 & 0{,}697 & 0{,}692 \\
+DLG16 & 246 &  44 & 0{,}565 & 0{,}626 & \textbf{0{,}841} & 0{,}599 & 0{,}783 & 0{,}818 \\
+DLG18 & 625 & 110 & 0{,}549 & 0{,}547 & \textbf{0{,}750} & 0{,}601 & 0{,}737 & 0{,}733 \\
+\midrule
+\emph{średnia} & & & 0{,}574 & 0{,}559 & 0{,}749 & 0{,}631 & 0{,}720 & \textbf{0{,}771} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Rozbicie ujawnia trzy rzeczy niewidoczne w~średnich.
+
+Po~pierwsze, \textbf{rozrzut jest~duży w~stosunku do~różnic między metodami}.
+Wynik LineageDetectora waha się~od~0{,}692 (DLG13) do~0{,}869 (DLG12) —
+rozpiętość 0{,}18 jest~ośmiokrotnie większa niż~jego przewaga nad~Random Forest
+w~średniej (0{,}022). Zmienność między grafami dominuje więc~nad~zmiennością
+między metodami uczonymi, co~bezpośrednio tłumaczy brak istotności
+statystycznej stwierdzony w~sekcji~\ref{sec:istotnosc}.
+
+Po~drugie, \textbf{przewaga detektora nie~jest~jednorodna}. LineageDetector
+wypada najlepiej na~pięciu z~ośmiu grafów, na~pozostałych trzech (DLG13, DLG16,
+DLG18) ustępuje Random Forest — za~każdym razem niewiele, o~0{,}017--0{,}031.
+Nie~widać przy~tym systematycznej zależności od~rozmiaru grafu: detektor
+wygrywa zarówno na~najmniejszym (DLG11, 65~kandydatów), jak i~na~jednym
+z~największych (DLG6, 568), a~przegrywa na~grafie średnim (DLG13, 100)
+i~największym (DLG18, 625).
+
+Po~trzecie, \textbf{uporządkowanie klas metod jest~natomiast stabilne}.
+Na~każdym z~ośmiu grafów obie najlepsze metody uczone (Random Forest
+i~LineageDetector) przewyższają obie przedstawione heurystyki, a~różnica
+wynosi od~0{,}014 (DLG13) do~0{,}270 (DLG12), przy~medianie około~0{,}13.
+Wniosek o~przewadze uczenia indukcyjnego
+nad~regułami lokalnymi nie~zależy więc~od~doboru grafu testowego —
+w~przeciwieństwie do~porównań wewnątrz grupy metod uczonych.
+
+Udział tabel zainfekowanych wśród kandydatów wynosi średnio 14{,}5\%
+i~jest~zbliżony we~wszystkich grafach (od~9\% dla~DLG11 do~18\% dla~DLG16),
+zadanie jest~zatem porównywalnie niezrównoważone niezależnie od~skali grafu.
+
+\section{Istotność statystyczna różnic}
+\label{sec:istotnosc}
+
+Różnice średnich z~tabeli~\ref{tab:wyniki-detekcja} są~w~części przypadków
+mniejsze od~odchyleń standardowych, dlatego zbadano ich~istotność statystyczną.
+Zastosowano test kolejności par Wilcoxona~\cite{Wilcoxon1945}
+(\emph{signed-rank}) w~wariancie dokładnym i~dwustronnym, sparowany
+po~\emph{grafach} testowych — zgodnie z~zaleceniem Demšara~\cite{Demsar2006} dla~porównywania klasyfikatorów
+na~wielu zbiorach danych. Jednostką obserwacji jest~graf wiarygodny, a~nie~
+pojedynczy węzeł: pary są~zależne (ten~sam graf, ten~sam podział indukcyjny),
+co~wyklucza testy zakładające niezależność obserwacji.
+
+Poprawkę Holma~\cite{Holm1979} na~wielokrotne porównania zastosowano \emph{w~obrębie rodziny
+hipotez}, wyróżniając dwie rodziny odpowiadające dwóm pytaniom pracy:
+porównanie z~heurystykami (5~testów) oraz~porównanie z~klasycznymi
+klasyfikatorami (3~testy). Podział ten~jest~podyktowany mocą testu: przy~ośmiu
+parach najniższe osiągalne $p$ wynosi $2/2^{8} = 0{,}0078$, więc~korekta
+na~wszystkich ośmiu porównaniach naraz podniosłaby próg do~$0{,}0625$ —
+przy~takim planie \emph{żadna} różnica nie~mogłaby zostać uznana za~istotną,
+niezależnie od~danych. Wyniki zestawia tabela~\ref{tab:istotnosc}.
+
+\begin{table}[ht]
+\centering
+\caption{Istotność statystyczna różnic między LineageDetectorem a~pozostałymi
+metodami. Test kolejności par Wilcoxona (dokładny, dwustronny), sparowany
+po~8~grafach wiarygodnych; poprawka Holma w~obrębie rodziny hipotez i~metryki.
+$\Delta$~—~mediana różnicy na~korzyść LineageDetectora.}
+\label{tab:istotnosc}
+\small
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Porównanie z} & \multicolumn{2}{c}{\textbf{AUC-ROC}} & \multicolumn{2}{c}{\textbf{AUC-PR}} & \multicolumn{2}{c}{\textbf{P@k}} & \multicolumn{2}{c}{\textbf{Brier}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+ & $\Delta$ & $p$ & $\Delta$ & $p$ & $\Delta$ & $p$ & $\Delta$ & $p$ \\
+\midrule
+\multicolumn{9}{l}{\emph{Heurystyki}} \\
+Anomalia stopnia & $+0{,}344$ & $0{,}039^{*}$ & $+0{,}273$ & $0{,}039^{*}$ & $+0{,}297$ & $0{,}039^{*}$ & $+0{,}029$ & $0{,}039^{*}$ \\
+Brzeg (root/leaf) & $+0{,}315$ & $0{,}039^{*}$ & $+0{,}279$ & $0{,}039^{*}$ & $+0{,}297$ & $0{,}039^{*}$ & $+0{,}633$ & $0{,}039^{*}$ \\
+Niska łączność zadań & $+0{,}466$ & $0{,}039^{*}$ & $+0{,}310$ & $0{,}039^{*}$ & $+0{,}352$ & $0{,}039^{*}$ & $+0{,}119$ & $0{,}039^{*}$ \\
+Reguła korzenia & $+0{,}177$ & $0{,}039^{*}$ & $+0{,}253$ & $0{,}039^{*}$ & $+0{,}250$ & $0{,}039^{*}$ & $+0{,}344$ & $0{,}039^{*}$ \\
+Score kompletności & $+0{,}189$ & $0{,}039^{*}$ & $+0{,}223$ & $0{,}039^{*}$ & $+0{,}193$ & $0{,}039^{*}$ & $+0{,}040$ & $0{,}039^{*}$ \\
+\midrule
+\multicolumn{9}{l}{\emph{Metody uczone}} \\
+Random Forest & $+0{,}023$ & $0{,}250$ & $+0{,}014$ & $0{,}461$ & $+0{,}064$ & $0{,}188$ & $+0{,}012$ & $0{,}109$ \\
+RUSBoost & $+0{,}139$ & $0{,}023^{*}$ & $+0{,}172$ & $0{,}023^{*}$ & $+0{,}071$ & $0{,}188$ & $+0{,}041$ & $0{,}023^{*}$ \\
+LightGBM & $+0{,}033$ & $0{,}078$ & $+0{,}047$ & $0{,}023^{*}$ & $+0{,}054$ & $0{,}188$ & $+0{,}042$ & $0{,}023^{*}$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\footnotesize $^{*}$ różnica istotna na~poziomie $\alpha = 0{,}05$ po~poprawce
+Holma. Różnica dodatnia oznacza przewagę LineageDetectora (dla~Brier score —
+wartość niższą). Przy~8~parach najniższe osiągalne $p$ wynosi 0{,}0078,
+co~ogranicza moc testu.
+\end{table}
+
+Wyniki układają się~w~trzy jednoznaczne wnioski.
+
+\noindent\textbf{Przewaga nad~heurystykami jest~istotna i~bezdyskusyjna.}
+We~wszystkich dwudziestu porównaniach (5~heurystyk $\times$ 4~metryki)
+LineageDetector wypada lepiej przy~$p_{\mathrm{Holm}} = 0{,}039$, wygrywając
+na~ośmiu z~ośmiu grafów (dla~reguły korzenia i~score'u kompletności — na~siedmiu
+z~ośmiu w~części metryk). Mediany różnic są~przy~tym duże: od~$+0{,}18$
+do~$+0{,}47$ AUC-ROC. Wniosek, że~uczenie indukcyjne na~cechach topologicznych
+przewyższa reguły oparte na~lokalnym symptomie, ma~zatem oparcie statystyczne,
+a~nie~tylko w~różnicy średnich.
+
+\noindent\textbf{Przewaga nad~metodami boostingowymi jest~istotna, ale~umiarkowana.}
+Nad~RUSBoostem LineageDetector wygrywa istotnie w~AUC-ROC, AUC-PR i~Brier
+($p_{\mathrm{Holm}} = 0{,}023$, 8/8~grafów), a~nad~LightGBM — w~AUC-PR i~Brier
+(również $p_{\mathrm{Holm}} = 0{,}023$, 8/8). Warto zauważyć, że~są~to~metryki
+najbardziej wrażliwe na~niezrównoważenie klas i~na~jakość oszacowań
+prawdopodobieństwa, a~więc~te, które w~zadaniu rankingowym mają~największe
+znaczenie praktyczne.
+
+\noindent\textbf{Wobec Random Forest przewagi wykazać się~nie~udało.}
+Na~żadnej z~czterech metryk różnica nie~osiąga istotności
+($p_{\mathrm{Holm}} = 0{,}109$--$0{,}461$), a~liczba wygranych grafów
+(5--6~na~8) jest~bliska losowej. Jest to~wynik negatywny i~jako~taki został
+tu~zaraportowany: w~świetle zebranych danych LineageDetector i~Random Forest
+należy uznać za~\emph{statystycznie nierozróżnialne} pod~względem jakości
+rankingu, a~przewagę 0{,}771 wobec 0{,}749 AUC-ROC — za~mieszczącą się
+w~granicach szumu. Nie~oznacza to~równoważności obu~metod: przy~ośmiu parach
+test wykrywa jedynie efekty duże, więc~brak istotności jest~równie dobrze
+zgodny z~istnieniem różnicy małej, której~przy~tej~liczbie grafów wykryć
+się~nie~da. Rozstrzygnięcie wymagałoby zbioru o~większej liczbie grafów.
+
+\section{Badanie ablacyjne detektora}
+\label{sec:ablacja}
+
+Detektor LineageDetector łączy dwa autorskie składniki nadbudowane
+nad~klasyfikatorem bazowym: relacyjny score kompletności peer-consistency
+oraz~kalibrację izotoniczną. Aby~rozdzielić ich~udział w~wyniku,
+przeprowadzono badanie ablacyjne w~pełnym planie $2 \times 2$ — każdy
+ze~składników wyłączano osobno i~obydwa naraz (parametry
+\texttt{use\_completeness} i~\texttt{calibrate}). Konfiguracja pozostała
+identyczna z~biegiem kanonicznym, dzięki czemu wiersz „pełny detektor"
+odtwarza dokładnie wartości z~tabeli~\ref{tab:wyniki-detekcja}.
+Wyniki przedstawia tabela~\ref{tab:ablacja}.
+
+\begin{table}[ht]
+\centering
+\caption{Badanie ablacyjne LineageDetectora (protokół indukcyjny, wariant
+uczciwy, 8~grafów wiarygodnych). W~nawiasach — różnica względem pełnego
+detektora; znak dla~Brier score odwrócono tak, aby~wartość ujemna zawsze
+oznaczała pogorszenie.}
+\label{tab:ablacja}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Wariant} & \textbf{AUC-ROC} & \textbf{AUC-PR} & \textbf{P@k} & \textbf{Brier} \\
+\midrule
+Pełny detektor & 0{,}771 & 0{,}435 & \textbf{0{,}443} & \textbf{0{,}106} \\
+\midrule
+bez kalibracji izotonicznej
+  & \textbf{0{,}786} & \textbf{0{,}440} & 0{,}446 & 0{,}111 \\
+  & \small$(+0{,}015)$ & \small$(+0{,}005)$ & \small$(+0{,}003)$ & \small$(-0{,}005)$ \\
+bez score'u kompletności
+  & 0{,}747 & 0{,}420 & 0{,}401 & 0{,}107 \\
+  & \small$(-0{,}023)$ & \small$(-0{,}015)$ & \small$(-0{,}042)^{*}$ & \small$(-0{,}001)$ \\
+bez obu składników
+  & 0{,}750 & 0{,}425 & 0{,}387 & 0{,}116 \\
+  & \small$(-0{,}020)$ & \small$(-0{,}010)$ & \small$(-0{,}056)$ & \small$(-0{,}010)$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\footnotesize $^{*}$ ubytek istotny statystycznie (test Wilcoxona sparowany
+po~grafach, poprawka Holma w~obrębie metryki, $p_{\mathrm{Holm}} = 0{,}023$,
+pogorszenie na~8~z~8~grafów). Pozostałe różnice nie~osiągają istotności.
+\end{table}
+
+\noindent\textbf{Score kompletności odpowiada za~wkład detektora.}
+Jego~wyłączenie pogarsza wszystkie cztery metryki, a~w~przypadku Precision@k —
+najbardziej praktycznej z~nich, bo~opisującej trafność czołówki rankingu
+przekazywanej do~ręcznej inspekcji — ubytek $-0{,}042$ jest~istotny
+statystycznie i~konsekwentny: wariant bez~kompletności przegrywa
+na~\emph{wszystkich} ośmiu grafach. Bez~tego składnika detektor spada
+do~poziomu Random Forest (0{,}747 wobec 0{,}749 AUC-ROC), co~jest~spójne
+z~jego konstrukcją — bazowym estymatorem jest~właśnie Random Forest, więc~
+po~usunięciu cech relacyjnych oba~modele stają się~niemal tożsame. Sygnał
+peer-consistency jest~zatem tym~elementem, który odróżnia autorski detektor
+od~gotowego klasyfikatora.
+
+\noindent\textbf{Kalibracja izotoniczna nie~poprawia rankingu — pogarsza go.}
+Wynik ten~jest~sprzeczny z~oczekiwaniem i~wymaga jasnego zaraportowania:
+wariant \emph{bez} kalibracji osiąga wyższe AUC-ROC (0{,}786 wobec 0{,}771)
+oraz~nieznacznie wyższe AUC-PR i~Precision@k, wygrywając odpowiednio
+na~7~i~5~z~8~grafów. Kalibracja poprawia natomiast to, do~czego służy —
+Brier score (0{,}106 wobec 0{,}111, poprawa na~6~z~8~grafów) — choć~
+i~ta~różnica nie~osiąga istotności statystycznej. Mechanizm jest~znany:
+regresja izotoniczna jest~funkcją schodkową, więc~przypisuje identyczne
+prawdopodobieństwo całym grupom węzłów, wprowadzając do~rankingu remisy,
+których surowy klasyfikator nie~miał; dodatkowo w~schemacie
+\texttt{CalibratedClassifierCV} z~$cv = 3$ każdy model składowy uczy się~
+na~dwóch trzecich puli treningowej. Kalibracja realizuje więc~\emph{wymianę}:
+oddaje część zdolności rozdzielczej w~zamian za~rzetelność oszacowań
+prawdopodobieństwa.
+
+\noindent\textbf{Wniosek dla~konstrukcji detektora.} Uzasadnione empirycznie
+jest~zachowanie kalibracji tylko wtedy, gdy odbiorcą wyniku ma~być~wartość
+$p(\text{zainfekowana})$ interpretowana jako~prawdopodobieństwo — na~przykład
+przy~progowaniu ryzyka albo szacowaniu kosztu inspekcji. Jeśli~celem jest~
+wyłącznie uszeregowanie tabel do~przeglądu, wariant bez~kalibracji jest~
+lepszym wyborem. W~pracy jako~konfigurację główną zachowano wariant
+skalibrowany, ponieważ zadanie zdefiniowano (sekcja~\ref{sec:sformulowanie})
+jako~oszacowanie prawdopodobieństwa, a~nie~sam ranking; alternatywa
+jest~jednak udokumentowana powyżej i~pozostaje dostępna jako~parametr
+implementacji.
 
 \section{Kontrola przecieku i~analiza wrażliwości}
 \label{sec:przeciek}
 
-% TODO (WYMAGANE): Opisać problem przecieku izolacji:
-%   po usunięciu joba ~29% chorych tabel staje się DATA_FLOW-izolowanych
-%   (0% czystych), co czyni regułę „izolowana ⟹ chora" trywialną i zawyża
-%   wynik. Flaga exclude_isolated daje wariant uczciwy. Porównać:
-%     - napompowany (10 grafów): RF 0.816, LightGBM 0.805, LineageDetector
-%       0.842; heurystyki boundary 0.600, low_job_connectivity 0.518,
-%     - uczciwy (8 grafów): RF 0.749, LightGBM 0.720, LineageDetector 0.771;
-%       heurystyki spadają do 0.455 / 0.324 („żyły z przecieku").
-%   ŹRÓDŁA — BIEG KANONICZNY: results/agregat_detekcja.csv (uczciwy) vs
-%   results/agregat_detekcja_napompowany.csv (napompowany).
-%   ⚠ HACZYK: warianty mają RÓŻNE zbiory grafów wiarygodnych (8 vs 10) —
-%   nie odejmować liczb 1:1; czyste porównanie tylko na wspólnym podzbiorze
-%   (patrz results/README_BIEG_KANONICZNY.md).
+\subsection{Przeciek izolacji}
 
-% TODO (WYMAGANE): Analiza wrażliwości na removal_ratio
-%   (results/_faza2_runs.txt, sekcja SWEEP): LineageDetector przy ratio
-%   0.05/0.10/0.20/0.30 daje AUC-ROC 0.761/0.771/0.755/0.754 — stabilny.
-%   Rysunek gotowy: figures/rys_wrazliwosc_removal_ratio.pdf.
+Usunięcie zadania może~pozbawić tabelę \emph{wszystkich} krawędzi przepływu
+danych, czyniąc ją~w~pełni izolowaną w~podgrafie \emph{DATA\_FLOW}. Ponieważ
+w~oryginalnych grafach tabele izolowane nie~występują, trywialna reguła
+„tabela izolowana $\Rightarrow$ zainfekowana" pozwala rozpoznać znaczną część
+pozytywów bez~żadnego uczenia i~sztucznie zawyża wynik. Aby~zmierzyć skalę
+tego~zjawiska, każdą metodę oceniono w~dwóch wariantach: \emph{napompowanym}
+(izolowane pozostają w~puli kandydatów) oraz~\emph{uczciwym} (flaga
+\texttt{exclude\_isolated} usuwa je~z~puli). Tabela~\ref{tab:warianty}
+zestawia oba warianty.
+
+\begin{table}[ht]
+\centering
+\caption{Wpływ przecieku izolacji na~AUC-ROC (protokół indukcyjny).}
+\label{tab:warianty}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metoda} & \textbf{Napompowany} & \textbf{Uczciwy} \\
+\midrule
+Brzeg (root/leaf)     & 0{,}600 & 0{,}455 \\
+Niska łączność zadań  & 0{,}518 & 0{,}324 \\
+Random Forest         & 0{,}816 & 0{,}749 \\
+LightGBM              & 0{,}805 & 0{,}720 \\
+LineageDetector\textsuperscript{*} & \textbf{0{,}842} & \textbf{0{,}771} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Heurystyki lokalne tracą najwięcej: \texttt{boundary} spada z~0{,}600 do~0{,}455,
+a~\texttt{low\_job\_connectivity} z~0{,}518 do~0{,}324 — „żyły" one~głównie
+z~przecieku izolacji. Metody uczone spadają znacznie łagodniej
+(RF: 0{,}816$\to$0{,}749; LineageDetector: 0{,}842$\to$0{,}771), co~pokazuje,
+że~opierają się~na~rzeczywistym sygnale strukturalnym, a~nie~na~trywialnej
+regule. W~obu wariantach LineageDetector pozostaje najlepszy.
+
+Oba warianty uśredniono po~\emph{różnej} liczbie grafów wiarygodnych: uczciwy
+— 8, napompowany — 10. Wykluczenie izolowanych zmniejsza liczbę pozytywów,
+przez~co~dwa grafy spadają poniżej progu $\mathrm{MIN\_POS} = 5$. Z~tego powodu
+wartości w~tabeli~\ref{tab:warianty} ilustrują tendencję (metody uczone są~
+odporniejsze na~usunięcie przecieku), a~nie~dokładny ubytek — nie~należy
+odejmować ich~kolumn 1:1.
+
+\subsection{Wrażliwość na~odsetek usuwanych zadań}
+
+Zbadano wpływ parametru \texttt{removal\_ratio} (udział usuwanych zadań
+łączących) na~wynik LineageDetectora, przy~wartościach 0{,}05 / 0{,}10 /
+0{,}20 / 0{,}30 (tabela~\ref{tab:sweep}).
+
+\begin{table}[ht]
+\centering
+\caption{Wrażliwość LineageDetectora na~\texttt{removal\_ratio}
+(AUC-ROC, protokół indukcyjny).}
+\label{tab:sweep}
+\begin{tabular}{lcccc}
+\toprule
+\texttt{removal\_ratio} & 0{,}05 & 0{,}10 & 0{,}20 & 0{,}30 \\
+\midrule
+AUC-ROC & 0{,}761 & 0{,}771 & 0{,}755 & 0{,}754 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Wynik jest~stabilny: w~całym badanym zakresie AUC-ROC mieści się~w~przedziale
+0{,}754--0{,}771, a~różnice są~rzędu wariancji między powtórzeniami. Oznacza to,
+że~skuteczność detektora nie~zależy istotnie od~intensywności symulowanego
+broken lineage — zarówno przy~rzadkich (5\%), jak i~częstych (30\%) usunięciach
+zadań detektor zachowuje porównywalną jakość rankingu
+(rys.~\ref{rys:wrazliwosc}).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\linewidth]{rys_wrazliwosc_removal_ratio.pdf}
+  \caption{Wrażliwość AUC-ROC detektora LineageDetector na~parametr
+           \texttt{removal\_ratio}. Wynik pozostaje stabilny w~całym
+           badanym zakresie.}
+  \label{rys:wrazliwosc}
+\end{figure}
+
+\section{Ważność cech}
+\label{sec:waznosc}
+
+Badanie ablacyjne pokazało, \emph{że} score kompletności wnosi informację;
+analiza ważności cech odpowiada na~pytanie, \emph{które} elementy opisu węzła
+niosą sygnał. Zastosowano metodę permutacyjną: wartości pojedynczej cechy
+przestawia się~losowo w~zbiorze testowym, a~spadek AUC-ROC mierzy, ile~model
+tracił bez~tej~informacji. W~odróżnieniu od~ważności wbudowanej w~drzewa
+decyzyjne (opartej na~liczbie podziałów) metoda ta~nie~faworyzuje cech
+o~wielu unikatowych wartościach i~mierzy wpływ na~metrykę, która faktycznie
+podlega ocenie. Wyniki uśredniono po~10~permutacjach, ośmiu grafach
+wiarygodnych i~trzech ziarnach (tabela~\ref{tab:waznosc}).
+
+\begin{table}[ht]
+\centering
+\caption{Ważność cech detektora LineageDetector mierzona metodą
+permutacyjną: średni spadek AUC-ROC po~losowym przestawieniu wartości cechy.
+Gwiazdka — cecha wnoszona przez~autorski score kompletności.}
+\label{tab:waznosc}
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Cecha} & \textbf{Spadek AUC-ROC} & \textbf{Odch.\ std} \\
+\midrule
+\texttt{avg\_job\_in\_df} — śr.\ stopień wej.\ zadań & $+0{,}0616$ & 0{,}0510 \\
+\texttt{n\_job\_neighbors} — liczba sąsiednich zadań & $+0{,}0492$ & 0{,}0266 \\
+\texttt{out\_df} — wyjściowe krawędzie \emph{DATA\_FLOW} & $+0{,}0408$ & 0{,}0207 \\
+\texttt{degree} — stopień całkowity & $+0{,}0260$ & 0{,}0336 \\
+\texttt{peer\_producer\_score}\textsuperscript{*} & $+0{,}0238$ & 0{,}0240 \\
+\texttt{n\_field\_children} — liczba pól tabeli & $+0{,}0196$ & 0{,}0280 \\
+\texttt{role} — rola w~przepływie & $+0{,}0128$ & 0{,}0204 \\
+\texttt{completeness\_anomaly}\textsuperscript{*} & $+0{,}0107$ & 0{,}0140 \\
+\texttt{is\_root} — brak producenta & $+0{,}0100$ & 0{,}0110 \\
+\texttt{flow\_depth} — głębokość w~DAG & $+0{,}0072$ & 0{,}0130 \\
+\texttt{in\_df} — wejściowe krawędzie \emph{DATA\_FLOW} & $+0{,}0065$ & 0{,}0125 \\
+\texttt{is\_leaf} — brak konsumenta & $+0{,}0036$ & 0{,}0128 \\
+\texttt{depth\_plus\_reach} — długość ścieżki & $+0{,}0018$ & 0{,}0292 \\
+\texttt{peer\_consumer\_score}\textsuperscript{*} & $\phantom{+}0{,}0000$ & 0{,}0000 \\
+\texttt{avg\_job\_out\_df} — śr.\ stopień wyj.\ zadań & $-0{,}0008$ & 0{,}0046 \\
+\texttt{flow\_reach} — zasięg w~dół DAG & $-0{,}0015$ & 0{,}0276 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Najsilniejszy sygnał pochodzi z~otoczenia, nie~z~samego węzła.}
+Dwie najważniejsze cechy — średni stopień wejściowy sąsiednich zadań
+oraz~liczba sąsiadujących zadań — opisują nie~tabelę, lecz~jej~kontekst.
+Wyprzedzają one~cechy opisujące bezpośrednio symptom zerwania
+($\mathrm{in\_df}$, \texttt{is\_root}), które plasują się~w~dolnej połowie
+zestawienia. Potwierdza to~diagnozę z~sekcji~\ref{sec:analiza}: sam brak
+producenta nie~odróżnia tabeli osieroconej od~prawdziwego źródła, a~informacja
+rozstrzygająca leży w~sąsiedztwie węzła.
+
+\noindent\textbf{Wkład autorskiego score'u jest~widoczny, lecz~jednostronny.}
+Cecha \texttt{peer\_producer\_score} zajmuje piąte miejsce na~szesnaście
+i~jest~najwyżej sklasyfikowaną cechą relacyjną;
+\texttt{completeness\_anomaly} plasuje się~ósma. Zwraca jednak uwagę
+\texttt{peer\_consumer\_score}: jej~przestawienie nie~zmienia wyniku
+\emph{w~ogóle} — spadek wynosi dokładnie zero przy~zerowym odchyleniu
+standardowym we~wszystkich 24~kombinacjach grafu i~ziarna.
+
+Analiza danych wyjaśnia przyczynę i~jest~ona~strukturalna, nie~
+implementacyjna. W~zbiorze DLG-DG-23 \emph{każde} zadanie zapisuje dokładnie
+jedną tabelę wyjściową — sprawdzono to~na~wszystkich zadaniach we~wszystkich
+grafach. Zbiór peerów po~stronie konsumenta $C(t)$, zdefiniowany jako~inne
+tabele zapisywane przez~te~same zadania upstream, jest~zatem zawsze pusty,
+a~wynikający z~niego score — tożsamościowo równy zeru. Konsekwencje są~dwie.
+Po~pierwsze, definicja sygnału anomalii z~sekcji~\ref{sec:lineage-detector}
+redukuje się~na~tym~zbiorze do~członu producenta:
+$\mathrm{anomaly}(t) = \mathbf{1}[\mathrm{in\_df}(t) = 0] \cdot \mathrm{prod}(t)$.
+Po~drugie, detektor korzysta w~praktyce z~15, a~nie~16~cech.
+
+Nie~jest~to~błąd konstrukcji — sformułowanie score'u pozostaje symetryczne
+i~na~zbiorze dopuszczającym zadania o~wielu wyjściach (np.~operacje
+partycjonowania lub~rozgałęzienia potoku) strona konsumenta byłaby~aktywna.
+Obserwacja ta~ma~jednak dwie praktyczne implikacje. Wskazuje, że~potencjał
+score'u peer-consistency jest~na~zbiorze DLG-DG-23 wykorzystany
+tylko w~połowie, co~może~częściowo tłumaczyć umiarkowaną skalę przewagi
+detektora (sekcja~\ref{sec:istotnosc}). Wzmacnia też~wyjaśnienie porażki
+sygnału relacyjnego na~zewnętrznym grafie DUT
+(sekcja~\ref{sec:cross_dataset}): tam nieaktywna jest~również strona
+producenta, przez~co~score milknie całkowicie.
+
+\section{Warianty protokołu ewaluacji}
+\label{sec:warianty-protokolu}
+
+Wyniki główne uzyskano w~jednym, ściśle określonym protokole: indukcyjnym
+leave-one-graph-out, z~losowym usuwaniem 10\% zadań łączących. Powstaje
+pytanie, na~ile~wnioski zależą od~tego~wyboru. Zbadano zatem trzy warianty
+kontrolne, zmieniające po~jednym elemencie protokołu przy~zachowaniu
+pozostałych ustawień biegu kanonicznego. Tabela~\ref{tab:warianty-protokolu}
+zestawia wyniki; dla~porównywalności wszystkie warianty ograniczono
+do~tych~samych pięciu dużych grafów, na~których każdy z~nich daje wiarygodne
+metryki.
+
+\begin{table}[ht]
+\centering
+\caption{Wpływ zmiany protokołu ewaluacji na~AUC-ROC. Wszystkie warianty
+na~tych~samych pięciu grafach testowych (DLG6, DLG10, DLG12, DLG16, DLG18),
+\texttt{removal\_ratio}~$=0{,}10$, wariant uczciwy.}
+\label{tab:warianty-protokolu}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metoda} & \textbf{Indukcyjny} & \textbf{Transduktywny} &
+\textbf{Skala: małe$\to$duże} \\
+ & \textbf{(kanoniczny)} & & \\
+\midrule
+Anomalia stopnia      & 0{,}410 & 0{,}392 & 0{,}410 \\
+Brzeg (root/leaf)     & 0{,}480 & 0{,}482 & 0{,}480 \\
+Niska łączność zadań  & 0{,}355 & 0{,}373 & 0{,}355 \\
+\midrule
+Random Forest         & 0{,}774 & \textbf{0{,}819} & 0{,}626 \\
+RUSBoost              & 0{,}602 & 0{,}634 & 0{,}613 \\
+LightGBM              & 0{,}731 & 0{,}769 & \textbf{0{,}638} \\
+LineageDetector\textsuperscript{*} & \textbf{0{,}785} & 0{,}804 & 0{,}623 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Protokół transduktywny}
+
+W~wariancie transduktywnym podział na~zbiór treningowy i~testowy przebiega
+\emph{wewnątrz} grafu (60/40 węzłów), a~nie~między grafami. Model widzi
+zatem w~treningu fragment tej~samej struktury, na~której jest~oceniany.
+Wszystkie metody uczone zyskują, co~potwierdza, że~protokół indukcyjny
+przyjęty jako~główny jest~istotnie trudniejszy — a~więc~uczciwszy.
+
+Rozkład tego~zysku jest~jednak nierówny i~sam w~sobie stanowi wynik.
+Random Forest zyskuje najwięcej ($+0{,}045$: z~0{,}774 do~0{,}819),
+LineageDetector wyraźnie mniej ($+0{,}019$: z~0{,}785 do~0{,}804). Innymi
+słowy: przewaga Random Forest ujawnia się~dopiero wtedy, gdy model może~
+dopasować się~do~konkretnego grafu. Sygnał relacyjny wykorzystywany przez
+LineageDetector przenosi się~natomiast między grafami lepiej, co~jest~zgodne
+z~jego~konstrukcją — porównanie tabeli z~jej~peerami jest~z~natury
+niezależne od~globalnych właściwości grafu. W~protokole transduktywnym
+Random Forest wysuwa się~na~prowadzenie, w~indukcyjnym obie metody
+są~nierozróżnialne (sekcja~\ref{sec:istotnosc}).
+
+\subsection{Generalizacja na~większą skalę}
+
+Wariant trzeci sprawdza najtrudniejszy przypadek praktyczny: model uczony
+na~10~małych i~3~średnich grafach ocenia grafy duże, o~rząd wielkości liczniejsze
+w~węzły. Skuteczność wszystkich metod uczonych spada drastycznie — z~okolic
+0{,}73--0{,}79 do~0{,}61--0{,}64 AUC-ROC, czyli o~około 0{,}15. Heurystyki,
+nie~korzystając z~treningu, pozostają na~niezmienionym poziomie.
+
+Jest to~najpoważniejsze ograniczenie praktyczne ujawnione w~pracy: wzorce
+topologiczne wyuczone na~małych grafach nie~przenoszą się~w~pełni na~grafy
+duże. W~protokole kanonicznym efekt ten~nie~występuje, ponieważ pula
+treningowa leave-one-graph-out zawiera zawsze inne grafy duże. Wniosek
+dla~zastosowań: detektor należy trenować na~grafach o~skali zbliżonej
+do~docelowej, a~zbiór treningowy złożony wyłącznie z~małych instancji
+nie~wystarcza. LineageDetector nie~ma~w~tym~wariancie przewagi
+(0{,}623 wobec 0{,}638 dla~LightGBM) — sygnał peer-consistency, kalibrowany
+na~małych grafach o~innej gęstości połączeń, traci trafność.
+
+\subsection{Pojedyncze zdarzenie broken lineage}
+\label{sec:jednojob}
+
+Wariant kontrolny o~najczystszej interpretacji przyczynowej: zamiast usuwać
+10\% zadań naraz, każda instancja testowa powstaje przez~usunięcie
+\emph{dokładnie jednego} zadania (do~30~prób na~graf, metryki uśredniane).
+Jedno zdarzenie broken lineage odpowiada tu~jednemu brakującemu zadaniu,
+a~graf pozostaje poza tym~nienaruszony. Trening prowadzony jest~nadal
+na~puli wielozadaniowej, na~grafach niewidzianych. Wyniki zestawia
+tabela~\ref{tab:jednojob}.
+
+\begin{table}[ht]
+\centering
+\caption{Wariant pojedynczego usuniętego zadania w~zestawieniu z~biegiem
+kanonicznym (protokół indukcyjny, wariant uczciwy, 8~grafów wiarygodnych).}
+\label{tab:jednojob}
+\small
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{AUC-ROC}} & \multicolumn{2}{c}{\textbf{AUC-PR}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Metoda} & jedno zadanie & kanoniczny & jedno zadanie & kanoniczny \\
+\midrule
+Reguła korzenia       & 0{,}518 & 0{,}574 & 0{,}025 & 0{,}168 \\
+Score kompletności    & 0{,}546 & 0{,}559 & 0{,}060 & 0{,}206 \\
+\midrule
+Random Forest         & 0{,}792 & 0{,}749 & 0{,}208 & 0{,}425 \\
+RUSBoost              & 0{,}682 & 0{,}631 & 0{,}071 & 0{,}249 \\
+LightGBM              & 0{,}767 & 0{,}720 & 0{,}187 & 0{,}382 \\
+LineageDetector\textsuperscript{*} & \textbf{0{,}799} & \textbf{0{,}771} & 0{,}192 & \textbf{0{,}435} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Wynik rozchodzi się~w~dwie przeciwne strony i~oba~kierunki są~pouczające.
+\textbf{AUC-ROC rośnie} — dla~LineageDetectora z~0{,}771 do~0{,}799, dla~Random
+Forest z~0{,}749 do~0{,}792 — ponieważ przy~jednym usuniętym zadaniu reszta
+grafu pozostaje spójna, a~nieliczne tabele osierocone wyraźniej odcinają się
+od~tła. \textbf{AUC-PR spada natomiast ponaddwukrotnie} (0{,}435~$\to$~0{,}192
+dla~detektora), gdyż klasa pozytywna liczy teraz~średnio dwie--trzy tabele
+na~260~kandydatów, czyli poniżej jednego procenta.
+
+Rozbieżność ta~jest~praktycznie istotna i~stanowi argument za~raportowaniem
+obu~metryk. Wysokie AUC-ROC oznacza, że~model niemal zawsze umieszcza tabelę
+zainfekowaną powyżej losowo wybranej tabeli czystej. Niskie AUC-PR mówi
+jednak, że~w~czołówce rankingu przekazywanej do~ręcznej inspekcji trafienia
+i~tak~będą~rzadkie — bo~pozytywów jest~garstka. Jest~to~wierne odwzorowanie
+sytuacji praktycznej: w~dużym grafie produkcyjnym z~pojedynczym zerwaniem
+lineage znalezienie właściwej tabeli pozostaje trudne, mimo dobrego
+uporządkowania rankingu.
+
+Uporządkowanie metod nie~zmienia się: LineageDetector osiąga najwyższe
+AUC-ROC i~zdecydowanie najlepszy Brier score (0{,}042 wobec 0{,}059
+dla~Random Forest i~0{,}117 dla~LightGBM), a~heurystyki pozostają w~pobliżu
+poziomu losowego. Wniosek jakościowy z~biegu kanonicznego jest~zatem odporny
+również na~tę~zmianę definicji instancji testowej.
+
+\section{Test na grafie spoza zbioru DLG-DG-23 (cross-dataset)}
+\label{sec:cross_dataset}
+
+Dotychczasowe eksperymenty oceniały metody w~protokole indukcyjnym \emph{wewnątrz}
+jednego zbioru danych. Aby~sprawdzić przenośność metody na~dane z~zupełnie
+innego źródła, przeprowadzono test cross-dataset: model wytrenowano wyłącznie
+na~grafach DLG-DG-23 (małych i~średnich, zgodnie ze~schematem generalizacji
+do~skali z~sekcji~\ref{sec:przeciek}), a~następnie oceniono — bez~douczania —
+na~zewnętrznym grafie \emph{DUT} zbudowanym z~repozytorium grupy
+promotora~\cite{Dutkiewicz2026}. Graf DUT pochodzi z~bazy \emph{Northwind}
+i~syntetycznych scenariuszy SQL; jego lineage zapisany jest~na~poziomie wierszy
+(RDF/CSV), dlatego opracowano adapter agregujący go~do~modelu
+tabela–zadanie–\emph{DATA\_FLOW} zgodnego z~DLG-DG-23: dla~każdej tabeli
+docelowej tworzy się~węzeł-zadanie karmiony przez~jej tabele źródłowe.
+Powstały graf liczy 21~tabel, 14~zadań i~33~krawędzie przepływu — jest~więc
+o~rzędy wielkości mniejszy i~ma~inną, łańcuchową topologię.
+
+Tabela~\ref{tab:cross-dataset} przedstawia wyniki na~grafie DUT w~wariancie
+uczciwym (z~wykluczeniem węzłów izolowanych), uśrednione po~20~powtórzeniach.
+
+\begin{table}[ht]
+\centering
+\caption{Wynik na~zewnętrznym grafie DUT (trening wyłącznie na~DLG-DG-23,
+wariant uczciwy). Ostatnia kolumna — AUC-ROC na~dużych grafach DLG-DG-23
+jako~odniesienie wewnątrz zbioru.}
+\label{tab:cross-dataset}
+\begin{tabular}{lcccc c}
+\toprule
+& \multicolumn{4}{c}{\textbf{Graf zewnętrzny DUT}} & \textbf{duże DLG} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-6}
+\textbf{Metoda} & \textbf{AUC-ROC} & \textbf{AUC-PR} & \textbf{P@k} & \textbf{Brier} & \textbf{AUC-ROC} \\
+\midrule
+Anomalia stopnia      & 0{,}751 & 0{,}422 & 0{,}436 & 0{,}180 & 0{,}426 \\
+Niska łączność zadań  & 0{,}751 & 0{,}422 & 0{,}436 & 0{,}198 & 0{,}384 \\
+Score kompletności    & 0{,}500 & 0{,}262 & 0{,}189 & 0{,}262 & 0{,}568 \\
+\midrule
+Random Forest         & 0{,}625 & 0{,}497 & 0{,}380 & 0{,}225 & 0{,}617 \\
+RUSBoost              & 0{,}489 & 0{,}260 & 0{,}141 & 0{,}216 & 0{,}591 \\
+LightGBM              & 0{,}674 & 0{,}564 & 0{,}464 & 0{,}296 & 0{,}605 \\
+LineageDetector\textsuperscript{*} & 0{,}641 & 0{,}521 & 0{,}439 & \textbf{0{,}187} & 0{,}623 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Najważniejsza obserwacja: metody uczone \emph{nie~załamują się} na~grafie
+z~innego źródła. Random Forest (0{,}625), LightGBM (0{,}674) i~LineageDetector
+(0{,}641) osiągają na~DUT AUC-ROC porównywalne z~ich wynikiem na~dużych grafach
+DLG-DG-23 (odpowiednio 0{,}617, 0{,}605, 0{,}623) — mimo że~graf testowy pochodzi
+z~zupełnie innej dziedziny i~jest~znacznie mniejszy. LineageDetector zachowuje
+przy~tym najlepszą kalibrację (Brier 0{,}187). W~wariancie napompowanym
+(bez~wykluczania izolowanych) przewaga jest~jeszcze wyraźniejsza — LineageDetector
+osiąga AUC-ROC 0{,}773 i~AUC-PR 0{,}721. Potwierdza to, że~wzorce topologiczne
+wyuczone na~jednym zbiorze niosą użyteczny sygnał także poza~nim.
+
+Wynik wymaga jednak trzech zastrzeżeń. Po~pierwsze, graf DUT jest~bardzo mały
+(21~tabel), więc~liczba zainfekowanych tabel spada poniżej progu wiarygodności
+przyjętego dla~DLG-DG-23; test należy traktować jako~jakościowy dowód
+przenośności (proof of concept), a~nie~precyzyjny benchmark. Po~drugie, na~tym
+konkretnym grafie trywialne heurystyki stopnia osiągają wysokie AUC-ROC
+(0{,}751) — odwrotnie niż~wewnątrz DLG-DG-23, gdzie plasują się~w~okolicy
+poziomu losowego. Wynika to~z~łańcuchowej topologii DUT: po~usunięciu zadania
+osierocona tabela ma~tu~wyraźnie niższy stopień, więc~sam stopień jest~na~tak
+prostej strukturze silnym sygnałem — który jednak nie~generalizuje na~gęstsze
+grafy produkcyjne. Po~trzecie, relacyjny score kompletności załamuje się~na~DUT
+(AUC-ROC 0{,}500), ponieważ łańcuchowe scenariusze dają każdej tabeli
+co~najwyżej jednego peera — sygnał peer-consistency wymaga rozgałęzień, których
+w~tym grafie brak. Stąd na~DUT LineageDetector nie~zyskuje przewagi nad~czystym
+LightGBM, choć~pozostaje najlepiej skalibrowany.
+
+Aby~sprawdzić, czy~powyższe obserwacje nie~są~artefaktem jednej konfiguracji,
+powtórzono test w~przeglądzie obejmującym dwa warianty izolacji oraz~trzy
+wartości \texttt{removal\_ratio} (0{,}2 / 0{,}3 / 0{,}4), po~25~powtórzeń
+na~konfigurację. Przegląd potwierdza wszystkie trzy zastrzeżenia i~dodaje
+dwie obserwacje. Po~pierwsze, jakość metod uczonych rośnie monotonicznie
+wraz z~natężeniem symulowanego zjawiska (w~wariancie napompowanym AUC-ROC
+LineageDetectora wynosi kolejno 0{,}767, 0{,}812 i~0{,}843) — modele reagują
+zatem na~intensywność broken lineage, a~nie~na~szum. Po~drugie, score
+kompletności osiąga AUC-ROC \emph{dokładnie} 0{,}500 we~wszystkich sześciu
+konfiguracjach; nie~jest~to~więc~słaby wynik losowy, lecz~sygnał tożsamościowo
+zerowy, wynikający ze~struktury grafu: w~topologii łańcuchowej tabela nie~ma~
+peerów, z~którymi mogłaby zostać porównana. Odnotować należy również, że~
+przy~najsilniejszym zaburzeniu (\texttt{removal\_ratio} = 0{,}4), gdy liczba
+tabel zainfekowanych zbliża się~do~progu wiarygodności, LineageDetector wraca
+na~prowadzenie także na~DUT (AUC-ROC 0{,}684 wobec 0{,}656 dla~LightGBM,
+przy~najwyższym P@k 0{,}555) — przewaga detektora ujawnia się~więc~dopiero
+przy~dostatecznej liczbie pozytywów, spójnie z~rolą liczby pozytywów
+obserwowaną w~sekcji~\ref{sec:per-graf}. Jako~liczby główne zachowano wariant
+\texttt{removal\_ratio} = 0{,}3, mieszczący się~w~zakresie zbadanym w~analizie
+wrażliwości (sekcja~\ref{sec:przeciek}); pełne zestawienie przeglądu zawiera
+plik \texttt{results/cross\_dataset\_dut\_sweep.md} w~repozytorium.
+
+Pełne, ilościowe porównanie na~drugim zbiorze wymagałoby większego grafu
+zewnętrznego o~topologii rozgałęzionej — kierunek ten~wskazano w~rozdziale~5.
 
 \section{Analiza wyników}
 \label{sec:analiza}
 
-% TODO: Dlaczego LineageDetector wygrywa (score kompletności dokłada sygnał
-%   relacyjny, którego nie ma w cechach lokalnych; kalibracja poprawia Brier).
-%   Dlaczego heurystyki oparte na wspólnych sąsiadach nie działają (bipartytowość).
-%   Trudność: osierocona tabela-następnik wygląda jak prawdziwe źródło.
+\noindent\textbf{Skąd bierze się~wynik LineageDetectora.} Zestawienie
+sekcji~\ref{sec:istotnosc} i~\ref{sec:ablacja} pozwala przypisać wynik
+konkretnym składnikom, zamiast tłumaczyć go~samą kombinacją trzech źródeł
+sygnału. Cechy pozycji w~DAG opisują węzeł lokalnie, lecz~nie~odróżniają
+osieroconej tabeli-następnika od~prawdziwego źródła. Sygnał relacyjny wnosi
+dopiero score kompletności \emph{peer-consistency} — porównanie tabeli
+z~jej peerami wpadającymi do~tych~samych zadań — i~to~on odpowiada
+za~całą przewagę detektora nad~klasyfikatorem bazowym: po~jego wyłączeniu
+detektor spada do~poziomu Random Forest, a~ubytek Precision@k jest~istotny
+statystycznie. Kalibracja izotoniczna działa natomiast inaczej, niż~zakładano
+przy~projektowaniu detektora: nie~jest~neutralna dla~rankingu, lecz~go~
+nieznacznie pogarsza, poprawiając w~zamian rzetelność oszacowań
+prawdopodobieństwa (Brier 0{,}106 wobec 0{,}111 bez~kalibracji). Jest~to~zatem
+świadoma wymiana jakości rankingu na~jakość prawdopodobieństw,
+a~nie~ulepszenie bezkosztowe.
+
+\noindent\textbf{Czego wynik nie~dowodzi.} Przewaga nad~heurystykami
+oraz~nad~metodami boostingowymi ma~potwierdzenie statystyczne, natomiast
+różnica wobec Random Forest — nie. Twierdzenie „autorski detektor jest~
+najlepszą z~badanych metod" byłoby~więc~nadinterpretacją średnich
+z~tabeli~\ref{tab:wyniki-detekcja}. Uprawniony wniosek jest~węższy: detektor
+dorównuje najlepszemu klasycznemu klasyfikatorowi przy~istotnie lepszej
+trafności czołówki rankingu niż~metody boostingowe, a~jego~przewaga nad~nimi
+pochodzi z~jednego, dającego się~wskazać składnika.
+
+\noindent\textbf{Dlaczego heurystyki oparte na~wspólnych sąsiadach zawodzą.}
+Podgraf przepływu danych jest~\emph{dwudzielny} (tabele łączą się~wyłącznie
+z~zadaniami, nie~bezpośrednio z~innymi tabelami), więc miary typu Common
+Neighbors, Jaccard czy~Adamic-Adar są~tożsamościowo zerowe między węzłami
+tego~samego typu i~nie~niosą informacji — dlatego wykluczono je~z~implementacji.
+Heurystyki oparte na~stopniu i~roli w~grafie mierzą jedynie lokalny symptom,
+który po~usunięciu przecieku izolacji przestaje wystarczać.
+
+\noindent\textbf{Główna trudność zadania.} Najtrudniejszym przypadkiem
+pozostaje osierocona tabela-następnik: po~usunięciu zadania traci ona~producenta
+($\mathrm{in\_df} = 0$) i~staje się~strukturalnie identyczna z~prawdziwą tabelą
+źródłową. Rozróżnienie ich~jest~możliwe tylko dzięki kontekstowi relacyjnemu
+(czy~peerzy również są~źródłami) oraz~uczeniu na~innych grafach — co~wyjaśnia,
+dlaczego metody indukcyjne przewyższają heurystyki, a~sygnał topologiczny,
+choć~użyteczny, ma~naturalny sufit skuteczności (AUC-ROC $\approx$ 0{,}77)
+bez~dostępu do~semantyki nazw i~schematów.
+
+\section{Zagrożenia trafności}
+\label{sec:trafnosc}
+
+Wnioski z~poprzednich sekcji obarczone są~ograniczeniami wynikającymi
+z~konstrukcji eksperymentu i~z~właściwości dostępnych danych. Omówiono je~
+poniżej w~czterech kategoriach przyjmowanych w~badaniach empirycznych
+w~inżynierii oprogramowania~\cite{Wohlin2012}: trafności konstrukcji, wewnętrznej, zewnętrznej
+oraz~wnioskowania statystycznego.
+
+\subsection{Trafność konstrukcji}
+
+\noindent\textbf{Etykieta zastępcza zamiast obserwowanego zjawiska.}
+Za~tabelę zainfekowaną uznaje się~każdą tabelę incydentną do~usuniętego
+zadania. Jest to~definicja operacyjna, nie~pomiar rzeczywistego zerwania
+lineage: w~praktyce część takich tabel mogłaby zachować czytelne pochodzenie
+inną ścieżką (np.~przez~równoległe zadanie zapisujące te~same dane), a~inne
+tabele mogłyby być~dotknięte zerwaniem, którego symulacja nie~obejmuje.
+Miara skuteczności odnosi się~zatem do~zadania zdefiniowanego w~pracy,
+a~nie~bezpośrednio do~użyteczności dla~audytora.
+
+\noindent\textbf{Utożsamienie różnych przyczyn broken lineage.} Tabela
+tymczasowa, funkcja definiowana przez użytkownika i~zapytanie rekurencyjne
+są~modelowane jednakowo — jako~usunięcie węzła-zadania. Upraszcza to~model
+i~czyni go~niezależnym od~mechanizmu, lecz~uniemożliwia sprawdzenie,
+czy~detektor radzi sobie równie dobrze z~każdą z~tych przyczyn osobno.
+
+\noindent\textbf{Zbieżność metryk przy~przyjętym $k$.} W~biegu kanonicznym
+$k$ równa się~liczbie tabel faktycznie zainfekowanych, przez~co~Precision@k,
+Recall@k i~Hits@k przyjmują tę~samą wartość. Metryki te~nie~są~więc~
+niezależnymi świadectwami jakości, a~ich~zgodność nie~stanowi dodatkowego
+potwierdzenia wyniku.
+
+\subsection{Trafność wewnętrzna}
+
+\noindent\textbf{Przeciek izolacji.} Usunięcie zadania może~pozostawić tabelę
+bez~żadnej krawędzi przepływu, co~czyni ją~rozpoznawalną trywialną regułą.
+Zjawisko to~zidentyfikowano i~zmierzono (tabela~\ref{tab:symulacja}: 19--35\%
+pozytywów), a~główne wyniki raportowane są~w~wariancie z~wykluczeniem takich
+tabel. Jest to~zabezpieczenie, nie~eliminacja problemu: pozostają tabele
+o~częściowo zerwanym lineage, których łatwość wykrycia również zależy
+od~liczby utraconych krawędzi.
+
+\noindent\textbf{Losowy dobór usuwanych zadań.} Zadania usuwane są~losowo,
+podczas gdy w~praktyce zerwanie lineage nie~jest~zdarzeniem losowym — dotyka
+częściej pewnych klas obiektów (potoków wsadowych, procesów tymczasowych).
+Rozkład symulowanych uszkodzeń może~być~zatem łatwiejszy albo~trudniejszy
+od~rzeczywistego; kierunek tego~obciążenia pozostaje nieznany.
+
+\noindent\textbf{Brak strojenia hiperparametrów.} Wszystkie klasyfikatory
+uruchomiono w~konfiguracjach domyślnych lub~zbliżonych do~domyślnych, bez~
+przeszukiwania przestrzeni hiperparametrów. Zapewnia to~jednakowe traktowanie
+metod i~eliminuje ryzyko przestrojenia pod~zbiór testowy, lecz~oznacza,
+że~porównanie dotyczy metod „z~pudełka", a~nie~ich~potencjału maksymalnego.
+
+\subsection{Trafność zewnętrzna}
+
+\noindent\textbf{Jeden zbiór danych, jedna domena.} Wyniki główne pochodzą
+z~18~grafów jednego dostawcy chmurowego. Nie~wiadomo, na~ile~wzorce
+topologiczne charakterystyczne dla~tego~środowiska przenoszą się~na~inne
+architektury przetwarzania danych. Test cross-dataset (sekcja~\ref{sec:cross_dataset})
+częściowo tę~lukę adresuje, lecz~graf zewnętrzny jest~mały (21~tabel)
+i~ma~odmienną, łańcuchową topologię — stanowi więc~dowód jakościowy,
+a~nie~ilościowe potwierdzenie przenośności.
+
+\noindent\textbf{Ograniczenie do~topologii jest~wyborem, nie~tylko koniecznością.}
+Anonimizacja zbioru wymusiła rezygnację z~sygnału semantycznego, co~jest~
+zarazem przedmiotem pytania badawczego. Uzyskany sufit skuteczności
+(AUC-ROC $\approx$ 0{,}77) opisuje jednak wyłącznie podejście czysto
+topologiczne i~nie~stanowi granicy dla~metod korzystających z~nazw
+obiektów lub~metadanych schematu.
+
+\subsection{Trafność wnioskowania statystycznego}
+
+\noindent\textbf{Mała liczba jednostek obserwacji.} Testy sparowano po~ośmiu
+grafach wiarygodnych, co~ogranicza moc: najniższe osiągalne $p$ w~dokładnym
+teście Wilcoxona wynosi 0{,}0078, a~efekty małe pozostają niewykrywalne.
+Brak istotności różnicy wobec Random Forest (sekcja~\ref{sec:istotnosc})
+należy zatem czytać jako~\emph{brak dowodu na~różnicę}, a~nie~jako~dowód
+jej~braku.
+
+\noindent\textbf{Zależność między powtórzeniami.} Trzy powtórzenia biegu
+kanonicznego różnią się~wyłącznie ziarnem losowości doboru usuwanych zadań;
+operują na~tych~samych grafach, więc~nie~zwiększają liczby niezależnych
+jednostek obserwacji. Uśrednianie po~ziarnach (z~trymowaniem wartości
+skrajnych) zmniejsza wariancję oszacowań, lecz~nie~zwiększa mocy testu.
+
+\noindent\textbf{Wybór progu wiarygodności.} Próg $\mathrm{MIN\_POS} = 5$
+przyjęto arbitralnie. Decyduje on~o~tym, które grafy wchodzą do~agregacji,
+a~przy~ośmiu jednostkach obserwacji pojedynczy graf ma~zauważalny wpływ
+na~średnią — dlatego obok średnich raportowane są~wyniki w~rozbiciu
+na~grafy (tabela~\ref{tab:per-graf}).
 
 % ============================================================
 %  ROZDZIAŁ 5 — UWAGI KOŃCOWE
 % ============================================================
 \chapter{Uwagi końcowe}
 
-Rozdział podsumowuje uzyskane wyniki i~wskazuje kierunki dalszych badań.
+Rozdział podsumowuje uzyskane wyniki, odnosząc je~do~postawionych pytań
+badawczych, oraz~wskazuje kierunki dalszych badań.
 
 \section{Podsumowanie}
 \label{sec:podsumowanie}
 
-% TODO: Odpowiedzieć na pytania badawcze PB1–PB4.
-%   Główny wniosek: sama topologia niesie umiarkowany, ale użyteczny sygnał
-%   o broken lineage na poziomie węzłów (LineageDetector AUC-ROC 0.771,
-%   wariant uczciwy, indukcyjny). Pozycjonowanie: topology-only baseline
-%   dla porównania z metodami KG/GNN grupy promotora.
+Celem pracy było zbadanie, w~jakim stopniu sama topologia grafu lineage
+pozwala wskazać tabele o~zerwanym pochodzeniu danych. Poniżej odniesiono się~
+do~postawionych pytań badawczych.
+
+\paragraph{PB1 — Techniki ekstrakcji grafów lineage.}
+Praca korzysta z~gotowych, rzeczywistych grafów zbioru DLG-DG-23, wczytywanych
+z~reprezentacji JSON (węzły + krawędzie z~typami \texttt{asset\_type},
+\texttt{relation\_type}) do~postaci skierowanego grafu DAG przepływu danych.
+Pokazano, że~dla~zadania detekcji węzłów wystarcza podgraf przepływu (krawędzie
+\emph{DATA\_FLOW} między tabelami a~zadaniami), bez~potrzeby odtwarzania
+semantyki nazw czy~schematów.
+
+\paragraph{PB2 — Adaptacja ML do~wykrywania niekompletności lineage.}
+Zaadaptowano trzy klasyczne klasyfikatory (Random Forest, RUSBoost, LightGBM)
+z~zadania klasyfikacji par obiektów do~klasyfikacji \emph{węzła} na~podstawie
+13-elementowego wektora cech topologicznych, oraz~zaproponowano autorski
+detektor LineageDetector. Wykazano — z~potwierdzeniem statystycznym — że~metody
+uczone przewyższają heurystyki, a~LineageDetector przewyższa metody boostingowe
+(RUSBoost, LightGBM), osiągając najwyższe wartości wszystkich metryk:
+AUC-ROC 0{,}771 przy~Brier score 0{,}106. Wobec Random Forest przewagi
+wykazać się~nie~udało — obie metody należy uznać za~statystycznie
+nierozróżnialne przy~dostępnej liczbie ośmiu grafów testowych. Badanie
+ablacyjne przypisało przewagę detektora relacyjnemu score'owi kompletności:
+po~jego~usunięciu wynik spada do~poziomu klasyfikatora bazowego.
+
+\paragraph{PB3 — Obsługa rekurencji (CTE) i~UDF.}
+W~przyjętym ujęciu przyczyny broken lineage (UDF, tabele tymczasowe, zapytania
+rekurencyjne) są~modelowane jednolicie — jako~usunięcie węzła-zadania wraz
+z~jego krawędziami — niezależnie od~konkretnego mechanizmu. Dzięki temu detektor
+nie~wymaga osobnej obsługi każdego typu transformacji; ograniczeniem jest~brak
+rozróżnienia przyczyny zerwania, co~pozostaje otwartym kierunkiem.
+
+\paragraph{PB4 — Metryki i~datasety.}
+Zastosowano zbiór DLG-DG-23 jako~\emph{ground truth} oraz~metryki rankingowe
+czułe na~niezrównoważenie klas (AUC-ROC, AUC-PR, Precision@k/Recall@k/Hits@k,
+Brier). Zaproponowano protokół ewaluacji \emph{indukcyjnej} cross-graph
+oraz~kontrolę przecieku izolacji (\texttt{exclude\_isolated}) — element
+metodyczny niezbędny dla~uczciwej oceny, dotąd nieobecny w~literaturze broken
+lineage. Porównania metod oparto na~teście kolejności par Wilcoxona sparowanym
+po~grafach, zgodnie z~zaleceniem Demšara~\cite{Demsar2006}; ujawniło ono~
+ograniczenie samego zbioru: przy~ośmiu grafach wiarygodnych najniższe osiągalne
+$p$ wynosi 0{,}0078, przez~co~efekty małe pozostają niewykrywalne niezależnie
+od~jakości metody. Jest to~argument za~rozbudową benchmarków lineage o~większą
+liczbę grafów, a~nie~wyłącznie o~grafy większe.
+
+\paragraph{Wniosek główny.}
+Sama topologia grafu lineage niesie umiarkowany, lecz~użyteczny sygnał
+o~broken lineage na~poziomie węzłów (LineageDetector, AUC-ROC 0{,}771
+w~wariancie uczciwym i~indukcyjnym). Praca pozycjonuje się~jako~\emph{topology-only
+baseline} — punkt odniesienia dla~bogatszych metod grafowo-semantycznych
+(grafy wiedzy, GNN), pokazujący, ile~można osiągnąć bez~dostępu do~nazw
+i~schematów, oraz~uzupełniający dotychczasowe podejścia o~brakujące ujęcie
+węzłowe: wskazanie podejrzanych tabel może poprzedzać kosztowniejsze
+odtwarzanie konkretnych zależności.
 
 \section{Kierunki dalszych badań}
 \label{sec:dalsze_badania}
 
-% TODO: Propozycje rozszerzeń:
-%   - indukcyjne GNN (GraphSAGE, R-GCN, HGT) jako następny krok po cechach
-%     topologicznych; Node2Vec wykluczono z protokołu indukcyjnego jako
-%     transduktywny (embeddingi nieporównywalne między grafami) — to WYNIK
-%     motywujący GNN, nie luka;
-%   - ewaluacja na benchmarku KG grupy promotora (github.com/dudenzz/lineage);
-%   - uwzględnienie semantyki nazw/schematów, jeśli dane staną się dostępne;
-%   - połączenie detekcji węzłów z predykcją krawędzi w potok dwuetapowy.
+\begin{itemize}
+  \item \textbf{Indukcyjne grafowe sieci neuronowe (GNN).} Naturalnym
+        następnym krokiem po~cechach topologicznych są~modele uczące
+        reprezentacji węzła z~propagacją komunikatów:
+        GraphSAGE~\cite{Hamilton2017}, R-GCN~\cite{Schlichtkrull2018}
+        oraz~HGT~\cite{Hu2020}.
+        Metoda Node2Vec~\cite{Grover2016} została świadomie wykluczona
+        z~protokołu indukcyjnego,
+        gdyż~uczy zanurzeń \emph{transduktywnie} (embeddingi nieporównywalne
+        między grafami) — jest~to~wynik motywujący GNN, a~nie~luka
+        implementacyjna.
+  \item \textbf{Ilościowy benchmark na~większym grafie zewnętrznym.}
+        Wstępny test cross-dataset na~grafie DUT (sekcja~\ref{sec:cross_dataset})
+        pokazał, że~detektor wytrenowany na~DLG-DG-23 przenosi się~na~graf
+        z~innego źródła bez~załamania. Graf ten~był jednak bardzo mały
+        (21~tabel) i~miał łańcuchową topologię, przez~co~wynik ma~charakter
+        jakościowy. Naturalnym rozszerzeniem jest~zbudowanie \emph{większego}
+        i~bardziej rozgałęzionego grafu zewnętrznego (pełniejsza integracja
+        benchmarku RDF grupy promotora~\cite{Dutkiewicz2026}), który umożliwi
+        wiarygodne porównanie ilościowe oraz~ujawnienie przewagi sygnału
+        relacyjnego, wymagającego rozgałęzień w~grafie. Równie istotna
+        jak~rozmiar grafów jest~ich~\emph{liczba}: przy~ośmiu grafach
+        wiarygodnych moc testów statystycznych nie~wystarcza do~wykrycia
+        różnic między metodami uczonymi (sekcja~\ref{sec:trafnosc}).
+  \item \textbf{Włączenie semantyki nazw i~schematów.} Sygnał topologiczny
+        badany w~pracy i~sygnał semantyczny (podobieństwo nazw, metadane
+        schematu) są~komplementarne~\cite{Boinski2025,Brzeski2025}. Jeśli~dane
+        przestaną być~zanonimizowane, połączenie obu~powinno przekroczyć
+        sufit $\approx$ 0{,}77 właściwy podejściu czysto topologicznemu.
+  \item \textbf{Potok dwuetapowy detekcja $\to$ predykcja.} Wskazanie
+        podejrzanych tabel (niniejsza praca) może~służyć jako~tani etap
+        wstępny, ograniczający przestrzeń kandydatów przed~kosztowną predykcją
+        konkretnych brakujących krawędzi — łącząc oba~ujęcia problemu broken
+        lineage.
+  \item \textbf{Rozróżnienie przyczyny zerwania.} Rozszerzenie etykiet o~typ
+        zdarzenia (UDF vs.~tabela tymczasowa vs.~CTE) umożliwiłoby nie~tylko
+        detekcję, lecz~i~diagnozę przyczyny broken lineage.
+\end{itemize}
 
 % ============================================================
 %  LITERATURA
 % ============================================================
 \bibliographystyle{plain}{\raggedright\sloppy\small\bibliography{bibliography}}
+
+% ============================================================
+%  DODATKI
+% ============================================================
+\appendix
+
+\chapter{Instrukcja uruchomienia i~zawartość repozytorium}
+\label{dod:uruchomienie}
+
+\section{Wymagania i~instalacja}
+
+Implementacja wymaga interpretera Python w~wersji 3.10 lub~nowszej.
+Zależności wraz z~wersjami użytymi w~biegu kanonicznym wymieniono
+w~tabeli~\ref{tab:stos}. Środowisko przygotowuje się~poleceniami:
+
+\begin{lstlisting}[numbers=none,language={}]
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+\end{lstlisting}
+
+\section{Odtworzenie wyników rozdziału~4}
+
+Każdą tabelę rozdziału~4 można odtworzyć niezależnie. Polecenia uruchamia się
+z~katalogu głównego repozytorium; wszystkie zapisują wyniki do~katalogu
+\texttt{results/}.
+
+\begin{lstlisting}[numbers=none,language={}]
+# Bieg kanoniczny -- wariant uczciwy (tabela wynikow glownych)
+python -m src.detection.run_detection_experiments --all \
+    --exclude-isolated --removal-ratio 0.10 --repeats 3 --seed 42 \
+    --csv results/wyniki_detekcja_canon.csv
+
+# Bieg kanoniczny -- wariant napompowany (kontrola przecieku izolacji)
+python -m src.detection.run_detection_experiments --all \
+    --removal-ratio 0.10 --repeats 3 --seed 42 \
+    --csv results/wyniki_detekcja_napompowany.csv
+
+# Testy istotnosci statystycznej
+python scripts/test_istotnosci.py
+
+# Badanie ablacyjne detektora
+python src/detection/run_ablation.py
+python scripts/test_istotnosci.py --ablacja
+
+# Waznosc cech (metoda permutacyjna)
+python scripts/waznosc_cech.py
+
+# Analiza wrazliwosci na removal_ratio
+python -m src.detection.run_removal_sensitivity
+
+# Warianty protokolu -- wszystkie w konfiguracji kanonicznej
+python -m src.detection.run_detection_experiments --all --single-job \
+    --exclude-isolated --removal-ratio 0.10 --repeats 3 --seed 42 \
+    --csv results/wyniki_jednojob.csv
+python -m src.detection.run_transductive \
+    --exclude-isolated --removal-ratio 0.10 --repeats 3
+python -m src.detection.run_scale_generalization \
+    --exclude-isolated --removal-ratio 0.10 --repeats 3
+
+# Test cross-dataset na grafie zewnetrznym DUT
+python -m src.detection.run_cross_dataset
+
+# Tabela charakterystyki symulacji (rozdzial 3)
+python scripts/tabela_symulacji.py
+
+# Tabele Dodatku B
+python scripts/dodatek_wyniki.py
+\end{lstlisting}
+
+Warianty protokołu wymagają jawnego podania flag \texttt{--exclude-isolated}
+i~\texttt{--removal-ratio 0.10}: ich~wartości domyślne różnią się~od~biegu
+kanonicznego, a~porównanie protokołów ma~sens tylko przy~identycznej
+konfiguracji pozostałych parametrów.
+
+Zestaw testów jednostkowych uruchamia się~poleceniem \texttt{pytest}
+z~katalogu głównego; wszystkie 83~testy powinny przejść.
+
+\section{Zawartość repozytorium}
+
+Strukturę katalogów przedstawia listing~\ref{lst:repo} w~sekcji~
+\ref{sec:implementacja}. Adres repozytorium podano
+w~sekcji~\ref{sec:repozytorium}. Katalog \texttt{results/} zawiera pliki CSV
+z~wynikami wszystkich biegów oraz~plik \texttt{README\_BIEG\_KANONICZNY.md}
+dokumentujący konfigurację biegu, z~którego pochodzą liczby raportowane
+w~pracy.
+
+\chapter{Pełne wyniki eksperymentów}
+\label{dod:wyniki}
+
+Tabele rozdziału~4 podają wartości uśrednione po~grafach wiarygodnych.
+Niniejszy dodatek zawiera wyniki biegu kanonicznego dla~\emph{wszystkich}
+18~grafów zbioru DLG-DG-23 i~wszystkich czterech metryk, wraz z~grafami
+odrzuconymi z~agregacji progiem $\mathrm{MIN\_POS} = 5$. Grafy te~oznaczono
+gwiazdką; ich~metryki obliczono, lecz~przy~jednym lub~dwóch pozytywach
+w~zbiorze testowym są~one~obarczone bardzo dużą wariancją i~nie~powinny
+być~interpretowane pojedynczo. Zestawienie pozwala czytelnikowi ocenić,
+co~próg wiarygodności odsiewa i~jak~duży jest~rozrzut wyników.
+
+\input{dodatek_b_wyniki}
+
+\chapter{Przegląd konfiguracji testu cross-dataset}
+\label{dod:sweep}
+
+Sekcja~\ref{sec:cross_dataset} raportuje wynik na~zewnętrznym grafie DUT
+dla~jednej konfiguracji. Aby~sprawdzić, czy~wnioski nie~zależą od~jej~doboru,
+test powtórzono dla~dwóch wariantów izolacji i~trzech wartości parametru
+\texttt{removal\_ratio}, po~25~powtórzeń na~konfigurację.
+Tabela~\ref{tab:dod-sweep} zestawia AUC-ROC; pełne wyniki, obejmujące
+pozostałe metryki, zawiera plik
+\texttt{results/cross\_dataset\_dut\_sweep.md} w~repozytorium.
+
+\begin{table}[ht]
+\centering
+\caption{AUC-ROC na~zewnętrznym grafie DUT w~zależności od~wariantu izolacji
+i~parametru \texttt{removal\_ratio} (trening na~małych i~średnich grafach
+DLG-DG-23, 25~powtórzeń na~konfigurację).}
+\label{tab:dod-sweep}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Wariant napompowany}} &
+  \multicolumn{3}{c}{\textbf{Wariant uczciwy}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+\textbf{Metoda} & 0{,}2 & 0{,}3 & 0{,}4 & 0{,}2 & 0{,}3 & 0{,}4 \\
+\midrule
+Anomalia stopnia     & 0{,}851 & 0{,}866 & 0{,}881 & 0{,}766 & 0{,}762 & 0{,}748 \\
+Brzeg (root/leaf)    & 0{,}828 & 0{,}847 & 0{,}873 & 0{,}726 & 0{,}725 & 0{,}727 \\
+Niska łączność zadań & 0{,}851 & 0{,}866 & 0{,}881 & 0{,}766 & 0{,}762 & 0{,}748 \\
+Score kompletności   & 0{,}500 & 0{,}500 & 0{,}500 & 0{,}500 & 0{,}500 & 0{,}500 \\
+Reguła korzenia      & 0{,}705 & 0{,}723 & 0{,}779 & 0{,}630 & 0{,}622 & 0{,}686 \\
+\midrule
+Random Forest        & 0{,}758 & 0{,}793 & 0{,}847 & 0{,}646 & 0{,}618 & 0{,}680 \\
+RUSBoost             & 0{,}627 & 0{,}681 & 0{,}765 & 0{,}484 & 0{,}483 & 0{,}504 \\
+LightGBM             & 0{,}794 & 0{,}813 & 0{,}845 & 0{,}663 & 0{,}664 & 0{,}656 \\
+LineageDetector\textsuperscript{*} & 0{,}767 & 0{,}812 & 0{,}843 & 0{,}654 & 0{,}646 & 0{,}684 \\
+\midrule
+\emph{śr.\ liczba zainfekowanych} & 6{,}6 & 8{,}5 & 12{,}2 & 3{,}9 & 4{,}5 & 5{,}4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Zwraca uwagę wiersz score'u kompletności: wartość 0{,}500 powtarza się~
+we~wszystkich sześciu konfiguracjach, co~potwierdza, że~sygnał
+peer-consistency jest~na~tym~grafie tożsamościowo zerowy z~przyczyn
+strukturalnych — łańcuchowa topologia nie~daje tabelom peerów — a~nie~
+przypadkowo słaby. Ostatni wiersz wyjaśnia z~kolei, dlaczego wariant uczciwy
+wypada gorzej od~napompowanego: przy~21~tabelach-kandydatach liczba pozytywów
+spada do~czterech, czyli poniżej progu wiarygodności przyjętego dla~DLG-DG-23.
 
 % ============================================================
 %  STRONA PRAW AUTORSKICH (wymagana przez szablon PP)

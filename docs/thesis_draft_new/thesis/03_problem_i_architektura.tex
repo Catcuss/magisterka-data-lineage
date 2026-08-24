@@ -9,7 +9,7 @@
 Rozdział precyzuje formalną definicję problemu detekcji węzłów
 o~zerwanym lineage (sekcja~\ref{sec:sformulowanie}). Sekcja~\ref{sec:dane} charakteryzuje
 zastosowany zbiór danych, sekcja~\ref{sec:symulacja} — metodykę symulacji
-broken lineage przez usuwanie jobów, a~sekcja~\ref{sec:architektura} opisuje
+broken lineage przez usuwanie zadań, a~sekcja~\ref{sec:architektura} opisuje
 architekturę potoku przetwarzania. Szczegóły implementacji metod detekcji
 omówiono w~sekcji~\ref{sec:algorytmy}.
 
@@ -22,7 +22,7 @@ omówiono w~sekcji~\ref{sec:algorytmy}.
 Graf lineage modeluje się jako skierowany graf DAG przepływu danych
 $G = (V, E)$, gdzie $V = V_{J} \cup V_{T} \cup V_{F}$ obejmuje węzły
 typu zadanie (\emph{Data Job}), tabela (\emph{Data Table}) i~pole,
-a~$E$ zawiera krawędzie przepływu danych (\emph{DATA\_FLOW}) między jobami
+a~$E$ zawiera krawędzie przepływu danych (\emph{DATA\_FLOW}) między zadaniami
 a~tabelami. Zjawisko broken lineage odpowiada usunięciu z~grafu pewnego
 zadania $J$: tabele z~nim incydentne — jego poprzedniki (tabele karmiące $J$)
 oraz~następniki (tabele karmione przez $J$) — tracą część informacji
@@ -133,7 +133,7 @@ DLG18 & 17\,085 & 1\,694 & duży \\
 \end{table}
 
 % ============================================================
-\section{Metodyka symulacji broken lineage przez usuwanie jobów}
+\section{Metodyka symulacji broken lineage przez usuwanie zadań}
 \label{sec:symulacja}
 % ============================================================
 
@@ -144,7 +144,7 @@ zjawisko broken lineage symulowane jest przez~kontrolowane usuwanie
 przyczynę broken lineage: zniknięcie tabeli tymczasowej lub~ukrycie logiki
 przez UDF odpowiada utracie całego węzła-zadania wraz z~jego krawędziami.
 
-Kandydatami do~usunięcia są~\emph{joby łączące} — zadania mające
+Kandydatami do~usunięcia są~\emph{zadania łączące} — zadania mające
 co~najmniej jedną wejściową i~jedną wyjściową krawędź \emph{DATA\_FLOW}
 ($\mathrm{in\_df} > 0 \land \mathrm{out\_df} > 0$). Usunięcie takiego zadania
 zrywa lineage po~obu stronach: tabele karmiące je~tracą konsumenta,
@@ -152,7 +152,7 @@ a~tabele przez nie~karmione — producenta. Z~grafu $G$ budowana jest instancja
 klasyfikacji węzłów:
 
 \begin{enumerate}
-  \item usuwa się losowy podzbiór jobów łączących (udział regulowany
+  \item usuwa się losowy podzbiór zadań łączących (udział regulowany
         parametrem \texttt{removal\_ratio}; w~eksperymentach przyjęto 10\%,
         a~wpływ tego parametru zbadano w~analizie wrażliwości
         w~sekcji~\ref{sec:przeciek}),
@@ -166,7 +166,7 @@ klasyfikacji węzłów:
 
 Dodatkowo zaimplementowano wariant kontrolny, w~którym każda instancja
 usuwa dokładnie \emph{jedno} zadanie, co~daje czystą interpretację
-przyczynową (jedno zdarzenie broken lineage $=$ jeden brakujący job).
+przyczynową (jedno zdarzenie broken lineage $=$ jedno brakujące zadanie).
 
 \subsection{Kontrola przecieku: wykluczenie węzłów izolowanych}
 \label{sec:exclude-isolated}
@@ -184,9 +184,44 @@ zerwanym lineage, które nadal mają część połączeń. W~pracy raportowane
 są~oba warianty, a~wariant uczciwy (z~wykluczeniem izolowanych) traktowany
 jest jako~główny.
 
-% TODO (WYMAGANE): Tabela zbiorcza symulacji:
-%   removal_ratio | liczba jobów łączących | średnia liczba infected |
-%   udział izolowanych pozytywów. Wprowadzić zdaniem „Tabela~X przedstawia...".
+Tabela~\ref{tab:symulacja} przedstawia skalę symulacji dla~czterech wartości
+parametru \texttt{removal\_ratio}. W~18~grafach zbioru DLG-DG-23 znajduje się
+łącznie 1453~zadania łączące (od~3 do~404 na~graf), spośród których usuwana
+jest~losowa część. Liczby podano dla~wariantu \emph{przed} wykluczeniem tabel
+izolowanych, ponieważ tylko wtedy można zmierzyć ich~udział wśród pozytywów.
+
+\begin{table}[ht]
+\centering
+\caption{Charakterystyka symulacji broken lineage w~zależności
+od~parametru \texttt{removal\_ratio}. Wartości uśrednione po~18~grafach
+i~trzech ziarnach losowości (42--44). Ostatnia kolumna — odsetek tabel
+zainfekowanych, które utraciły \emph{wszystkie} krawędzie przepływu danych
+i~są~rozpoznawalne trywialną regułą izolacji.}
+\label{tab:symulacja}
+\begin{tabular}{ccccc}
+\toprule
+\texttt{removal\_ratio} & \textbf{Usuniętych} & \textbf{Tabel} & \textbf{Udział} & \textbf{Pozytywów} \\
+ & \textbf{zadań} & \textbf{zainfekowanych} & \textbf{pozytywów} & \textbf{izolowanych} \\
+\midrule
+0{,}05 & 4{,}2 & 15{,}1 & 11{,}4\% & 19{,}7\% \\
+0{,}10 & 8{,}0 & 25{,}1 & 19{,}0\% & 22{,}9\% \\
+0{,}20 & 16{,}2 & 45{,}2 & 34{,}1\% & 29{,}8\% \\
+0{,}30 & 24{,}3 & 62{,}6 & 47{,}3\% & 34{,}5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Dwie obserwacje z~tabeli mają~znaczenie dla~konstrukcji eksperymentu.
+Po~pierwsze, przyjęta w~biegu kanonicznym wartość $0{,}10$ daje średnio
+25~tabel zainfekowanych na~graf przy~19\% pozytywów — zadanie pozostaje
+wyraźnie niezrównoważone, lecz~klasa pozytywna jest~dostatecznie liczna,
+by~metryki rankingowe były wiarygodne. Po~drugie, udział pozytywów trywialnych
+(tabel w~pełni izolowanych) rośnie z~19{,}7\% do~34{,}5\% wraz ze~wzrostem
+odsetka usuwanych zadań: im~silniejsze zaburzenie, tym~większa część zadania
+daje się~rozwiązać bez~żadnego uczenia. Liczby te~określają skalę przecieku,
+któremu zapobiega opisana wyżej flaga \texttt{exclude\_isolated} — przy~biegu
+kanonicznym usuwa ona~z~puli kandydatów blisko jedną czwartą pozytywów,
+i~to~tych najłatwiejszych.
 
 % ============================================================
 \section{Architektura rozwiązania}
@@ -225,7 +260,7 @@ i~\texttt{relation\_id}). Moduł \texttt{loader.py} buduje z~nich obiekt
 
 % [NOWY — zastępuje splitter/scenario_splitter krawędziowe.]
 Moduł \texttt{job\_removal.py} realizuje metodykę z~sekcji~\ref{sec:symulacja}:
-identyfikuje joby łączące, usuwa ich podzbiór, wyznacza zbiór zainfekowanych
+identyfikuje zadania łączące, usuwa ich podzbiór, wyznacza zbiór zainfekowanych
 tabel i~zwraca instancję (graf $G_{\mathrm{obs}}$, listę kandydatów,
 etykiety, listę usuniętych jobów). Obsługuje warianty \texttt{side}
 (strona incydencji liczona jako~infected: producenta, konsumenta lub~obie)
@@ -437,7 +472,11 @@ Bramkowany sygnał anomalii aktywuje się~wyłącznie na~brzegu grafu:
 %
 Sygnał ten ma~charakter relacyjny — jest jakościowo różny od~lokalnego
 stopnia węzła i~dostarcza informacji niedostępnej klasyfikatorowi
-korzystającemu wyłącznie z~cech lokalnych. Trzy wynikające z~niego cechy
+korzystającemu wyłącznie z~cech lokalnych. Definicja jest~symetryczna
+względem obu~stron przepływu, jednak na~zbiorze DLG-DG-23 aktywna
+okazuje się~wyłącznie strona producenta: każde zadanie w~tym~zbiorze
+zapisuje dokładnie jedną tabelę, przez~co~zbiór $C(t)$ jest~zawsze pusty.
+Konsekwencje tej~własności omówiono w~sekcji~\ref{sec:waznosc}. Trzy wynikające z~niego cechy
 (\texttt{peer\_producer\_score}, \texttt{peer\_consumer\_score},
 \texttt{completeness\_anomaly}) rozszerzają wektor cech z~tabeli~\ref{tab:cechy}
 i~są~dostępne wyłącznie detektorowi LineageDetector.
@@ -451,6 +490,254 @@ cech kompletności (\texttt{use\_completeness=False}) — wpływ sygnału
 relacyjnego na~AUC.
 
 % ============================================================
+\section{Implementacja}
+\label{sec:implementacja}
+% ============================================================
+
+Sekcja opisuje realizację techniczną potoku z~sekcji~\ref{sec:architektura}:
+zastosowane narzędzia, organizację kodu oraz~te~fragmenty implementacji,
+które są~istotne dla~zrozumienia metody, a~nie~wynikają wprost z~jej~opisu
+formalnego.
+
+\subsection{Stos technologiczny}
+
+Całość zaimplementowano w~języku Python. Tabela~\ref{tab:stos} zestawia
+wykorzystane biblioteki wraz z~wersjami, w~których wykonano bieg kanoniczny.
+Podanie wersji jest~istotne dla~odtwarzalności: implementacje algorytmów
+uczenia maszynowego bywają modyfikowane między wydaniami, co~może~wpływać
+na~wyniki liczbowe.
+
+\begin{table}[ht]
+\centering
+\caption{Stos technologiczny i~wersje bibliotek użyte w~biegu kanonicznym.}
+\label{tab:stos}
+\begin{tabular}{lll}
+\toprule
+\textbf{Składnik} & \textbf{Wersja} & \textbf{Rola w~pracy} \\
+\midrule
+Python            & 3.10.2  & środowisko uruchomieniowe \\
+NetworkX          & 3.4.2   & reprezentacja i~przetwarzanie grafów \\
+NumPy             & 1.26.4  & operacje macierzowe, wektory cech \\
+pandas            & 1.5.1   & agregacja wyników, eksport CSV \\
+scikit-learn      & 1.6.1   & Random Forest, kalibracja izotoniczna, metryki \\
+LightGBM          & 4.6.0   & gradientowy boosting drzew \\
+imbalanced-learn  & 0.14.1  & RUSBoost \\
+SciPy             & 1.15.3  & test kolejności par Wilcoxona \\
+Matplotlib        & 3.8.0   & rysunki \\
+pytest            & 9.0.2   & testy jednostkowe \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Organizacja repozytorium}
+
+Kod podzielono na~pakiety odpowiadające etapom potoku; skrypty
+uruchomieniowe oddzielono od~modułów bibliotecznych, aby~każdy eksperyment
+z~rozdziału~4 dawał się~odtworzyć jednym poleceniem. Listing~\ref{lst:repo}
+przedstawia strukturę katalogów.
+
+\begin{lstlisting}[caption={Struktura repozytorium (fragmenty istotne
+dla~detekcji węzłów).},label={lst:repo},numbers=none,language={}]
+src/
+  data/
+    loader.py               # wczytanie 18 grafow DLG-DG-23 z JSON
+    dutkiewicz_adapter.py   # adapter benchmarku zewnetrznego (graf DUT)
+  detection/
+    job_removal.py          # symulacja broken lineage, etykiety, podzial
+    node_features.py        # 13 cech topologicznych wezla
+    completeness.py         # score peer-consistency (wklad wlasny)
+    lineage_detector.py     # LineageHealthDetector
+    node_classifier.py      # heurystyki + klasyczne klasyfikatory
+    node_metrics.py         # metryki rankingowe
+    run_detection_experiments.py   # bieg kanoniczny (rozdz. 4.2)
+    run_ablation.py                # badanie ablacyjne (rozdz. 4.5)
+    run_cross_dataset.py           # test cross-dataset (rozdz. 4.7)
+    run_removal_sensitivity.py     # analiza wrazliwosci (rozdz. 4.6)
+scripts/
+  test_istotnosci.py        # testy Wilcoxona (rozdz. 4.4)
+  tabela_symulacji.py       # tabela charakterystyki symulacji
+tests/                      # 83 testy jednostkowe (pytest)
+results/                    # wyniki biegow w formacie CSV
+\end{lstlisting}
+
+\subsection{Format danych i~wczytywanie}
+
+Każdy graf zbioru DLG-DG-23 opisany jest~parą plików JSON: lista węzłów
+z~atrybutem \texttt{asset\_type} oraz~lista krawędzi z~atrybutami
+\texttt{relation\_id} i~\texttt{relation\_type} (listing~\ref{lst:json}).
+Moduł \texttt{loader.py} przekształca je~w~obiekt \texttt{nx.DiGraph},
+przenosząc typ węzła i~typ relacji do~atrybutów grafu — dzięki temu
+pozostałe moduły filtrują podgraf przepływu danych bez~ponownego sięgania
+do~plików.
+
+\begin{lstlisting}[caption={Fragment plików wejściowych
+\texttt{DLGi-node.json} i~\texttt{DLGi-edge.json} (identyfikatory skrócone).},
+label={lst:json},numbers=none,language={}]
+// DLG1-node.json
+{"nodes": [
+  {"asset_id": "3f2a...c81", "asset_type": "Data Table"},
+  {"asset_id": "9b07...4de", "asset_type": "Data Job"},
+  {"asset_id": "a154...77f", "asset_type": "Data Field"}
+]}
+
+// DLG1-edge.json
+{"edges": [
+  {"relation_id": "r-0012", "relation_type": "DATA_FLOW",
+   "source": "3f2a...c81", "target": "9b07...4de"},
+  {"relation_id": "r-0013", "relation_type": "PARENT_CHILD",
+   "source": "3f2a...c81", "target": "a154...77f"}
+]}
+\end{lstlisting}
+
+\subsection{Wyznaczanie score'u peer-consistency}
+
+Najistotniejszym fragmentem implementacji jest~wyznaczanie relacyjnego
+score'u kompletności, zdefiniowanego wzorami w~sekcji~\ref{sec:lineage-detector}.
+Listing~\ref{lst:peer} pokazuje jego~rdzeń. Warto zwrócić uwagę na~dwa
+szczegóły, których sam wzór nie~oddaje. Po~pierwsze, zbiory peerów budowane
+są~\emph{przez zadania}: peerami tabeli po~stronie producenta są~inne tabele
+wpadające do~tych~samych zadań downstream — w~grafie dwudzielnym nie~istnieje
+bowiem bezpośrednia krawędź tabela–tabela. Po~drugie, sygnał anomalii
+jest~\emph{bramkowany}: aktywuje się~wyłącznie wtedy, gdy rozpatrywana tabela
+sama znajduje się~na~brzegu przepływu ($\mathrm{in\_df} = 0$
+lub~$\mathrm{out\_df} = 0$). Bez~tego bramkowania score mierzyłby jedynie
+własności otoczenia, nie~zaś~niespójność tabeli z~jej~otoczeniem.
+
+\begin{lstlisting}[caption={Rdzeń wyznaczania score'u peer-consistency
+(moduł \texttt{completeness.py}).},label={lst:peer},language=Python]
+# Strona producenta: peerzy = inne wejscia do downstream-jobow tej tabeli.
+downstream_jobs = [v for _, v, d in G.out_edges(t, data=True)
+                   if d.get("relation_type") == "DATA_FLOW"
+                   and G.nodes[v].get("asset_type") == "Data Job"]
+prod_peers = set()
+for j in downstream_jobs:
+    prod_peers.update(job_inputs.get(j, ()))
+prod_peers.discard(t)
+prod_score = (np.mean([1.0 if in_df[p] > 0 else 0.0 for p in prod_peers])
+              if prod_peers else 0.0)
+
+# Bramkowana anomalia: liczy sie tylko na brzegu (korzen/lisc).
+anomaly = 0.0
+if in_df[t] == 0:
+    anomaly = max(anomaly, prod_score)
+if out_df[t] == 0:
+    anomaly = max(anomaly, cons_score)
+\end{lstlisting}
+
+\subsection{Protokół indukcyjny w~kodzie}
+
+Pętla ewaluacji realizuje schemat leave-one-graph-out: dla~każdego grafu
+testowego model uczy się~na~wszystkich pozostałych. Listing~\ref{lst:logo}
+przedstawia jej~szkielet. Kluczowa dla~poprawności protokołu jest~kolejność
+operacji: instancje wszystkich grafów budowane są~\emph{przed} pętlą,
+przy~wspólnym ziarnie, a~pula treningowa powstaje przez~wykluczenie grafu
+testowego z~gotowego słownika — model nie~ma~więc~dostępu do~żadnej informacji
+z~grafu testowego, także pośrednio przez~dobór usuwanych zadań.
+
+\begin{lstlisting}[caption={Szkielet pętli leave-one-graph-out
+(moduł \texttt{run\_detection\_experiments.py}).},label={lst:logo},
+language=Python]
+datasets = build_datasets(graphs, removal_ratio, seed, side,
+                          exclude_isolated=exclude_isolated)
+for test_g in datasets:
+    ds_test = datasets[test_g]
+    train_pool = [datasets[g] for g in datasets if g != test_g]
+
+    for name in FIT_MODELS:
+        clf = _make_model(name, seed).fit(train_pool)
+        m = node_detection_metrics(ds_test["labels"], clf.score(ds_test))
+        rows.append({"graph": test_g, "algorithm": name, **m})
+\end{lstlisting}
+
+Wyniki z~kolejnych ziaren agregowane są~średnią z~trymowaniem wartości
+skrajnych (odrzucenie najmniejszej i~największej), co~ogranicza wpływ
+pojedynczego nietypowego losowania na~oszacowanie.
+
+\subsection{Złożoność obliczeniowa}
+
+Koszt przetwarzania jednego grafu jest~liniowy względem liczby krawędzi.
+Wyznaczenie stopni \emph{DATA\_FLOW}, ekstrakcja cech oraz~budowa zbiorów
+peerów wymagają stałej liczby przejść po~krawędziach, a~metadane przepływu
+(głębokość i~zasięg w~DAG) wyznaczane są~przeszukiwaniem grafu, również
+w~czasie $O(|V| + |E|)$. Dominującym składnikiem kosztu nie~jest~zatem
+przetwarzanie grafu, lecz~trenowanie klasyfikatorów: w~protokole
+leave-one-graph-out model uczony jest~od~nowa dla~każdego grafu testowego,
+co~przy~18~grafach, trzech ziarnach i~czterech wariantach detektora daje
+216~pełnych treningów. Bieg ablacyjny z~sekcji~\ref{sec:ablacja} zajął
+z~tego~powodu 412~sekund, podczas gdy sama ekstrakcja cech dla~wszystkich
+18~grafów trwa poniżej sekundy. Skala zbioru DLG-DG-23 (do~17~085~węzłów
+na~graf) nie~stanowi więc~ograniczenia wydajnościowego.
+
+% ============================================================
+\section{Testy jednostkowe i~odtwarzalność}
+\label{sec:testy}
+% ============================================================
+
+\subsection{Zakres testów}
+
+Poprawność implementacji zweryfikowano zestawem 83~testów jednostkowych
+uruchamianych narzędziem \texttt{pytest}; wszystkie przechodzą.
+Tabela~\ref{tab:testy} przedstawia ich~rozkład na~moduły.
+
+\begin{table}[ht]
+\centering
+\caption{Rozkład testów jednostkowych na~moduły.}
+\label{tab:testy}
+\small
+\begin{tabular}{lrp{7.2cm}}
+\toprule
+\textbf{Plik testowy} & \textbf{Liczba} & \textbf{Weryfikowane własności} \\
+\midrule
+\texttt{test\_loader.py} & 29 &
+  poprawność typów węzłów i~krawędzi, zgodność liczby obiektów z~plikami
+  źródłowymi, wczytanie wszystkich 18~grafów \\
+\texttt{test\_splitter.py} & 17 &
+  rozłączność podziałów, zgodność liczności podzbiorów \\
+\texttt{test\_job\_removal.py} & 12 &
+  identyfikacja zadań łączących, poprawność etykiet, rozłączność zbiorów
+  treningowego i~testowego, działanie flagi \texttt{exclude\_isolated} \\
+\texttt{test\_scenario\_splitter.py} & 9 &
+  scenariusze usuwania krawędzi (badanie wstępne) \\
+\texttt{test\_dutkiewicz\_adapter.py} & 6 &
+  mapowanie benchmarku zewnętrznego na~model
+  tabela–zadanie–\emph{DATA\_FLOW} \\
+\texttt{test\_node\_features.py} & 4 &
+  wymiar wektora cech, zgodność z~\texttt{feature\_names()},
+  wartości brzegowe dla~węzłów izolowanych \\
+\texttt{test\_completeness.py} & 3 &
+  poprawność score'u peer-consistency, bramkowanie sygnału anomalii \\
+\texttt{test\_lineage\_detector.py} & 3 &
+  interfejs \texttt{fit}/\texttt{score}, zakres zwracanych
+  prawdopodobieństw, warianty ablacyjne \\
+\midrule
+\textbf{Razem} & \textbf{83} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Testy sprawdzają nie~tylko poprawność techniczną, lecz~także dwie własności
+istotne metodycznie. Pierwsza to~\emph{brak przecieku} między zbiorem
+treningowym a~testowym: test weryfikuje, że~identyfikatory grafów w~obu
+zbiorach są~rozłączne. Druga to~\emph{determinizm}: przy~ustalonym ziarnie
+losowości powtórne wykonanie symulacji daje identyczny zbiór usuniętych zadań
+i~identyczne etykiety — bez~tego liczby raportowane w~rozdziale~4
+nie~byłyby~odtwarzalne.
+
+\subsection{Odtwarzalność wyników}
+
+Wszystkie liczby przedstawione w~rozdziale~4 pochodzą z~jednego
+\emph{biegu kanonicznego} o~ustalonej konfiguracji: 18~grafów,
+\texttt{removal\_ratio}~$=0{,}10$, \texttt{side}~$=$~\texttt{both},
+trzy powtórzenia z~ziarnami 42--44, protokół indukcyjny leave-one-graph-out,
+próg wiarygodności $\mathrm{MIN\_POS} = 5$, wariant uczciwy
+(\texttt{exclude\_isolated}). Wyniki pośrednie zapisywane są~w~postaci plików
+CSV w~katalogu \texttt{results/}, osobno dla~wariantu uczciwego
+i~napompowanego, wraz z~opisem konfiguracji. Eksperymenty poboczne
+(ablacja, analiza wrażliwości, test cross-dataset) mają~własne skrypty
+i~własne pliki wynikowe, wymienione w~listingu~\ref{lst:repo}, co~pozwala
+odtworzyć każdą tabelę rozdziału~4 niezależnie od~pozostałych.
+
+% ============================================================
 \section{Dostępność implementacji i~pochodzenie algorytmów}
 \label{sec:repozytorium}
 % ============================================================
@@ -460,10 +747,10 @@ Całość implementacji opisanej w~niniejszej pracy — moduły wczytywania
 danych, symulacji broken lineage, ekstrakcji cech, metod detekcji oraz~
 ewaluacji, wraz z~testami jednostkowymi i~skryptami odtwarzającymi
 eksperymenty z~rozdziału~4 — udostępniono w~publicznym repozytorium Git
-pod~adresem \texttt{https://github.com/<uzupełnić>}\footnote{Dostęp
-zweryfikowano w~dniu obrony pracy.}. Repozytorium zawiera instrukcję
-uruchomienia oraz~pliki konfiguracyjne biegu kanonicznego, co~zapewnia
-odtwarzalność raportowanych wyników.
+pod~adresem \texttt{https://github.com/Catcuss/magisterka-data-lineage}\footnote{Dostęp
+zweryfikowano 19~sierpnia 2026~r.}. Repozytorium zawiera instrukcję
+uruchomienia (dodatek~\ref{dod:uruchomienie}) oraz~pliki konfiguracyjne biegu
+kanonicznego, co~zapewnia odtwarzalność raportowanych wyników.
 
 Metody z~grupy heurystyk oraz~klasyczne klasyfikatory nie~są~oryginalnym
 wkładem pracy — stanowią \emph{punkty odniesienia} (baseline) zaczerpnięte
