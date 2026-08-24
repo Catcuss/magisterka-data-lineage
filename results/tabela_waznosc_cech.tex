@@ -1,0 +1,28 @@
+\begin{table}[ht]
+\centering
+\caption{Ważność cech detektora LineageDetector mierzona metodą permutacyjną: średni spadek AUC-ROC po~losowym przestawieniu wartości cechy (10~permutacji, protokół indukcyjny, grafy wiarygodne). Gwiazdka — cecha wnoszona przez~autorski score kompletności.}
+\label{tab:waznosc}
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Cecha} & \textbf{Spadek AUC-ROC} & \textbf{Odch.\ std} \\
+\midrule
+avg\_job\_in\_df — śr{,}\ stopień wej{,}\ zadań & $+0{,}0616$ & 0{,}0510 \\
+n\_job\_neighbors — liczba sąsiednich zadań & $+0{,}0492$ & 0{,}0266 \\
+out\_df — wyjściowe krawędzie DATA\_FLOW & $+0{,}0408$ & 0{,}0207 \\
+degree — stopień całkowity & $+0{,}0260$ & 0{,}0336 \\
+peer\_producer\_score\textsuperscript{*} & $+0{,}0238$ & 0{,}0240 \\
+n\_field\_children — liczba pól tabeli & $+0{,}0196$ & 0{,}0280 \\
+role — rola w~przepływie & $+0{,}0128$ & 0{,}0204 \\
+completeness\_anomaly\textsuperscript{*} & $+0{,}0107$ & 0{,}0140 \\
+is\_root — brak producenta & $+0{,}0100$ & 0{,}0110 \\
+flow\_depth — głębokość w~DAG & $+0{,}0072$ & 0{,}0130 \\
+in\_df — wejściowe krawędzie DATA\_FLOW & $+0{,}0065$ & 0{,}0125 \\
+is\_leaf — brak konsumenta & $+0{,}0036$ & 0{,}0128 \\
+depth\_plus\_reach — długość ścieżki & $+0{,}0018$ & 0{,}0292 \\
+peer\_consumer\_score\textsuperscript{*} & $+0{,}0000$ & 0{,}0000 \\
+avg\_job\_out\_df — śr{,}\ stopień wyj{,}\ zadań & $-0{,}0008$ & 0{,}0046 \\
+flow\_reach — zasięg w~dół DAG & $-0{,}0015$ & 0{,}0276 \\
+\bottomrule
+\end{tabular}
+\end{table}

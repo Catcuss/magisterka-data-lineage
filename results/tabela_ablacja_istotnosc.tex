@@ -1,0 +1,21 @@
+\begin{table}[ht]
+\centering
+\caption{Istotność statystyczna różnic między LineageDetectorem a~pozostałymi metodami. Test kolejności par Wilcoxona (dokładny, dwustronny), sparowany po~8~grafach wiarygodnych; poprawka Holma w~obrębie rodziny hipotez i~metryki. $\Delta$~—~mediana różnicy na~korzyść LineageDetectora.}
+\label{tab:istotnosc}
+\small
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Porównanie z} & \multicolumn{2}{c}{\textbf{AUC-ROC}} & \multicolumn{2}{c}{\textbf{AUC-PR}} & \multicolumn{2}{c}{\textbf{P@k}} & \multicolumn{2}{c}{\textbf{Brier}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+ & $\Delta$ & $p$ & $\Delta$ & $p$ & $\Delta$ & $p$ & $\Delta$ & $p$ \\
+\midrule
+\multicolumn{9}{l}{\emph{Warianty ablacyjne}} \\
+bez kalibracji & $-0{,}018$ & $0{,}328$ & $-0{,}003$ & $0{,}922$ & $-0{,}009$ & $1{,}000$ & $+0{,}007$ & $0{,}500$ \\
+bez score'u kompletności & $+0{,}016$ & $0{,}328$ & $+0{,}009$ & $0{,}586$ & $+0{,}034$ & $0{,}023^{*}$ & $+0{,}000$ & $0{,}641$ \\
+bez obu składników & $+0{,}019$ & $0{,}328$ & $+0{,}017$ & $0{,}922$ & $+0{,}064$ & $0{,}094$ & $+0{,}012$ & $0{,}328$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\footnotesize $^{*}$ różnica istotna na~poziomie $\alpha = 0{,}05$ po~poprawce Holma. Różnica dodatnia oznacza przewagę LineageDetectora (dla~Brier score — wartość niższą). Przy~8~parach najniższe osiągalne $p$ wynosi 0{,}0078, co~ogranicza moc testu.
+\end{table}

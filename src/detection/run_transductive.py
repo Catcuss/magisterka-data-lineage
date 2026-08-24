@@ -39,6 +39,7 @@ from detection.job_removal import build_node_dataset
 from detection.node_classifier import (
     HeuristicNodeScorer, NodeMLClassifier, HEURISTICS, ML_MODELS,
 )
+from detection.lineage_detector import LineageHealthDetector
 from detection.node_metrics import node_detection_metrics
 from detection.run_detection_experiments import _trimmed_mean, _METRICS, MIN_POS
 
@@ -84,9 +85,10 @@ def run_graph(G, gid: str, seed: int, removal_ratio: float,
     for name in HEURISTICS:
         m = node_detection_metrics(y_te, HeuristicNodeScorer(name).score(ds_te))
         rows.append({**base, "algorithm": name, **m})
-    for name in ML_MODELS:
+    for name in ML_MODELS + ["LineageDetector"]:
         try:
-            clf = NodeMLClassifier(name, seed=seed).fit([ds_tr])
+            clf = (LineageHealthDetector(seed=seed) if name == "LineageDetector"
+                   else NodeMLClassifier(name, seed=seed)).fit([ds_tr])
             m = node_detection_metrics(y_te, clf.score(ds_te))
             rows.append({**base, "algorithm": name, **m})
         except (ValueError, ImportError) as e:
@@ -213,7 +215,7 @@ def main():
     args = p.parse_args()
 
     seeds = [args.seed + i for i in range(max(1, args.repeats))]
-    algorithms = HEURISTICS + ML_MODELS
+    algorithms = HEURISTICS + ML_MODELS + ["LineageDetector"]
     graphs = {f"DLG{i}": load_graph(f"DLG{i}") for i in ALL_DLGS}
     selected = {g: G for g, G in graphs.items() if G.number_of_nodes() >= MIN_NODES}
 

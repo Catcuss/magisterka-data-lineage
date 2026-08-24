@@ -32,6 +32,7 @@ from detection.job_removal import build_node_dataset
 from detection.node_classifier import (
     HeuristicNodeScorer, NodeMLClassifier, HEURISTICS, ML_MODELS,
 )
+from detection.lineage_detector import LineageHealthDetector
 from detection.node_metrics import node_detection_metrics
 from detection.run_detection_experiments import _trimmed_mean, _METRICS, MIN_POS
 
@@ -65,9 +66,10 @@ def run_seed(graphs: dict, seed: int, removal_ratio: float,
     train_pool = [datasets[g] for g in train_ids]
     heur = {name: HeuristicNodeScorer(name) for name in HEURISTICS}
     fitted = {}
-    for name in ML_MODELS:
+    for name in ML_MODELS + ["LineageDetector"]:
         try:
-            fitted[name] = NodeMLClassifier(name, seed=seed).fit(train_pool)
+            fitted[name] = (LineageHealthDetector(seed=seed) if name == "LineageDetector"
+                            else NodeMLClassifier(name, seed=seed)).fit(train_pool)
         except (ValueError, ImportError) as e:
             print(f"  {name} pominięto: {e}")
 
@@ -186,7 +188,7 @@ def main():
     args = p.parse_args()
 
     seeds = [args.seed + i for i in range(max(1, args.repeats))]
-    algorithms = HEURISTICS + ML_MODELS
+    algorithms = HEURISTICS + ML_MODELS + ["LineageDetector"]
     graphs = {f"DLG{i}": load_graph(f"DLG{i}") for i in ALL_DLGS}
 
     small = [g for g in graphs if size_class(graphs[g].number_of_nodes()) == "mały"]

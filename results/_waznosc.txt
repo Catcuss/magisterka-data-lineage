@@ -1,0 +1,26 @@
+Cech: 16 (13 topologicznych + 3 kompletności)
+
+Seed 42...
+Seed 43...
+Seed 44...
+
+Cecha                       spadek AUC-ROC   odch. std
+------------------------------------------------------
+avg_job_in_df                      +0.0616      0.0510
+n_job_neighbors                    +0.0492      0.0266
+out_df                             +0.0408      0.0207
+degree                             +0.0260      0.0336
+peer_producer_score                +0.0238      0.0240
+n_field_children                   +0.0196      0.0280
+role                               +0.0128      0.0204
+completeness_anomaly               +0.0107      0.0140
+is_root                            +0.0100      0.0110
+flow_depth                         +0.0072      0.0130
+in_df                              +0.0065      0.0125
+is_leaf                            +0.0036      0.0128
+depth_plus_reach                   +0.0018      0.0292
+peer_consumer_score                +0.0000      0.0000
+avg_job_out_df                     -0.0008      0.0046
+flow_reach                         -0.0015      0.0276
+
+Zapisano: C:\Users\Maria\Desktop\MAGISTERKA\results\tabela_waznosc_cech.tex

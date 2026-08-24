@@ -3,13 +3,16 @@ networkx>=3.2
 node2vec>=0.4
 
 # Dane
-pandas>=2.0
+pandas>=1.5
 numpy>=1.26
 
 # Machine learning
 scikit-learn>=1.4
 lightgbm>=4.3
 imbalanced-learn>=0.12
+
+# Testy istotności statystycznej (scripts/test_istotnosci.py)
+scipy>=1.11
 
 # Wizualizacja
 matplotlib>=3.8

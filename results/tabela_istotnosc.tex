@@ -1,0 +1,28 @@
+\begin{table}[ht]
+\centering
+\caption{Istotność statystyczna różnic między LineageDetectorem a~pozostałymi metodami. Test kolejności par Wilcoxona (dokładny, dwustronny), sparowany po~8~grafach wiarygodnych; poprawka Holma w~obrębie rodziny hipotez i~metryki. $\Delta$~—~mediana różnicy na~korzyść LineageDetectora.}
+\label{tab:istotnosc}
+\small
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Porównanie z} & \multicolumn{2}{c}{\textbf{AUC-ROC}} & \multicolumn{2}{c}{\textbf{AUC-PR}} & \multicolumn{2}{c}{\textbf{P@k}} & \multicolumn{2}{c}{\textbf{Brier}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+ & $\Delta$ & $p$ & $\Delta$ & $p$ & $\Delta$ & $p$ & $\Delta$ & $p$ \\
+\midrule
+\multicolumn{9}{l}{\emph{Heurystyki}} \\
+Anomalia stopnia & $+0{,}344$ & $0{,}039^{*}$ & $+0{,}273$ & $0{,}039^{*}$ & $+0{,}297$ & $0{,}039^{*}$ & $+0{,}029$ & $0{,}039^{*}$ \\
+Brzeg (root/leaf) & $+0{,}315$ & $0{,}039^{*}$ & $+0{,}279$ & $0{,}039^{*}$ & $+0{,}297$ & $0{,}039^{*}$ & $+0{,}633$ & $0{,}039^{*}$ \\
+Niska łączność jobów & $+0{,}466$ & $0{,}039^{*}$ & $+0{,}310$ & $0{,}039^{*}$ & $+0{,}352$ & $0{,}039^{*}$ & $+0{,}119$ & $0{,}039^{*}$ \\
+Reguła korzenia & $+0{,}177$ & $0{,}039^{*}$ & $+0{,}253$ & $0{,}039^{*}$ & $+0{,}250$ & $0{,}039^{*}$ & $+0{,}344$ & $0{,}039^{*}$ \\
+Score kompletności & $+0{,}189$ & $0{,}039^{*}$ & $+0{,}223$ & $0{,}039^{*}$ & $+0{,}193$ & $0{,}039^{*}$ & $+0{,}040$ & $0{,}039^{*}$ \\
+\midrule
+\multicolumn{9}{l}{\emph{Metody uczone}} \\
+Random Forest & $+0{,}023$ & $0{,}250$ & $+0{,}014$ & $0{,}461$ & $+0{,}064$ & $0{,}188$ & $+0{,}012$ & $0{,}109$ \\
+RUSBoost & $+0{,}139$ & $0{,}023^{*}$ & $+0{,}172$ & $0{,}023^{*}$ & $+0{,}071$ & $0{,}188$ & $+0{,}041$ & $0{,}023^{*}$ \\
+LightGBM & $+0{,}033$ & $0{,}078$ & $+0{,}047$ & $0{,}023^{*}$ & $+0{,}054$ & $0{,}188$ & $+0{,}042$ & $0{,}023^{*}$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\footnotesize $^{*}$ różnica istotna na~poziomie $\alpha = 0{,}05$ po~poprawce Holma. Różnica dodatnia oznacza przewagę LineageDetectora (dla~Brier score — wartość niższą). Przy~8~parach najniższe osiągalne $p$ wynosi 0{,}0078, co~ogranicza moc testu.
+\end{table}

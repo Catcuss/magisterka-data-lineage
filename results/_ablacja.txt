@@ -1,0 +1,29 @@
+Grafy:        ['DLG1', 'DLG2', 'DLG3', 'DLG4', 'DLG5', 'DLG6', 'DLG7', 'DLG8', 'DLG9', 'DLG10', 'DLG11', 'DLG12', 'DLG13', 'DLG14', 'DLG15', 'DLG16', 'DLG17', 'DLG18']
+Powtórzenia:  3 (seedy 42-44)
+removal_ratio=0.1, side=both, exclude_isolated=True, MIN_POS=5
+Warianty:     pelny, bez_kalibracji, bez_kompletnosci, bez_obu
+
+Seed 42...
+Seed 43...
+Seed 44...
+
+====================================================================================
+BADANIE ABLACYJNE — średnie po grafach wiarygodnych (wariant uczciwy)
+====================================================================================
+  Wariant                           AUC-ROC   AUC-PR     P@k    Brier  n graf
+  ----------------------------------------------------------------------------
+  Pełny detektor                      0.771    0.435   0.443    0.106       8
+  bez kalibracji izotonicznej         0.786    0.440   0.446    0.111       8
+  bez score'u kompletności            0.747    0.420   0.401    0.107       8
+  bez obu składników                  0.750    0.425   0.387    0.116       8
+
+  Ubytek względem pełnego detektora (ujemny = wariant gorszy):
+  ----------------------------------------------------------------------------
+  bez kalibracji izotonicznej        +0.015   +0.005  +0.003   -0.005
+  bez score'u kompletności           -0.023   -0.015  -0.042   -0.001
+  bez obu składników                 -0.020   -0.010  -0.056   -0.010
+
+  (dla Brier score znak odwrócono, aby '-' zawsze oznaczał pogorszenie)
+
+Wyniki zapisane: C:\Users\Maria\Desktop\MAGISTERKA\results\wyniki_ablacja.csv
+Czas: 411.5s
