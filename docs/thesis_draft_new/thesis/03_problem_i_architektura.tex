@@ -1,16 +1,16 @@
 % ============================================================
 %  ROZDZIAŁ 3 — PROBLEM I SPOSÓB JEGO ROZWIĄZANIA
-%  NOWA KONCEPCJA: detekcja chorych węzłów (node detection).
+%  Detekcja zainfekowanych tabel (node detection).
 %  Włączany do Thesis.tex przez \input{03_problem_i_architektura}
 % ============================================================
 
 \chapter{Problem i~sposób jego rozwiązania}
 
 Rozdział precyzuje formalną definicję problemu detekcji węzłów
-o~zerwanym lineage (sekcja~\ref{sec:sformulowanie}). Sekcja~\ref{sec:dane} charakteryzuje
-zastosowany zbiór danych, sekcja~\ref{sec:symulacja} — metodykę symulacji
-broken lineage przez usuwanie zadań, a~sekcja~\ref{sec:architektura} opisuje
-architekturę potoku przetwarzania. Szczegóły implementacji metod detekcji
+o~zerwanym lineage (sekcja~\ref{sec:sformulowanie}). Sekcja~\ref{sec:dane}
+charakteryzuje zastosowany zbiór danych, sekcja~\ref{sec:symulacja} opisuje
+metodykę symulacji broken lineage przez~usuwanie zadań,
+a~sekcja~\ref{sec:architektura} architekturę potoku przetwarzania. Szczegóły implementacji metod detekcji
 omówiono w~sekcji~\ref{sec:algorytmy}.
 
 % ============================================================
@@ -24,22 +24,23 @@ $G = (V, E)$, gdzie $V = V_{J} \cup V_{T} \cup V_{F}$ obejmuje węzły
 typu zadanie (\emph{Data Job}), tabela (\emph{Data Table}) i~pole,
 a~$E$ zawiera krawędzie przepływu danych (\emph{DATA\_FLOW}) między zadaniami
 a~tabelami. Zjawisko broken lineage odpowiada usunięciu z~grafu pewnego
-zadania $J$: tabele z~nim incydentne — jego poprzedniki (tabele karmiące $J$)
-oraz~następniki (tabele karmione przez $J$) — tracą część informacji
-o~swoim pochodzeniu i~stają się \emph{zainfekowane} (ang. \emph{infected}).
+zadania $J$. Tabele z~nim incydentne, czyli jego poprzedniki (tabele
+karmiące $J$) oraz~następniki (tabele karmione przez~$J$), tracą część
+informacji o~swoim pochodzeniu i~stają się~\emph{zainfekowane}
+(ang.~\emph{infected}).
 
 Obserwowany graf ma~postać $G_{\mathrm{obs}} = G \setminus \{J_1,\dots,J_m\}$,
 powstałą przez~usunięcie podzbioru zadań. Zadaniem detekcji jest wyznaczenie
 funkcji, która każdej tabeli $t \in V_{T}$ przypisuje wynik
 $s(t) \in [0, 1]$ interpretowany jako~oszacowane prawdopodobieństwo
-$p(\text{tabela } t \text{ jest zainfekowana})$. Wynikiem nie~jest decyzja
-binarna przy~ustalonym progu, lecz~\emph{ranking} tabel — tabele o~najwyższym
+$p(\text{tabela } t \text{ jest zainfekowana})$. Wynikiem nie~jest~decyzja
+binarna przy~ustalonym progu, lecz~\emph{ranking} tabel; tabele o~najwyższym
 wyniku są~pierwszymi kandydatami do~ręcznej inspekcji.
 
 Etykiety referencyjne (\emph{ground truth}) generowane są~automatycznie:
 tabela jest zainfekowana wtedy i~tylko wtedy, gdy była incydentna
 do~co~najmniej jednego usuniętego zadania. Zbiór kandydatów ograniczono
-do~węzłów typu \emph{Data Table} — węzły typu pole (\emph{field}) łączy
+do~węzłów typu \emph{Data Table}; węzły typu pole (\emph{field}) łączy
 z~tabelami wyłącznie relacja \emph{PARENT\_CHILD} i~nie~podlegają one detekcji.
 
 Zasadnicza trudność zadania polega na~tym, że~osierocona tabela-następnik
@@ -56,27 +57,27 @@ opisujących pozycję węzła w~grafie DAG oraz~uczenia \emph{indukcyjnego}
 % [ZACHOWANE z poprzedniej wersji — opis zbioru aktualny.]
 Zastosowany zbiór danych pochodzi z~pracy Chen et~al.~\cite{Chen2024}
 i~zawiera 18~grafów lineage pobranych ze~środowiska produkcyjnego
-Huawei Cloud. Dane zostały zanonimizowane — nazwy tabel i~atrybutów
-zastąpiono identyfikatorami w~formacie UUID, a~schematy bazy danych
-nie~zostały udostępnione. Zbiór opublikowano w~2024~roku jako pierwszy
+Huawei Cloud. Dane zostały zanonimizowane: nazwy tabel i~atrybutów
+zastąpiono identyfikatorami w~formacie UUID, a~schematów bazy danych
+nie~udostępniono. Zbiór opublikowano w~2024~roku jako pierwszy
 otwarty zestaw rzeczywistych grafów lineage.
 
 % [SCALONE — pełny opis struktury zbioru (przeniesiony z rozdz. 2), aby
 %  zbiór był opisany w jednym miejscu.]
-Każdy graf zawiera węzły trzech typów — \textbf{Data Job} (zapytanie SQL
-lub~zadanie ETL, ang. \emph{Extract, Transform, Load}), \textbf{Data Table}
-(tabela lub~widok przechowujący dane) oraz~\textbf{field} (atrybut/kolumna
-należąca do~tabeli) — połączone krawędziami dwóch typów: \textbf{DATA\_FLOW}
+Każdy graf zawiera węzły trzech typów: \textbf{Data Job} (zapytanie SQL
+lub~zadanie ETL, ang.~\emph{Extract, Transform, Load}), \textbf{Data Table}
+(tabela lub~widok przechowujący dane) oraz~\textbf{field} (atrybut lub~kolumna
+należąca do~tabeli). Łączą je~krawędzie dwóch typów: \textbf{DATA\_FLOW}
 (skierowana krawędź przepływu danych między tabelą a~zadaniem)
 oraz~\textbf{PARENT\_CHILD} (relacja przynależności pola do~tabeli). Pełny
-graf jest zatem \emph{heterogeniczny}. Przedmiotem detekcji są~wyłącznie
+graf jest~zatem \emph{heterogeniczny}. Przedmiotem detekcji są~wyłącznie
 węzły typu \emph{Data Table}, a~sygnał czerpany jest z~podgrafu przepływu
 danych (krawędzie \emph{DATA\_FLOW} między węzłami \emph{Data Table}
 i~\emph{Data Job}); podgraf ten~ma~strukturę dwudzielną i~skierowaną,
 interpretowaną jako graf DAG. Grafy różnią się skalą: liczba węzłów waha się
 od~278 do~17~085.
 
-% [ZMIENIONE — uzasadnienie doboru: teraz „topology-only", pod detekcję.]
+% [ZMIENIONE — uzasadnienie doboru: teraz „topology-only'', pod detekcję.]
 Zbiór DLG-DG-23 wybrano, ponieważ jest jedynym publicznie dostępnym
 zestawem rzeczywistych grafów lineage. Anonimizacja nazw
 węzłów ma~bezpośredni wpływ na~dobór metod: metryki podobieństwa oparte
@@ -144,11 +145,11 @@ zjawisko broken lineage symulowane jest przez~kontrolowane usuwanie
 przyczynę broken lineage: zniknięcie tabeli tymczasowej lub~ukrycie logiki
 przez UDF odpowiada utracie całego węzła-zadania wraz z~jego krawędziami.
 
-Kandydatami do~usunięcia są~\emph{zadania łączące} — zadania mające
+Kandydatami do~usunięcia są~\emph{zadania łączące}, czyli zadania mające
 co~najmniej jedną wejściową i~jedną wyjściową krawędź \emph{DATA\_FLOW}
 ($\mathrm{in\_df} > 0 \land \mathrm{out\_df} > 0$). Usunięcie takiego zadania
 zrywa lineage po~obu stronach: tabele karmiące je~tracą konsumenta,
-a~tabele przez nie~karmione — producenta. Z~grafu $G$ budowana jest instancja
+a~tabele przez~nie~karmione producenta. Z~grafu $G$ budowana jest instancja
 klasyfikacji węzłów:
 
 \begin{enumerate}
@@ -161,7 +162,7 @@ klasyfikacji węzłów:
   \item graf obserwowany $G_{\mathrm{obs}}$ powstaje przez~usunięcie
         wybranych zadań i~ich krawędzi,
   \item kandydatami są~wszystkie tabele w~$G_{\mathrm{obs}}$; etykieta~1
-        oznacza tabelę zainfekowaną, etykieta~0 — czystą.
+        oznacza tabelę zainfekowaną, a~etykieta~0 czystą.
 \end{enumerate}
 
 Dodatkowo zaimplementowano wariant kontrolny, w~którym każda instancja
@@ -175,8 +176,8 @@ przyczynową (jedno zdarzenie broken lineage $=$ jedno brakujące zadanie).
 Usunięcie zadania może~pozbawić tabelę \emph{wszystkich} krawędzi
 przepływu danych ($\mathrm{in\_df} = 0 \land \mathrm{out\_df} = 0$).
 Ponieważ w~oryginalnych grafach tabele izolowane nie~występują, trywialna
-reguła „tabela izolowana $\Rightarrow$ zainfekowana" pozwala rozpoznać
-znaczną część pozytywów bez~żadnego uczenia, sztucznie zawyżając wynik.
+reguła „tabela izolowana $\Rightarrow$ zainfekowana'' pozwala rozpoznać
+znaczną część pozytywów bez~żadnego uczenia i~sztucznie zawyża wynik.
 Aby~zapewnić uczciwą ewaluację, wprowadzono flagę \texttt{exclude\_isolated},
 która usuwa z~puli kandydatów tabele w~pełni izolowane. Wariant ten~stawia
 trudniejsze i~bardziej realistyczne zadanie: wykryć tabele o~\emph{częściowo}
@@ -194,9 +195,9 @@ izolowanych, ponieważ tylko wtedy można zmierzyć ich~udział wśród pozytyw�
 \centering
 \caption{Charakterystyka symulacji broken lineage w~zależności
 od~parametru \texttt{removal\_ratio}. Wartości uśrednione po~18~grafach
-i~trzech ziarnach losowości (42--44). Ostatnia kolumna — odsetek tabel
-zainfekowanych, które utraciły \emph{wszystkie} krawędzie przepływu danych
-i~są~rozpoznawalne trywialną regułą izolacji.}
+i~trzech ziarnach losowości (42--44). W~ostatniej kolumnie podano odsetek
+tabel zainfekowanych, które utraciły \emph{wszystkie} krawędzie przepływu
+danych i~są~rozpoznawalne trywialną regułą izolacji.}
 \label{tab:symulacja}
 \begin{tabular}{ccccc}
 \toprule
@@ -212,14 +213,14 @@ i~są~rozpoznawalne trywialną regułą izolacji.}
 \end{table}
 
 Dwie obserwacje z~tabeli mają~znaczenie dla~konstrukcji eksperymentu.
-Po~pierwsze, przyjęta w~biegu kanonicznym wartość $0{,}10$ daje średnio
-25~tabel zainfekowanych na~graf przy~19\% pozytywów — zadanie pozostaje
-wyraźnie niezrównoważone, lecz~klasa pozytywna jest~dostatecznie liczna,
-by~metryki rankingowe były wiarygodne. Po~drugie, udział pozytywów trywialnych
-(tabel w~pełni izolowanych) rośnie z~19{,}7\% do~34{,}5\% wraz ze~wzrostem
+Przyjęta w~biegu kanonicznym wartość $0{,}10$ daje średnio 25~tabel
+zainfekowanych na~graf przy~19\% pozytywów. Zadanie pozostaje więc~wyraźnie
+niezrównoważone, ale~klasa pozytywna jest~dostatecznie liczna, by~metryki
+rankingowe były wiarygodne. Udział pozytywów trywialnych (tabel w~pełni
+izolowanych) rośnie z~kolei z~19{,}7\% do~34{,}5\% wraz ze~wzrostem
 odsetka usuwanych zadań: im~silniejsze zaburzenie, tym~większa część zadania
 daje się~rozwiązać bez~żadnego uczenia. Liczby te~określają skalę przecieku,
-któremu zapobiega opisana wyżej flaga \texttt{exclude\_isolated} — przy~biegu
+któremu zapobiega opisana wyżej flaga \texttt{exclude\_isolated}. Przy~biegu
 kanonicznym usuwa ona~z~puli kandydatów blisko jedną czwartą pozytywów,
 i~to~tych najłatwiejszych.
 
@@ -262,7 +263,7 @@ i~\texttt{relation\_id}). Moduł \texttt{loader.py} buduje z~nich obiekt
 Moduł \texttt{job\_removal.py} realizuje metodykę z~sekcji~\ref{sec:symulacja}:
 identyfikuje zadania łączące, usuwa ich podzbiór, wyznacza zbiór zainfekowanych
 tabel i~zwraca instancję (graf $G_{\mathrm{obs}}$, listę kandydatów,
-etykiety, listę usuniętych jobów). Obsługuje warianty \texttt{side}
+etykiety, listę usuniętych zadań). Obsługuje warianty \texttt{side}
 (strona incydencji liczona jako~infected: producenta, konsumenta lub~obie)
 oraz~\texttt{exclude\_isolated}. Funkcja \texttt{inductive\_split} dzieli
 identyfikatory grafów na~rozłączne zbiory treningowy i~testowy (cross-graph).
@@ -283,9 +284,9 @@ i~testowy są~rozłączne, co~sprawdza zdolność metody do~generalizacji
 na~nowe grafy, a~nie~jedynie do~zapamiętania jednego. Konsekwencją tego
 protokołu jest~wykluczenie metody Node2Vec: uczy ona~zanurzeń węzłów
 transduktywnie, dla~konkretnego grafu, przez~co~embeddingi są~geometrycznie
-nieporównywalne między grafami. Nie~jest to~luka, lecz~\emph{wynik}: motywuje
-zastosowanie indukcyjnych grafowych sieci neuronowych (GraphSAGE, R-GCN, HGT),
-wskazanych w~rozdziale~5 jako~kierunek dalszych badań.
+nieporównywalne między grafami. Nie~jest~to~luka, lecz~\emph{wynik}, który
+motywuje zastosowanie indukcyjnych grafowych sieci neuronowych (GraphSAGE,
+R-GCN, HGT), wskazanych w~rozdziale~5 jako~kierunek dalszych badań.
 
 % ============================================================
 \section{Zaimplementowane metody detekcji}
@@ -300,9 +301,6 @@ LineageDetector.
 \subsection{Heurystyki strukturalne}
 % ============================================================
 
-% [ZMIENIONE — heurystyki jako scoringi WĘZŁÓW, nie par. Część dawnych
-%  heurystyk krawędziowych (Katz, PPR, L3) można zachować jako baseline
-%  scoringu węzła po agregacji — patrz TODO. Główny wkład: peer-consistency.]
 Heurystyki strukturalne przypisują tabeli wynik podejrzliwości wyłącznie
 na~podstawie jej pozycji w~grafie, bez~etapu uczenia. Są~naturalnym
 punktem odniesienia (\emph{baseline}) dla~metod uczonych. Miary oparte
@@ -310,30 +308,35 @@ na~wspólnych sąsiadach (Common Neighbors, Jaccard, Adamic-Adar) są~w~grafie
 dwudzielnym nieskuteczne, ponieważ węzły tego~samego typu nigdy nie~mają
 wspólnych sąsiadów bezpośrednich; wykluczono je~z~implementacji.
 
-W~pracy zaimplementowano cztery heurystyki bazowe:
+W~pracy zaimplementowano cztery heurystyki bazowe. Piątym punktem
+odniesienia w~tej~grupie jest~sam \emph{score kompletności}
+(sekcja~\ref{sec:lineage-detector}), oceniany dodatkowo w~oderwaniu
+od~detektora, co~pozwala rozdzielić wkład sygnału relacyjnego od~wkładu
+uczenia. W~zestawieniach rozdziału~4 występuje on~zatem jako~osobna metoda
+obok czterech poniższych:
 
 \begin{itemize}
-  \item \textbf{Anomalia stopnia} (\texttt{degree\_anomaly}) — wynik
+  \item \textbf{Anomalia stopnia} (\texttt{degree\_anomaly}): wynik
         $1/(1+\deg(t))$, gdzie $\deg(t)$ jest stopniem całkowitym tabeli.
         Intuicja: tabela, która utraciła zadanie, ma~mniej połączeń
         niż~przed zerwaniem lineage.
-  \item \textbf{Brzeg grafu} (\texttt{boundary}) — suma wskaźników
+  \item \textbf{Brzeg grafu} (\texttt{boundary}): suma wskaźników
         $\mathbf{1}[\mathrm{in\_df}=0] + \mathbf{1}[\mathrm{out\_df}=0]$.
         Tabele na~brzegu przepływu (korzenie i~liście) są~podejrzane,
         ponieważ zerwanie lineage często wypycha tabelę na~brzeg grafu.
   \item \textbf{Niska łączność z~zadaniami}
-        (\texttt{low\_job\_connectivity}) — wynik $1/(1+n_{J}(t))$,
+        (\texttt{low\_job\_connectivity}): wynik $1/(1+n_{J}(t))$,
         gdzie $n_{J}(t)$ to~liczba unikatowych zadań sąsiadujących
         z~tabelą przez krawędzie \emph{DATA\_FLOW}.
-  \item \textbf{Reguła korzenia} (\texttt{rule\_root}) — binarny wskaźnik
+  \item \textbf{Reguła korzenia} (\texttt{rule\_root}): binarny wskaźnik
         $\mathbf{1}[\mathrm{in\_df}=0]$: każda tabela bez~producenta jest
         uznawana za~podejrzaną. To~celowo trywialny punkt odniesienia,
         obrazujący siłę najprostszego możliwego symptomu.
 \end{itemize}
 
-Heurystyki te~mierzą wyłącznie \emph{lokalny} symptom (stopień, rola);
-ich~ograniczenie — w~szczególności nieodróżnianie osieroconej tabeli
-od~prawdziwego źródła — motywuje metody uczone oraz~autorski detektor
+Heurystyki te~mierzą wyłącznie \emph{lokalny} symptom (stopień, rola).
+Ich~ograniczenie, przede wszystkim nieodróżnianie osieroconej tabeli
+od~prawdziwego źródła, motywuje metody uczone oraz~autorski detektor
 LineageDetector (sekcja~\ref{sec:lineage-detector}), który wzbogaca opis
 węzła o~relacyjny \emph{score kompletności} (peer-consistency).
 
@@ -346,14 +349,14 @@ węzła o~relacyjny \emph{score kompletności} (peer-consistency).
 Klasyczne metody ML traktują detekcję jako~binarną klasyfikację węzła:
 wejściem jest wektor cech opisujących pozycję tabeli w~grafie DAG,
 a~wyjściem prawdopodobieństwo zainfekowania. Ze~względu na~anonimizację
-(UUID) jako~cechy przyjęto wyłącznie atrybuty topologiczne — metryki
+(UUID) jako~cechy przyjęto wyłącznie atrybuty topologiczne; metryki
 oparte na~nazwach są~nieaplikowalne.
 
 \subsubsection{Wektor cech węzła}
 
 Tabela~\ref{tab:cechy} przedstawia pełny wektor 13~cech topologicznych
 wyznaczanych dla~każdej tabeli-kandydata. Cechy opisują pozycję węzła
-w~grafie przepływu danych — to~ona, a~nie sam stopień, pozwala odróżnić
+w~grafie przepływu danych, bo~to~ona, a~nie~sam stopień, pozwala odróżnić
 prawdziwą tabelę źródłową od~tabeli osieroconej po~usunięciu zadania.
 
 \begin{table}[ht]
@@ -391,7 +394,7 @@ prawdziwą tabelę źródłową od~tabeli osieroconej po~usunięciu zadania.
 12 & \texttt{avg\_job\_in\_df} & średni stopień wejściowy sąsiednich zadań
     & charakterystyka otoczenia węzła \\
 13 & \texttt{avg\_job\_out\_df} & średni stopień wyjściowy sąsiednich
-    zadań & j.w.~— od~strony wyjść \\
+    zadań & jak~wyżej, od~strony wyjść \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -420,8 +423,9 @@ a~nie~pary obiektów.
 
 LightGBM to~implementacja gradientowego boostingu drzew decyzyjnych,
 budująca kolejne drzewa sekwencyjnie, każde minimalizując błąd resztkowy
-poprzednika. Parametr \texttt{scale\_pos\_weight} (lub~\texttt{class\_weight})
-kompensuje niezbalansowanie klas.
+poprzednika. Niezbalansowanie klas kompensuje parametr
+\texttt{class\_weight}~$=$~\texttt{balanced}, przypisujący obserwacjom wagi
+odwrotnie proporcjonalne do~liczności klasy.
 
 % ============================================================
 \subsection{Autorski detektor — LineageDetector}
@@ -434,20 +438,20 @@ Autorski detektor \texttt{LineageDetector} (klasa
 model:
 
 \begin{enumerate}
-  \item \textbf{cechy pozycji w~DAG} (z~modułu \texttt{node\_features}) —
-        lokalny opis węzła,
-  \item \textbf{score kompletności peer-consistency} (opisany poniżej) —
-        sygnał relacyjny stanowiący sedno wkładu własnego pracy,
+  \item \textbf{cechy pozycji w~DAG} (z~modułu \texttt{node\_features}),
+        czyli lokalny opis węzła,
+  \item \textbf{score kompletności peer-consistency} (opisany poniżej),
+        czyli sygnał relacyjny, na~którym opiera się~wkład własny pracy,
   \item \textbf{kalibrację prawdopodobieństw} metodą izotoniczną
-        (\texttt{CalibratedClassifierCV}) — wyjście jest~rzetelnym
-        $p(\text{zainfekowana})$, a~nie~dowolnym wynikiem.
+        (\texttt{CalibratedClassifierCV}), dzięki której wyjście
+        jest~rzetelnym $p(\text{zainfekowana})$, a~nie~dowolnym wynikiem.
 \end{enumerate}
 
-\paragraph{Score kompletności — peer-consistency.}
+\paragraph{Score kompletności peer-consistency.}
 Zaproponowany w~pracy score kompletności opiera się na~założeniu,
 że~tabela o~zerwanym lineage jest~\emph{strukturalnie niespójna}
 ze~swoimi sąsiadami (peerami) w~grafie DAG. Dla~tabeli-korzenia
-($\mathrm{in\_df} = 0$) rozważa się zbiór peerów-wejść — inne tabele
+($\mathrm{in\_df} = 0$) rozważa się~zbiór peerów-wejść, czyli inne tabele
 wpadające do~tych~samych zadań downstream. Jeśli~peerzy \emph{mają}
 producenta, a~rozpatrywana tabela nie, to~jej brak producenta jest~podejrzany:
 prawdziwe źródło danych sąsiaduje zwykle z~innymi źródłami. Symetrycznie
@@ -461,7 +465,7 @@ Formalnie dla~tabeli $t$ definiuje się:
 \]
 %
 gdzie $P(t)$ i~$C(t)$ oznaczają zbiory peerów odpowiednio po~stronie
-producenta i~konsumenta, a~$\mathbf{1}[\cdot]$ — funkcję wskaźnikową.
+producenta i~konsumenta, a~$\mathbf{1}[\cdot]$ funkcję wskaźnikową.
 Bramkowany sygnał anomalii aktywuje się~wyłącznie na~brzegu grafu:
 %
 \[
@@ -470,7 +474,7 @@ Bramkowany sygnał anomalii aktywuje się~wyłącznie na~brzegu grafu:
             \mathbf{1}[\mathrm{out\_df}(t)=0]\cdot\mathrm{cons}(t)\bigr).
 \]
 %
-Sygnał ten ma~charakter relacyjny — jest jakościowo różny od~lokalnego
+Sygnał ten~ma~charakter relacyjny. Różni się~jakościowo od~lokalnego
 stopnia węzła i~dostarcza informacji niedostępnej klasyfikatorowi
 korzystającemu wyłącznie z~cech lokalnych. Definicja jest~symetryczna
 względem obu~stron przepływu, jednak na~zbiorze DLG-DG-23 aktywna
@@ -481,12 +485,12 @@ Konsekwencje tej~własności omówiono w~sekcji~\ref{sec:waznosc}. Trzy wynikaj�
 \texttt{completeness\_anomaly}) rozszerzają wektor cech z~tabeli~\ref{tab:cechy}
 i~są~dostępne wyłącznie detektorowi LineageDetector.
 
-Bazowym estymatorem jest~Random Forest (domyślnie; wariant alternatywny —
-LightGBM). Interfejs \texttt{fit}/\texttt{score} jest~zgodny z~pozostałymi
+Bazowym estymatorem jest~domyślnie Random Forest, a~wariantem
+alternatywnym LightGBM. Interfejs \texttt{fit}/\texttt{score} jest~zgodny z~pozostałymi
 klasyfikatorami, co~umożliwia bezpośrednie porównanie w~tym~samym potoku.
 Konstrukcja detektora umożliwia badania ablacyjne: wyłączenie kalibracji
 (\texttt{calibrate=False}) izoluje jej~wpływ na~Brier score, a~wyłączenie
-cech kompletności (\texttt{use\_completeness=False}) — wpływ sygnału
+cech kompletności (\texttt{use\_completeness=False}) wpływ sygnału
 relacyjnego na~AUC.
 
 % ============================================================
@@ -593,15 +597,14 @@ label={lst:json},numbers=none,language={}]
 
 Najistotniejszym fragmentem implementacji jest~wyznaczanie relacyjnego
 score'u kompletności, zdefiniowanego wzorami w~sekcji~\ref{sec:lineage-detector}.
-Listing~\ref{lst:peer} pokazuje jego~rdzeń. Warto zwrócić uwagę na~dwa
-szczegóły, których sam wzór nie~oddaje. Po~pierwsze, zbiory peerów budowane
-są~\emph{przez zadania}: peerami tabeli po~stronie producenta są~inne tabele
-wpadające do~tych~samych zadań downstream — w~grafie dwudzielnym nie~istnieje
-bowiem bezpośrednia krawędź tabela–tabela. Po~drugie, sygnał anomalii
-jest~\emph{bramkowany}: aktywuje się~wyłącznie wtedy, gdy rozpatrywana tabela
-sama znajduje się~na~brzegu przepływu ($\mathrm{in\_df} = 0$
-lub~$\mathrm{out\_df} = 0$). Bez~tego bramkowania score mierzyłby jedynie
-własności otoczenia, nie~zaś~niespójność tabeli z~jej~otoczeniem.
+Listing~\ref{lst:peer} pokazuje jego~rdzeń. Sam wzór nie~precyzuje jednego
+szczegółu: zbiory peerów budowane są~\emph{przez zadania}. Peerami tabeli
+po~stronie producenta są~inne tabele wpadające do~tych~samych zadań
+downstream, w~grafie dwudzielnym nie~istnieje bowiem bezpośrednia krawędź
+tabela–tabela. Widoczne w~listingu bramkowanie wskaźnikami odpowiada wprost
+drugiemu ze~wzorów z~sekcji~\ref{sec:lineage-detector}; bez~niego score
+mierzyłby jedynie własności otoczenia, a~nie~niespójność tabeli
+z~jej~otoczeniem.
 
 \begin{lstlisting}[caption={Rdzeń wyznaczania score'u peer-consistency
 (moduł \texttt{completeness.py}).},label={lst:peer},language=Python]
@@ -631,8 +634,8 @@ testowego model uczy się~na~wszystkich pozostałych. Listing~\ref{lst:logo}
 przedstawia jej~szkielet. Kluczowa dla~poprawności protokołu jest~kolejność
 operacji: instancje wszystkich grafów budowane są~\emph{przed} pętlą,
 przy~wspólnym ziarnie, a~pula treningowa powstaje przez~wykluczenie grafu
-testowego z~gotowego słownika — model nie~ma~więc~dostępu do~żadnej informacji
-z~grafu testowego, także pośrednio przez~dobór usuwanych zadań.
+testowego z~gotowego słownika. Model nie~ma~więc~dostępu do~żadnej
+informacji z~grafu testowego, także pośrednio przez~dobór usuwanych zadań.
 
 \begin{lstlisting}[caption={Szkielet pętli leave-one-graph-out
 (moduł \texttt{run\_detection\_experiments.py}).},label={lst:logo},
@@ -715,12 +718,12 @@ Tabela~\ref{tab:testy} przedstawia ich~rozkład na~moduły.
 \end{tabular}
 \end{table}
 
-Testy sprawdzają nie~tylko poprawność techniczną, lecz~także dwie własności
-istotne metodycznie. Pierwsza to~\emph{brak przecieku} między zbiorem
+Poza poprawnością techniczną testy sprawdzają dwie własności istotne
+metodycznie. Pierwsza to~\emph{brak przecieku} między zbiorem
 treningowym a~testowym: test weryfikuje, że~identyfikatory grafów w~obu
 zbiorach są~rozłączne. Druga to~\emph{determinizm}: przy~ustalonym ziarnie
 losowości powtórne wykonanie symulacji daje identyczny zbiór usuniętych zadań
-i~identyczne etykiety — bez~tego liczby raportowane w~rozdziale~4
+i~identyczne etykiety. Bez~tego liczby raportowane w~rozdziale~4
 nie~byłyby~odtwarzalne.
 
 \subsection{Odtwarzalność wyników}
@@ -742,48 +745,51 @@ odtworzyć każdą tabelę rozdziału~4 niezależnie od~pozostałych.
 \label{sec:repozytorium}
 % ============================================================
 
-% [NOWA SEKCJA 3.6 — repozytorium + provenance/adaptacja algorytmów.]
-Całość implementacji opisanej w~niniejszej pracy — moduły wczytywania
-danych, symulacji broken lineage, ekstrakcji cech, metod detekcji oraz~
-ewaluacji, wraz z~testami jednostkowymi i~skryptami odtwarzającymi
-eksperymenty z~rozdziału~4 — udostępniono w~publicznym repozytorium Git
+Całość implementacji opisanej w~niniejszej pracy, obejmującą moduły
+wczytywania danych, symulacji broken lineage, ekstrakcji cech, metod
+detekcji oraz~ewaluacji, wraz z~testami jednostkowymi i~skryptami
+odtwarzającymi eksperymenty z~rozdziału~4, udostępniono w~publicznym
+repozytorium Git
 pod~adresem \texttt{https://github.com/Catcuss/magisterka-data-lineage}\footnote{Dostęp
 zweryfikowano 19~sierpnia 2026~r.}. Repozytorium zawiera instrukcję
 uruchomienia (dodatek~\ref{dod:uruchomienie}) oraz~pliki konfiguracyjne biegu
 kanonicznego, co~zapewnia odtwarzalność raportowanych wyników.
 
 Metody z~grupy heurystyk oraz~klasyczne klasyfikatory nie~są~oryginalnym
-wkładem pracy — stanowią \emph{punkty odniesienia} (baseline) zaczerpnięte
-z~literatury i~z~publicznych bibliotek, a~wkładem własnym jest~ich~
+wkładem pracy; stanowią \emph{punkty odniesienia} (baseline) zaczerpnięte
+z~literatury i~z~publicznych bibliotek. Wkładem własnym jest~ich~
 \emph{adaptacja} do~zadania detekcji zainfekowanych węzłów w~grafie lineage
 oraz~autorski detektor LineageDetector. Pochodzenie i~zakres adaptacji
 poszczególnych składników zestawiono poniżej:
 
 \begin{itemize}
-  \item \textbf{Heurystyki strukturalne} — inspirowane rodziną miar
+  \item \textbf{Heurystyki strukturalne}: inspirowane rodziną miar
         predykcji krawędzi w~grafach (Common Neighbors, Jaccard, Adamic–Adar,
-        Preferential Attachment)~\cite{KohanMarzagao2023}. Ponieważ graf
+        Preferential Attachment)~\cite{LibenNowell2007,Martinez2016}. Ponieważ graf
         przepływu danych jest~dwudzielny, miary oparte na~wspólnych sąsiadach
         są~w~nim nieskuteczne; zaadaptowano je~do~postaci \emph{scoringu
         pojedynczego węzła} opartego na~stopniu i~roli w~DAG.
-  \item \textbf{Random Forest} — implementacja z~biblioteki
+  \item \textbf{Random Forest}: implementacja z~biblioteki
         \texttt{scikit-learn}~\cite{scikit-learn}. Adaptacja: wejściem jest~
         autorski wektor cech topologicznych węzła (tab.~\ref{tab:cechy})
         zamiast cech pary obiektów; niezbalansowanie klas obsłużono przez
         \texttt{class\_weight}.
-  \item \textbf{RUSBoost} — implementacja z~biblioteki
+  \item \textbf{RUSBoost}: implementacja z~biblioteki
         \texttt{imbalanced-learn}~\cite{imblearn}, wybrana dla~bezpośredniego
         nawiązania do~pracy Boińskiego et~al.~\cite{Boinski2025}. Adaptacja:
         klasyfikacja \emph{węzła} zamiast pary, na~cechach topologicznych.
-  \item \textbf{LightGBM} — biblioteka gradientowego boostingu
-        firmy Microsoft~\cite{lightgbm}. Adaptacja: strojenie
-        \texttt{scale\_pos\_weight} pod~rozkład klas w~zadaniu detekcji węzłów.
-  \item \textbf{LineageDetector} — \emph{wkład własny}: łączy powyższe cechy
+  \item \textbf{LightGBM}: biblioteka gradientowego boostingu
+        firmy Microsoft~\cite{lightgbm,Ke2017}. Adaptacja: klasyfikacja
+        węzła na~cechach topologicznych, z~kompensacją rozkładu klas przez
+        \texttt{class\_weight}. Hiperparametrów nie~strojono — wszystkie
+        klasyfikatory porównywane są~w~konfiguracjach domyślnych
+        (por.~sekcja~\ref{sec:trafnosc}).
+  \item \textbf{LineageDetector}, \emph{wkład własny}: łączy powyższe cechy
         z~autorskim relacyjnym score kompletności peer-consistency
         (sekcja~\ref{sec:lineage-detector}) i~kalibracją izotoniczną;
         nie~ma~bezpośredniego odpowiednika w~literaturze.
 \end{itemize}
 
-Takie rozgraniczenie — komponenty zapożyczone z~jawnie wskazanym źródłem
-kontra elementy autorskie — pozwala jednoznacznie ocenić rzeczywisty wkład
+Rozgraniczenie komponentów zapożyczonych, z~jawnie wskazanym źródłem,
+od~elementów autorskich pozwala jednoznacznie ocenić rzeczywisty wkład
 pracy i~odróżnić go~od~narzędzi ogólnego przeznaczenia.

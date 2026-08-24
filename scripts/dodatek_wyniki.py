@@ -53,12 +53,13 @@ def table_for(df: pd.DataFrame, metric: str, label: str, higher: bool) -> str:
     info = df.groupby("graph")[["n_candidates", "n_infected", "reliable"]].first()
     order = sorted(wide.index, key=lambda g: int(g.replace("DLG", "")))
 
-    kierunek = "wyżej — lepiej" if higher else "niżej — lepiej"
+    kierunek = ("wyższa wartość jest lepsza" if higher
+                else "niższa wartość jest lepsza")
     lines = [
         r"\begin{table}[ht]",
         r"\centering",
         rf"\caption{{{label} dla~wszystkich 18~grafów zbioru DLG-DG-23 "
-        rf"({kierunek}). Gwiazdka przy~identyfikatorze grafu — graf odrzucony "
+        rf"({kierunek}). Gwiazdką oznaczono grafy odrzucone "
         rf"z~agregacji progiem $\mathrm{{MIN\_POS}} = 5$.}}",
         rf"\label{{tab:dodb-{metric.replace('_', '-')}}}",
         r"\footnotesize",
@@ -88,7 +89,7 @@ def table_for(df: pd.DataFrame, metric: str, label: str, higher: bool) -> str:
         r"",
         r"\vspace{0.4em}",
         r"\footnotesize Skróty metod: Stopień — anomalia stopnia, Brzeg — "
-        r"root/leaf, Łączn.\ — niska łączność jobów, Korzeń — reguła korzenia, "
+        r"root/leaf, Łączn.\ — niska łączność zadań, Korzeń — reguła korzenia, "
         r"Kompl.\ — score kompletności, RF — Random Forest, RUSB — RUSBoost, "
         r"LGBM — LightGBM, LD\textsuperscript{*} — LineageDetector (wkład "
         r"własny). Średnia liczona wyłącznie po~grafach wiarygodnych.",
