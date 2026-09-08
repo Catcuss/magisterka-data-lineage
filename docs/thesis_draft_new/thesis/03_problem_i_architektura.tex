@@ -18,7 +18,6 @@ omówiono w~sekcji~\ref{sec:algorytmy}.
 \label{sec:sformulowanie}
 % ============================================================
 
-% [PRZEPISANE POD DETEKCJĘ WĘZŁÓW — zastępuje dawną binarną klasyfikację par.]
 Graf lineage modeluje się jako skierowany graf DAG przepływu danych
 $G = (V, E)$, gdzie $V = V_{J} \cup V_{T} \cup V_{F}$ obejmuje węzły
 typu zadanie (\emph{Data Job}), tabela (\emph{Data Table}) i~pole,
@@ -54,7 +53,6 @@ opisujących pozycję węzła w~grafie DAG oraz~uczenia \emph{indukcyjnego}
 \label{sec:dane}
 % ============================================================
 
-% [ZACHOWANE z poprzedniej wersji — opis zbioru aktualny.]
 Zastosowany zbiór danych pochodzi z~pracy Chen et~al.~\cite{Chen2024}
 i~zawiera 18~grafów lineage pobranych ze~środowiska produkcyjnego
 Huawei Cloud. Dane zostały zanonimizowane: nazwy tabel i~atrybutów
@@ -62,8 +60,6 @@ zastąpiono identyfikatorami w~formacie UUID, a~schematów bazy danych
 nie~udostępniono. Zbiór opublikowano w~2024~roku jako pierwszy
 otwarty zestaw rzeczywistych grafów lineage.
 
-% [SCALONE — pełny opis struktury zbioru (przeniesiony z rozdz. 2), aby
-%  zbiór był opisany w jednym miejscu.]
 Każdy graf zawiera węzły trzech typów: \textbf{Data Job} (zapytanie SQL
 lub~zadanie ETL, ang.~\emph{Extract, Transform, Load}), \textbf{Data Table}
 (tabela lub~widok przechowujący dane) oraz~\textbf{field} (atrybut lub~kolumna
@@ -77,7 +73,6 @@ i~\emph{Data Job}); podgraf ten~ma~strukturę dwudzielną i~skierowaną,
 interpretowaną jako graf DAG. Grafy różnią się skalą: liczba węzłów waha się
 od~278 do~17~085.
 
-% [ZMIENIONE — uzasadnienie doboru: teraz „topology-only'', pod detekcję.]
 Zbiór DLG-DG-23 wybrano, ponieważ jest jedynym publicznie dostępnym
 zestawem rzeczywistych grafów lineage. Anonimizacja nazw
 węzłów ma~bezpośredni wpływ na~dobór metod: metryki podobieństwa oparte
@@ -90,13 +85,9 @@ Metoda skuteczna przy~tak ograniczonym wglądzie w~graf ma~przy~tym większą
 szansę na~zastosowanie praktyczne niż~podejścia wymagające pełnych
 metadanych.
 
-\subsection{Charakterystyka grafów}
-\label{sec:dane-opis}
-
 Tabela~\ref{tab:dlg-stats} przedstawia statystyki poszczególnych
 grafów zbioru DLG-DG-23.
 
-% [ZACHOWANE — tabela statystyk. Aktualna.]
 \begin{table}[ht]
 \centering
 \caption{Charakterystyka grafów zbioru DLG-DG-23.}
@@ -138,12 +129,14 @@ DLG18 & 17\,085 & 1\,694 & duży \\
 \label{sec:symulacja}
 % ============================================================
 
-% [NOWA SEKCJA — zastępuje dawne scenariusze A/B/C usuwania krawędzi.]
 Ponieważ zbiór DLG-DG-23 zawiera w~pełni zaobserwowane grafy lineage,
 zjawisko broken lineage symulowane jest przez~kontrolowane usuwanie
 \emph{zadań} (nie~pojedynczych krawędzi). Podejście to~wiernie odwzorowuje
 przyczynę broken lineage: zniknięcie tabeli tymczasowej lub~ukrycie logiki
 przez UDF odpowiada utracie całego węzła-zadania wraz z~jego krawędziami.
+
+\subsection{Procedura symulacji i~konstrukcja etykiet}
+\label{sec:procedura-symulacji}
 
 Kandydatami do~usunięcia są~\emph{zadania łączące}, czyli zadania mające
 co~najmniej jedną wejściową i~jedną wyjściową krawędź \emph{DATA\_FLOW}
@@ -172,7 +165,6 @@ przyczynową (jedno zdarzenie broken lineage $=$ jedno brakujące zadanie).
 \subsection{Kontrola przecieku: wykluczenie węzłów izolowanych}
 \label{sec:exclude-isolated}
 
-% [NOWA PODSEKCJA — kluczowy element uczciwości ewaluacji (pivot).]
 Usunięcie zadania może~pozbawić tabelę \emph{wszystkich} krawędzi
 przepływu danych ($\mathrm{in\_df} = 0 \land \mathrm{out\_df} = 0$).
 Ponieważ w~oryginalnych grafach tabele izolowane nie~występują, trywialna
@@ -193,7 +185,7 @@ izolowanych, ponieważ tylko wtedy można zmierzyć ich~udział wśród pozytyw�
 
 \begin{table}[ht]
 \centering
-\caption{Charakterystyka symulacji broken lineage w~zależności
+\caption[Charakterystyka symulacji broken lineage]{Charakterystyka symulacji broken lineage w~zależności
 od~parametru \texttt{removal\_ratio}. Wartości uśrednione po~18~grafach
 i~trzech ziarnach losowości (42--44). W~ostatniej kolumnie podano odsetek
 tabel zainfekowanych, które utraciły \emph{wszystkie} krawędzie przepływu
@@ -229,7 +221,6 @@ i~to~tych najłatwiejszych.
 \label{sec:architektura}
 % ============================================================
 
-% [PRZEPISANE — potok pod detekcję węzłów; loader zachowany.]
 Potok przetwarzania składa się z~czterech komponentów: modułu wczytywania
 grafów, modułu symulacji broken lineage (budowa instancji klasyfikacji
 węzłów), metod detekcji oraz~modułu ewaluacji indukcyjnej.
@@ -241,7 +232,7 @@ i~ekstrakcję cech, po~scoring detektora i~wyznaczenie metryk rankingowych.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\linewidth]{rys_potok.pdf}
-  \caption{Schemat potoku przetwarzania. Każda instancja ewaluacji
+  \caption[Schemat potoku przetwarzania]{Schemat potoku przetwarzania. Każda instancja ewaluacji
            przebiega w~protokole indukcyjnym leave-one-graph-out:
            model trenowany jest na~17~grafach, a~testowany
            na~grafie niewidzianym.}
@@ -250,16 +241,14 @@ i~ekstrakcję cech, po~scoring detektora i~wyznaczenie metryk rankingowych.
 
 \subsection{Moduł wczytywania danych}
 
-% [ZACHOWANE — loader działa tak samo niezależnie od koncepcji.]
 Dane wejściowe każdego grafu przechowywane są~w~dwóch plikach JSON:
 \texttt{DLGi-node.json} (opisy węzłów z~atrybutem \texttt{asset\_type})
 oraz~\texttt{DLGi-edge.json} (krawędzie z~atrybutami \texttt{relation\_type}
 i~\texttt{relation\_id}). Moduł \texttt{loader.py} buduje z~nich obiekt
 \texttt{nx.DiGraph} (NetworkX) i~zwraca słownik wszystkich 18~grafów.
 
-\subsection{Moduł symulacji (job\_removal)}
+\subsection{Moduł symulacji usuwania zadań}
 
-% [NOWY — zastępuje splitter/scenario_splitter krawędziowe.]
 Moduł \texttt{job\_removal.py} realizuje metodykę z~sekcji~\ref{sec:symulacja}:
 identyfikuje zadania łączące, usuwa ich podzbiór, wyznacza zbiór zainfekowanych
 tabel i~zwraca instancję (graf $G_{\mathrm{obs}}$, listę kandydatów,
@@ -268,9 +257,8 @@ etykiety, listę usuniętych zadań). Obsługuje warianty \texttt{side}
 oraz~\texttt{exclude\_isolated}. Funkcja \texttt{inductive\_split} dzieli
 identyfikatory grafów na~rozłączne zbiory treningowy i~testowy (cross-graph).
 
-\subsection{Moduł ewaluacji (node\_metrics)}
+\subsection{Moduł ewaluacji i~metryki rankingowe}
 
-% [ZMIENIONE — metryki rankingowe zamiast klasyfikacji przy progu.]
 Moduł \texttt{node\_metrics.py} wyznacza metryki rankingowe: AUC-ROC,
 AUC-PR, Precision@k, Recall@k, Hits@k oraz~Brier score. Wyniki agregowane
 są~po~grafach testowych w~protokole indukcyjnym; stosuje się powtórzenia
@@ -345,7 +333,6 @@ węzła o~relacyjny \emph{score kompletności} (peer-consistency).
 \label{sec:ml}
 % ============================================================
 
-% [ZMIENIONE — klasyfikacja WĘZŁA (nie pary). Klasyfikatory zachowane.]
 Klasyczne metody ML traktują detekcję jako~binarną klasyfikację węzła:
 wejściem jest wektor cech opisujących pozycję tabeli w~grafie DAG,
 a~wyjściem prawdopodobieństwo zainfekowania. Ze~względu na~anonimizację
@@ -361,7 +348,7 @@ prawdziwą tabelę źródłową od~tabeli osieroconej po~usunięciu zadania.
 
 \begin{table}[ht]
 \centering
-\caption{Wektor cech topologicznych węzła (moduł \texttt{node\_features}).}
+\caption[Wektor cech topologicznych węzła]{Wektor cech topologicznych węzła (moduł \texttt{node\_features}).}
 \label{tab:cechy}
 \small
 \begin{tabular}{clp{5.2cm}p{4.6cm}}
@@ -428,11 +415,10 @@ poprzednika. Niezbalansowanie klas kompensuje parametr
 odwrotnie proporcjonalne do~liczności klasy.
 
 % ============================================================
-\subsection{Autorski detektor — LineageDetector}
+\subsection{Autorski detektor LineageDetector}
 \label{sec:lineage-detector}
 % ============================================================
 
-% [NOWA SEKCJA — wkład własny pracy.]
 Autorski detektor \texttt{LineageDetector} (klasa
 \texttt{LineageHealthDetector}) łączy trzy elementy w~jeden skalibrowany
 model:
@@ -541,7 +527,7 @@ z~rozdziału~4 dawał się~odtworzyć jednym poleceniem. Listing~\ref{lst:repo}
 przedstawia strukturę katalogów.
 
 \begin{lstlisting}[caption={Struktura repozytorium (fragmenty istotne
-dla~detekcji węzłów).},label={lst:repo},numbers=none,language={}]
+dla~detekcji węzłów).},label={lst:repo},numbers=none,language={},float=htbp]
 src/
   data/
     loader.py               # wczytanie 18 grafow DLG-DG-23 z JSON
@@ -555,7 +541,7 @@ src/
     node_metrics.py         # metryki rankingowe
     run_detection_experiments.py   # bieg kanoniczny (rozdz. 4.2)
     run_ablation.py                # badanie ablacyjne (rozdz. 4.5)
-    run_cross_dataset.py           # test cross-dataset (rozdz. 4.7)
+    run_cross_dataset.py           # test cross-dataset (rozdz. 4.9)
     run_removal_sensitivity.py     # analiza wrazliwosci (rozdz. 4.6)
 scripts/
   test_istotnosci.py        # testy Wilcoxona (rozdz. 4.4)
@@ -569,14 +555,14 @@ results/                    # wyniki biegow w formacie CSV
 Każdy graf zbioru DLG-DG-23 opisany jest~parą plików JSON: lista węzłów
 z~atrybutem \texttt{asset\_type} oraz~lista krawędzi z~atrybutami
 \texttt{relation\_id} i~\texttt{relation\_type} (listing~\ref{lst:json}).
-Moduł \texttt{loader.py} przekształca je~w~obiekt \texttt{nx.DiGraph},
-przenosząc typ węzła i~typ relacji do~atrybutów grafu — dzięki temu
+Moduł \texttt{loader.py} przekształca je~w~obiekt \texttt{nx.DiGraph}
+i~przenosi typ węzła oraz~typ relacji do~atrybutów grafu. Dzięki temu
 pozostałe moduły filtrują podgraf przepływu danych bez~ponownego sięgania
 do~plików.
 
 \begin{lstlisting}[caption={Fragment plików wejściowych
 \texttt{DLGi-node.json} i~\texttt{DLGi-edge.json} (identyfikatory skrócone).},
-label={lst:json},numbers=none,language={}]
+label={lst:json},numbers=none,language={},float=htbp]
 // DLG1-node.json
 {"nodes": [
   {"asset_id": "3f2a...c81", "asset_type": "Data Table"},
@@ -607,7 +593,7 @@ mierzyłby jedynie własności otoczenia, a~nie~niespójność tabeli
 z~jej~otoczeniem.
 
 \begin{lstlisting}[caption={Rdzeń wyznaczania score'u peer-consistency
-(moduł \texttt{completeness.py}).},label={lst:peer},language=Python]
+(moduł \texttt{completeness.py}).},label={lst:peer},language=Python,float=htbp]
 # Strona producenta: peerzy = inne wejscia do downstream-jobow tej tabeli.
 downstream_jobs = [v for _, v, d in G.out_edges(t, data=True)
                    if d.get("relation_type") == "DATA_FLOW"
@@ -639,7 +625,7 @@ informacji z~grafu testowego, także pośrednio przez~dobór usuwanych zadań.
 
 \begin{lstlisting}[caption={Szkielet pętli leave-one-graph-out
 (moduł \texttt{run\_detection\_experiments.py}).},label={lst:logo},
-language=Python]
+language=Python,float=htbp]
 datasets = build_datasets(graphs, removal_ratio, seed, side,
                           exclude_isolated=exclude_isolated)
 for test_g in datasets:
@@ -779,9 +765,9 @@ poszczególnych składników zestawiono poniżej:
         nawiązania do~pracy Boińskiego et~al.~\cite{Boinski2025}. Adaptacja:
         klasyfikacja \emph{węzła} zamiast pary, na~cechach topologicznych.
   \item \textbf{LightGBM}: biblioteka gradientowego boostingu
-        firmy Microsoft~\cite{lightgbm,Ke2017}. Adaptacja: klasyfikacja
+        firmy Microsoft~\cite{Ke2017}. Adaptacja: klasyfikacja
         węzła na~cechach topologicznych, z~kompensacją rozkładu klas przez
-        \texttt{class\_weight}. Hiperparametrów nie~strojono — wszystkie
+        \texttt{class\_weight}. Hiperparametrów nie~strojono; wszystkie
         klasyfikatory porównywane są~w~konfiguracjach domyślnych
         (por.~sekcja~\ref{sec:trafnosc}).
   \item \textbf{LineageDetector}, \emph{wkład własny}: łączy powyższe cechy

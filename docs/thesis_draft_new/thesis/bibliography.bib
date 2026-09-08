@@ -1,7 +1,5 @@
 % ============================================================
-%  Bibliografia — Thesis.tex (NOWA KONCEPCJA: detekcja chorych węzłów)
 %  Format: BibTeX (plain.bst)
-%  Bazuje na bibliografii z thesis_draft, rozszerzona o prace z pivotu.
 % ============================================================
 
 % ------------------------------------------------------------
@@ -46,35 +44,44 @@
 }
 
 % [4] Kohan Marzagão et al. — Provenance Graph Kernel (PGK) — metryki podobieństwa grafów
-@article{KohanMarzagao2023,
+@article{KohanMarzagao2025,
   author    = {Kohan Marzag{\~a}o, David and Huynh, Trung Dong and Helal, Ayah
                and Baccas, Sean and Moreau, Luc},
   title     = {{Provenance Graph Kernel}},
-  journal   = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  year      = {2023},
+  journal   = {IEEE Transactions on Knowledge and Data Engineering},
+  volume    = {37},
+  number    = {6},
+  pages     = {3653--3668},
+  year      = {2025},
+  doi       = {10.1109/TKDE.2025.3543097}
 }
 
 % [5] Psallidas et al. — OneProvenance (log analysis, kontekst)
-@article{Psallidas2022,
+@article{Psallidas2023,
   author    = {Psallidas, Fotis and Agrawal, Ashvin and Sugunan, Chandru
                and Ibrahim, Khaled and Karanasos, Konstantinos
                and Camacho-Rodr{\'i}guez, Jes{\'u}s and Floratou, Avrilia
                and Curino, Carlo and Ramakrishnan, Raghu},
-  title     = {{ONEPROVENANCE: Efficient Extraction of Dynamic Coarse-Grained
+  title     = {{OneProvenance: Efficient Extraction of Dynamic Coarse-Grained
                Provenance From Database Query Event Logs}},
-  journal   = {CoRR},
-  volume    = {abs/2210.14047},
-  year      = {2022},
-  note      = {Technical Report; deployed in Microsoft Purview}
+  journal   = {Proceedings of the VLDB Endowment},
+  volume    = {16},
+  number    = {12},
+  pages     = {3662--3675},
+  year      = {2023},
+  doi       = {10.14778/3611540.3611555},
+  note      = {Wdrozone w Microsoft Purview}
 }
 
 % [6] Shan et al. — KPI-HGNN (heterogeniczne GNN; kontekst dla anomalii węzłów w grafach provenance)
-@article{Shan2023,
+@article{Shan2024,
   author    = {Shan, Dibin and Du, Xuehui and Wang, Wenjuan and Wang, Na and Liu, Aodi},
   title     = {{KPI-HGNN: Key Provenance Identification Based on a Heterogeneous
                Graph Neural Network for Big Data Access Control}},
   journal   = {Information Sciences},
-  year      = {2023},
+  volume    = {659},
+  pages     = {120059},
+  year      = {2024},
   publisher = {Elsevier},
 }
 
@@ -86,6 +93,7 @@
                UDF processing}},
   journal   = {The VLDB Journal},
   volume    = {32},
+  number    = {5},
   pages     = {963--983},
   year      = {2023},
   doi       = {10.1007/s00778-022-00769-7}
@@ -116,8 +124,6 @@
 }
 
 % ------------------------------------------------------------
-%  NOWE POZYCJE — kluczowe dla nowej koncepcji (pivot 2026-06-09)
-%  UWAGA: pola do uzupełnienia/weryfikacji oznaczono TODO.
 % ------------------------------------------------------------
 
 % Dutkiewicz, Misiorek, Wrembel — KG + indukcyjny GNN do predykcji linków lineage
@@ -136,7 +142,7 @@
 
 % Andrzejewski, Boiński, Wrembel — odzyskiwanie funkcji liniowej i warunku
 % selekcji dla obiektów select-project (warsztat DARLI-AP, EDBT/ICDT 2026).
-@inproceedings{Andrzejewski2025,
+@inproceedings{Andrzejewski2026,
   author    = {Andrzejewski, Witold and Boi{\'n}ski, Pawe{\l} and Wrembel, Robert},
   title     = {{On Discovering Provenance of Data Warehouse Objects Created
                by Select-Project Queries}},
@@ -159,9 +165,6 @@
   publisher = {VLDB Endowment},
   year      = {2025},
 }
-
-% (Opcjonalnie) referencja do kalibracji prawdopodobieństw — jeśli opisujesz kalibrację w LineageDetector.
-% TODO: dodać właściwe źródło (np. Platt scaling / isotonic regression), jeśli będzie potrzebne.
 
 % ------------------------------------------------------------
 %  BIBLIOTEKI NARZĘDZIOWE (pochodzenie klasycznych klasyfikatorów, sekcja 3.6)
@@ -190,16 +193,6 @@
   number  = {17},
   pages   = {1--5},
   year    = {2017}
-}
-
-% LightGBM — gradientowy boosting drzew decyzyjnych
-@inproceedings{lightgbm,
-  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng
-               and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
-  title     = {{LightGBM: A Highly Efficient Gradient Boosting Decision Tree}},
-  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-  volume    = {30},
-  year      = {2017}
 }
 
 @article{Demsar2006,
@@ -263,7 +256,7 @@
 
 @misc{OpenLineage,
   author = {{OpenLineage Project}},
-  title  = {{OpenLineage}: An Open Standard for Data Lineage Collection},
+  title  = {{OpenLineage}: An Open Framework for Data Lineage Collection and Analysis},
   note   = {Projekt Linux Foundation, https://openlineage.io/},
   year   = {2024}
 }
@@ -360,7 +353,7 @@
                Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
   title     = {{LightGBM}: A Highly Efficient Gradient Boosting Decision Tree},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-  pages     = {3146--3154},
+  pages     = {3149--3157},
   year      = {2017}
 }
 
@@ -458,9 +451,10 @@
              Cubero, Juan-Carlos},
   title   = {A Survey of Link Prediction in Complex Networks},
   journal = {ACM Computing Surveys},
-  volume  = {49},
-  number  = {4},
-  pages   = {1--33},
+  volume    = {49},
+  number    = {4},
+  pages     = {1--33},
+  articleno = {69},
   year    = {2016}
 }
 
