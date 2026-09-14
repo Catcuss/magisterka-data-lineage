@@ -39,9 +39,7 @@ _VALID_TYPE_PAIRS = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Klasyfikacja ról węzłów w podgrafie DATA_FLOW
-# ---------------------------------------------------------------------------
 
 def classify_table_roles(G: nx.DiGraph) -> dict[str, list]:
     """
@@ -90,9 +88,7 @@ def classify_table_roles(G: nx.DiGraph) -> dict[str, list]:
     return roles
 
 
-# ---------------------------------------------------------------------------
 # Podział strukturalny
-# ---------------------------------------------------------------------------
 
 def scenario_split(
     G: nx.DiGraph,

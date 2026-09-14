@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Generacja rysunków do rozdz. 3 i 4 pracy magisterskiej (detekcja chorych węzłów).
 
@@ -23,7 +22,7 @@ RESULTS = ROOT / "results"
 FIGDIR = ROOT / "docs" / "thesis_draft_new" / "thesis" / "figures"
 FIGDIR.mkdir(parents=True, exist_ok=True)
 
-# ── styl spójny dla wszystkich rysunków ─────────────────────────────
+# Styl spójny dla wszystkich rysunków.
 plt.rcParams.update({
     "font.family": "DejaVu Sans",
     "font.size": 10,
@@ -66,9 +65,7 @@ def _save(fig, name):
     print(f"  zapisano  figures/{name}.pdf (+.png)")
 
 
-# ════════════════════════════════════════════════════════════════════
 # RYSUNEK 1 — schemat potoku przetwarzania
-# ════════════════════════════════════════════════════════════════════
 def fig_pipeline():
     fig, ax = plt.subplots(figsize=(9.2, 2.5))
     ax.set_xlim(0, 10)
@@ -111,12 +108,9 @@ def fig_pipeline():
     _save(fig, "rys_potok")
 
 
-# ════════════════════════════════════════════════════════════════════
 # RYSUNEK 2 — mały graf przed i po usunięciu jobu (infected)
-# ════════════════════════════════════════════════════════════════════
 def _draw_lineage(ax, removed):
     """Rysuje przykładowy podgraf lineage; removed=True → job J1 usunięty."""
-    # pozycje węzłów
     T = {
         "T1": (0.6, 3.2), "T2": (0.6, 1.4),
         "T3": (3.4, 2.3),
@@ -173,7 +167,6 @@ def fig_before_after():
     _draw_lineage(axes[1], removed=True)
     axes[1].set_title("(b) Po usunięciu jobu J1", fontsize=10)
 
-    # legenda
     from matplotlib.lines import Line2D
     from matplotlib.patches import Patch
     legend = [
@@ -189,9 +182,7 @@ def fig_before_after():
     _save(fig, "rys_graf_przed_po")
 
 
-# ════════════════════════════════════════════════════════════════════
-# RYSUNEK 3 — AUC-ROC per algorytm: uczciwy vs napompowany
-# ════════════════════════════════════════════════════════════════════
+# RYSUNEK 3 — AUC-ROC per algorytm: uczciwy vs zawyżony
 def fig_auc_bars():
     honest = pd.read_csv(RESULTS / "agregat_detekcja.csv").set_index("algorithm")
     infl = pd.read_csv(RESULTS / "agregat_detekcja_napompowany.csv").set_index("algorithm")
@@ -204,7 +195,7 @@ def fig_auc_bars():
     fig, ax = plt.subplots(figsize=(8.6, 5.0))
     ax.barh(y + hgt / 2, infl.loc[order, "auc_roc_mean"], height=hgt,
             xerr=infl.loc[order, "auc_roc_std"], error_kw=dict(lw=0.8, alpha=0.5),
-            color="#c9c9c9", edgecolor="#888", label="Wariant napompowany (n=10)")
+            color="#c9c9c9", edgecolor="#888", label="Wariant zawyżony (n=10)")
     ax.barh(y - hgt / 2, honest.loc[order, "auc_roc_mean"], height=hgt,
                    xerr=honest.loc[order, "auc_roc_std"],
                    error_kw=dict(lw=0.8, alpha=0.6),
@@ -231,15 +222,13 @@ def fig_auc_bars():
     ax.legend(loc="lower right", frameon=True, fontsize=8.5)
     fig.text(0.01, -0.02,
              "* wkład własny. Warianty uśrednione po różnych zbiorach grafów "
-             "wiarygodnych (uczciwy 8, napompowany 10) — nie odejmować 1:1.",
+             "wiarygodnych (uczciwy 8, zawyżony 10) — nie odejmować 1:1.",
              fontsize=7.2, color="#555")
     fig.tight_layout()
     _save(fig, "rys_auc_uczciwy_napompowany")
 
 
-# ════════════════════════════════════════════════════════════════════
 # RYSUNEK 4 — wrażliwość na removal_ratio (sweep)
-# ════════════════════════════════════════════════════════════════════
 def fig_sensitivity():
     # dane wprost ze sweepu w results/_faza2_runs.txt
     ratios = [0.05, 0.10, 0.20, 0.30]

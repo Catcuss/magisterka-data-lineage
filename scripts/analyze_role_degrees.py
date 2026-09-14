@@ -139,7 +139,6 @@ def plot_boxplot(role_degrees: dict, out_path: Path) -> None:
     axes[1].set_title("Rozkład stopni per rola ETL\n(bez outlierów, do p95)")
     axes[1].grid(axis="y", alpha=0.3)
 
-    # Adnotacja z medianami
     for ax, bp_obj in [(axes[0], bp), (axes[1], bp2)]:
         for i, d in enumerate(data):
             med = np.median(d)

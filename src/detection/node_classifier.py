@@ -34,9 +34,7 @@ except ImportError:  # pragma: no cover
     _LGBM_AVAILABLE = False
 
 
-# ---------------------------------------------------------------------------
 # Heurystyki anomalii (bez uczenia)
-# ---------------------------------------------------------------------------
 # Indeksy cech (zgodne z node_features.feature_names()):
 #   2=degree, 7=is_root, 8=is_leaf, 10=n_job_neighbors
 
@@ -70,9 +68,7 @@ class HeuristicNodeScorer:
         raise AssertionError("unreachable")
 
 
-# ---------------------------------------------------------------------------
 # Klasyczne ML na cechach węzła (protokół indukcyjny)
-# ---------------------------------------------------------------------------
 
 ML_MODELS = ["RandomForest", "RUSBoost", "LightGBM"]
 

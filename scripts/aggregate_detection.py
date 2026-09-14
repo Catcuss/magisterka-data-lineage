@@ -35,7 +35,6 @@ ALGO_ORDER = [
     "RandomForest", "RUSBoost", "LightGBM",
     "LineageDetector",
 ]
-# Ładne etykiety do tabeli.
 ALGO_LABELS = {
     "degree_anomaly":       "Anomalia stopnia",
     "boundary":             "Brzeg (root/leaf)",

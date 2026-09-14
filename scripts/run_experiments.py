@@ -41,10 +41,6 @@ from algorithms.node2vec_ml import Node2VecMLPClassifier
 from evaluation.metrics import tune_and_evaluate
 
 
-# ---------------------------------------------------------------------------
-# Konfiguracja
-# ---------------------------------------------------------------------------
-
 DEFAULT_DLGS = [1, 2, 3, 4]   # małe grafy — szybki podgląd
 ALL_DLGS     = list(range(1, 19))
 
@@ -68,10 +64,6 @@ ML_MODELS = {
     "RUSBoost-18(ETL)": ETLAwareRUSBoostClassifier,
 }
 
-
-# ---------------------------------------------------------------------------
-# Uruchomienie jednego grafu
-# ---------------------------------------------------------------------------
 
 def run_one(dlg_id: int, seed: int, run_ml: bool,
             val_ratio: float = 0.2) -> list[dict]:
@@ -105,16 +97,11 @@ def run_one(dlg_id: int, seed: int, run_ml: bool,
     ]
 
 
-# ---------------------------------------------------------------------------
-# Drukowanie tabeli
-# ---------------------------------------------------------------------------
-
 def print_table(all_results: list[dict]):
     if not all_results:
         print("Brak wyników.")
         return
 
-    # Nagłówek
     COL = 24
     print()
     print("=" * 100)
@@ -152,9 +139,7 @@ def print_table(all_results: list[dict]):
             print(f"  {g}: {best['algorithm']:<24}  F1={best['f1']:.3f}  AUC-ROC={best['auc_roc']:.3f}")
 
 
-# ---------------------------------------------------------------------------
 # Eksperymenty scenariuszowe A / B / C
-# ---------------------------------------------------------------------------
 
 def _run_algorithms(G_train, splits, run_ml, seed) -> list[dict]:
     """
@@ -175,7 +160,7 @@ def _run_algorithms(G_train, splits, run_ml, seed) -> list[dict]:
 
     results = []
 
-    # --- Heurystyki ---
+    # Heurystyki
     val_scores_dict  = score_all_methods(G_train, val_edges) if val_edges else {}
     test_scores_dict = score_all_methods(G_train, test_edges)
     for method in HEURISTICS:
@@ -187,7 +172,7 @@ def _run_algorithms(G_train, splits, run_ml, seed) -> list[dict]:
     if not run_ml:
         return results
 
-    # --- Modele ML ---
+    # Modele ML
     for model_name, ModelClass in ML_MODELS.items():
         try:
             clf = ModelClass(seed=seed)
@@ -292,10 +277,6 @@ def print_scenario_table(all_results: list[dict]):
             print(f"  {g} [{sc}]: {best['algorithm']:<24}  F1={best['f1']:.3f}  AUC-ROC={best['auc_roc']:.3f}")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 _RESULTS_DIR = _PROJECT_ROOT / "results"
 
 _CSV_FIELDS_BASE = [
@@ -351,7 +332,7 @@ def main():
 
     t0 = time.time()
 
-    # --- Losowy split (zawsze) ---
+    # Losowy split (zawsze)
     print(">>> Losowy split 60/20/20")
     all_results = []
     for dlg_id in dlg_ids:
@@ -361,7 +342,7 @@ def main():
     save_csv(all_results, _RESULTS_DIR / "wyniki_random_split.csv")
     print(f"Wyniki zapisane: {_RESULTS_DIR / 'wyniki_random_split.csv'}")
 
-    # --- Scenariusze (opcjonalnie) ---
+    # Scenariusze (opcjonalnie)
     if args.scenarios:
         print("\n>>> Scenariusze strukturalne A/B/C")
         sc_results = []

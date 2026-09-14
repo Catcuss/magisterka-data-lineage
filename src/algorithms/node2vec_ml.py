@@ -117,7 +117,7 @@ class Node2VecMLPClassifier:
         """
         G_und = G_train.to_undirected()
 
-        # --- Krok 1: Node2Vec embeddingi ---
+        # Krok 1: embeddingi Node2Vec
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             n2v = _Node2Vec(
@@ -140,7 +140,7 @@ class Node2VecMLPClassifier:
             if str(node) in model.wv
         }
 
-        # --- Krok 2: MLP na embedding krawędzi ---
+        # Krok 2: MLP na embeddingach krawędzi
         edges = pos_train + neg_train
         y = np.array([1] * len(pos_train) + [0] * len(neg_train))
         X = self._edge_features(edges)
@@ -179,8 +179,6 @@ class Node2VecMLPClassifier:
         if mask.sum() > 0:
             scores[mask] = self.mlp.predict_proba(X[mask])[:, 1]
         return scores
-
-    # ------------------------------------------------------------------
 
     def _edge_features(self, edges: list[tuple]) -> np.ndarray:
         """Embedding krawędzi: hadamard(emb_u, emb_v)."""

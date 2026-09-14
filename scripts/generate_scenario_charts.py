@@ -22,9 +22,6 @@ _TXT  = _PROJECT_ROOT / "results" / "wyniki_scenariusze.txt"
 _OUT  = _PROJECT_ROOT / "results" / "figures"
 _OUT.mkdir(parents=True, exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# Parser
-# ---------------------------------------------------------------------------
 
 ALGO_LABELS = {
     "preferential_attachment": "PA",
@@ -115,9 +112,7 @@ def parse_file(path: Path) -> list[dict]:
     return records
 
 
-# ---------------------------------------------------------------------------
 # Wykres: grouped bar chart — mean AUC-ROC per algorytm × scenariusz
-# ---------------------------------------------------------------------------
 
 def plot_scenarios(records: list[dict]) -> None:
     if not records:
@@ -200,9 +195,7 @@ def plot_scenarios(records: list[dict]) -> None:
     print(f"Zapisano: {out}")
 
 
-# ---------------------------------------------------------------------------
 # Druk podsumowania w konsoli
-# ---------------------------------------------------------------------------
 
 def print_summary(records: list[dict]) -> None:
     from collections import defaultdict
@@ -220,10 +213,6 @@ def print_summary(records: list[dict]) -> None:
                 print(f"{sc:<5} {algo:<16} {np.mean(vals):>12.3f} {len(vals):>4}")
         print()
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main():
     print(f"Wczytuję: {_TXT}")

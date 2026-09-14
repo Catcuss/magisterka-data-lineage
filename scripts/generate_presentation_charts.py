@@ -80,9 +80,7 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-# ---------------------------------------------------------------------------
 # Wykres 1: mean AUC-ROC per algorytm (bar chart poziomy)
-# ---------------------------------------------------------------------------
 
 def plot_auc_barplot(df: pd.DataFrame) -> None:
     means = (
@@ -104,7 +102,6 @@ def plot_auc_barplot(df: pd.DataFrame) -> None:
     ax.text(0.501, -0.7, "AUC=0.5\n(losowe)", fontsize=7.5, color="black",
             alpha=0.7, va="top")
 
-    # Wartości na słupkach
     for bar, val in zip(bars, values):
         if not np.isnan(val):
             ax.text(val + 0.004, bar.get_y() + bar.get_height() / 2,
@@ -136,9 +133,7 @@ def plot_auc_barplot(df: pd.DataFrame) -> None:
     print(f"Zapisano: {out}")
 
 
-# ---------------------------------------------------------------------------
 # Wykres 2: heatmap AUC-ROC algorytmy x grafy
-# ---------------------------------------------------------------------------
 
 def plot_auc_heatmap(df: pd.DataFrame) -> None:
     # Tylko sensowne algorytmy (pomijamy CN/Jaccard/AA — zawsze NaN)
@@ -164,7 +159,6 @@ def plot_auc_heatmap(df: pd.DataFrame) -> None:
     ax.set_xticklabels(graphs, rotation=45, ha="right", fontsize=9)
     ax.set_yticklabels(labels_y, fontsize=9)
 
-    # Wartości w komórkach
     for i in range(len(algos_show)):
         for j in range(len(graphs)):
             val = pivot.values[i, j]
@@ -197,9 +191,7 @@ def plot_auc_heatmap(df: pd.DataFrame) -> None:
     print(f"Zapisano: {out}")
 
 
-# ---------------------------------------------------------------------------
 # Wykres 3: feature importance RF-11 (dane z implementation_summary)
-# ---------------------------------------------------------------------------
 
 def plot_feature_importance() -> None:
     # Dane z wytrenowanego RF na DLG-DG-23 (agregacja)
@@ -236,7 +228,6 @@ def plot_feature_importance() -> None:
     ax.axvline(0.05, color="gray", linestyle=":", linewidth=1, alpha=0.6)
     ax.grid(axis="x", alpha=0.3)
 
-    # Adnotacja
     ax.annotate("cechy ETL-aware\n(flow_depth, role)\ndodano tutaj",
                 xy=(0.046, 3.5), xytext=(0.25, 3.5),
                 arrowprops=dict(arrowstyle="->", color="navy"),
@@ -248,10 +239,6 @@ def plot_feature_importance() -> None:
     plt.close()
     print(f"Zapisano: {out}")
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main():
     print("Wczytuję wyniki...")

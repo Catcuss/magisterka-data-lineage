@@ -13,7 +13,12 @@
       "Skill(humanizer)",
       "Skill(humanizer:*)",
       "Bash(latexmk -pdf -interaction=nonstopmode -halt-on-error Thesis.tex)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(\"C:/Users/Maria/AppData/Local/Programs/Python/Python310/python.exe\" -)",
+      "Bash(mkdir -p /c/Users/Maria/Desktop/MAGISTERKA/data/external/dutkiewicz)",
+      "Bash(cp /c/Users/Maria/AppData/Local/Temp/claude/c--Users-Maria-Desktop-MAGISTERKA/6ba47002-0c92-4aa7-a6f7-0e6f3e41e741/scratchpad/lineage/csv/train/DataLineage.csv /c/Users/Maria/Desktop/MAGISTERKA/data/external/dutkiewicz/train_DataLineage.csv)",
+      "Bash(cp /c/Users/Maria/AppData/Local/Temp/claude/c--Users-Maria-Desktop-MAGISTERKA/6ba47002-0c92-4aa7-a6f7-0e6f3e41e741/scratchpad/lineage/csv/test/DataLineage.csv /c/Users/Maria/Desktop/MAGISTERKA/data/external/dutkiewicz/test_DataLineage.csv)",
+      "Bash(cp /c/Users/Maria/AppData/Local/Temp/claude/c--Users-Maria-Desktop-MAGISTERKA/6ba47002-0c92-4aa7-a6f7-0e6f3e41e741/scratchpad/lineage/readme.md /c/Users/Maria/Desktop/MAGISTERKA/data/external/dutkiewicz/SOURCE_readme.md)"
     ]
   }
 }

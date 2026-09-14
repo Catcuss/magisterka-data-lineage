@@ -40,9 +40,7 @@ _FIGURES_DIR  = _PROJECT_ROOT / "results" / "figures"
 
 DEFAULT_DLGS = [1, 2, 3, 4]
 
-# ---------------------------------------------------------------------------
 # Siatka wag do przeszukania
-# ---------------------------------------------------------------------------
 
 W_INTERMEDIATE = [1.5, 2.0, 3.0, 5.0, 8.0]
 W_SOURCE       = [0.75, 1.0, 1.25, 1.5, 2.0]
@@ -54,9 +52,7 @@ BASELINE_PA      = (1.0, 1.0, 1.0, 0.5)   # de facto PA bez isolated
 BASELINE_CURRENT = (3.0, 1.5, 1.0, 0.5)   # wagi z heuristics.py
 
 
-# ---------------------------------------------------------------------------
 # RWPA z dowolnymi wagami (bez modyfikacji heuristics.py)
-# ---------------------------------------------------------------------------
 
 def _role_weight_custom(G, node,
                         w_interm: float, w_source: float,
@@ -85,9 +81,7 @@ def score_rwpa_custom(G_train, edges, w_interm, w_source, w_sink, w_isolated):
     return np.array(scores)
 
 
-# ---------------------------------------------------------------------------
 # Ewaluacja jednej kombinacji wag na jednym grafie
-# ---------------------------------------------------------------------------
 
 def eval_one_graph(dlg_id: str, seed: int,
                    w_interm: float, w_source: float,
@@ -117,9 +111,7 @@ def eval_one_graph(dlg_id: str, seed: int,
     return m
 
 
-# ---------------------------------------------------------------------------
 # Główna pętla grid search
-# ---------------------------------------------------------------------------
 
 def run_grid_search(dlg_ids: list[str], seed: int) -> list[dict]:
     weight_combos = list(itertools.product(
@@ -172,9 +164,7 @@ def run_grid_search(dlg_ids: list[str], seed: int) -> list[dict]:
     return all_rows
 
 
-# ---------------------------------------------------------------------------
 # Analiza wyników
-# ---------------------------------------------------------------------------
 
 def analyze_results(all_rows: list[dict]) -> dict:
     """Agreguje AUC-ROC per kombinacja wag i zwraca najlepsze."""
@@ -287,7 +277,6 @@ def plot_heatmap(summary: list[dict], out_path: Path) -> None:
     ax.set_title("Grid search RWPA: mean AUC-ROC na zbiorze walidacyjnym\n"
                  "(w_sink=1.0 stały, w_isolated=0.5 stały)")
 
-    # Wartości w komórkach
     for i in range(len(w_i_vals)):
         for j in range(len(w_s_vals)):
             val = matrix[i, j]
@@ -338,10 +327,6 @@ def save_csvs(all_rows: list[dict], summary: list[dict]) -> None:
         writer.writerows(summary)
     print(f"Najlepsze wagi CSV: {best_path}")
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(

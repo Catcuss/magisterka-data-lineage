@@ -115,9 +115,7 @@ def score_all_methods(
     }
 
 
-# ---------------------------------------------------------------------------
 # Implementacje poszczególnych heurystyk
-# ---------------------------------------------------------------------------
 
 def _neighbors(G: nx.Graph, node) -> set:
     """Zbiór sąsiadów węzła (z wykluczeniem samego siebie)."""

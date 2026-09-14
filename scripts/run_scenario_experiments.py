@@ -70,8 +70,6 @@ SCENARIO_LABELS = {
 }
 
 
-# ---------------------------------------------------------------------------
-
 def run_one(dlg_id: int, scenario: str, seed: int, run_ml: bool,
             val_ratio: float = 0.2, neg_ratio: float = 5.0) -> list[dict]:
     label = f"DLG{dlg_id}"
@@ -136,8 +134,6 @@ def run_one(dlg_id: int, scenario: str, seed: int, run_ml: bool,
     return results
 
 
-# ---------------------------------------------------------------------------
-
 _AGG_METRICS = ["precision", "recall", "f1", "auc_roc", "auc_pr", "hits_at_k"]
 
 
@@ -191,8 +187,6 @@ def run_repeated(dlg_id: int, scenario: str, seeds: list[int], run_ml: bool,
     return aggregated
 
 
-# ---------------------------------------------------------------------------
-
 def print_table(all_results: list[dict], scenarios: list[str]):
     if not all_results:
         print("Brak wyników.")
@@ -230,7 +224,7 @@ def print_table(all_results: list[dict], scenarios: list[str]):
 
     print(f"\n  ! = test_pos < {MIN_TEST_POS}: metryki o dużym rozrzucie, wyłączone z agregacji.")
 
-    # Podsumowanie: średni AUC-ROC / Hits@k PER ALGORYTM (bez cherry-pickingu).
+    # Podsumowanie: średni AUC-ROC / Hits@k per algorytm.
     # Liczone tylko na grafach wiarygodnych (test_pos ≥ MIN_TEST_POS).
     print(f"\n{'='*108}")
     print("PODSUMOWANIE — średni AUC-ROC i Hits@k per algorytm (tylko grafy wiarygodne)")
@@ -256,8 +250,6 @@ def print_table(all_results: list[dict], scenarios: list[str]):
             else:
                 print(f"  {alg:<24} {'—':>12} {'—':>12} {0:>9}")
 
-
-# ---------------------------------------------------------------------------
 
 _DEFAULT_CSV = _PROJECT_ROOT / "results" / "wyniki_scenariusze.csv"
 

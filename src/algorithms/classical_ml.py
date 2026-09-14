@@ -43,9 +43,7 @@ _ASSET_TYPE_MAP = {"Data Table": 0, "Data Job": 1, "Data Field": 2}
 _NO_PATH_VALUE = 999  # wartość długości ścieżki gdy brak połączenia
 
 
-# ---------------------------------------------------------------------------
 # Klasa bazowa — ekstrakcja cech wspólna dla wszystkich modeli ML
-# ---------------------------------------------------------------------------
 
 class _BaseGraphClassifier:
     """
@@ -111,9 +109,7 @@ class _BaseGraphClassifier:
             "has_path", "shortest_path",
         ]
 
-    # ------------------------------------------------------------------
     # Ekstrakcja cech (identyczna dla wszystkich modeli)
-    # ------------------------------------------------------------------
 
     def _extract_features(
         self,
@@ -173,9 +169,7 @@ class _BaseGraphClassifier:
         ]
 
 
-# ---------------------------------------------------------------------------
 # Konkretne modele
-# ---------------------------------------------------------------------------
 
 class GraphMLClassifier(_BaseGraphClassifier):
     """
@@ -266,9 +260,7 @@ class LightGBMGraphClassifier(_BaseGraphClassifier):
         )
 
 
-# ---------------------------------------------------------------------------
 # ETL-aware: cechy flow-position (7 dodatkowych cech)
-# ---------------------------------------------------------------------------
 
 def _multi_source_bfs(G: nx.DiGraph, sources: list) -> dict:
     """BFS z wielu źródeł. Zwraca minimalną odległość od zbioru sources."""

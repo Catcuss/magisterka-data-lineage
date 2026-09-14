@@ -40,11 +40,11 @@ METRIC_LABELS = {
     "brier": "Brier",
 }
 
-# Rodziny hipotez. Poprawkę Holma stosujemy W OBRĘBIE RODZINY, nie na wszystkich
-# ośmiu porównaniach naraz. Powód jest metodyczny, nie oportunistyczny: przy 8 parach
-# dokładny test Wilcoxona daje minimalne osiągalne p = 2/2^8 = 0,0078, więc korekta
-# na 8 porównaniach podnosi próg do 8 x 0,0078 = 0,0625 — żadna różnica NIE MOŻE
-# wtedy wyjść istotna, niezależnie od danych. Podział na dwie rodziny odpowiada
+# Rodziny hipotez. Poprawkę Holma stosujemy w obrębie rodziny, a nie na wszystkich
+# ośmiu porównaniach naraz, bo przy 8 parach dokładny test Wilcoxona daje minimalne
+# osiągalne p = 2/2^8 = 0,0078, więc korekta na 8 porównaniach podnosi próg do
+# 8 x 0,0078 = 0,0625 i żadna różnica nie mogłaby wyjść istotna, niezależnie od
+# danych. Podział na dwie rodziny odpowiada
 # dwóm odrębnym pytaniom badawczym pracy: (1) czy uczenie bije heurystyki,
 # (2) czy autorski detektor bije klasyczne klasyfikatory.
 FAMILIES = {

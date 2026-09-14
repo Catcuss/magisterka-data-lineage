@@ -134,7 +134,6 @@ def draw_clean_graph(G: nx.DiGraph, title: str, out_path: str):
 
     node_colors = [COLORS.get(G.nodes[n].get("asset_type", ""), "#888") for n in G.nodes()]
 
-    # Rozmiar figury
     figsize = (max(14, n // 2), max(8, n // 3))
     node_size = max(400, 1200 - n * 20)
     font_size = max(7, 11 - n // 10)
@@ -142,7 +141,6 @@ def draw_clean_graph(G: nx.DiGraph, title: str, out_path: str):
     fig, ax = plt.subplots(figsize=figsize, facecolor="white")
     ax.set_facecolor("white")
 
-    # Krawędzie
     nx.draw_networkx_edges(
         G, pos,
         edge_color=EDGE_COLOR,
@@ -158,7 +156,6 @@ def draw_clean_graph(G: nx.DiGraph, title: str, out_path: str):
         min_target_margin=15,
     )
 
-    # Węzły
     nx.draw_networkx_nodes(
         G, pos,
         node_color=node_colors,
@@ -167,7 +164,6 @@ def draw_clean_graph(G: nx.DiGraph, title: str, out_path: str):
         ax=ax,
     )
 
-    # Etykiety
     nx.draw_networkx_labels(
         G, pos,
         labels=labels,
@@ -177,7 +173,6 @@ def draw_clean_graph(G: nx.DiGraph, title: str, out_path: str):
         ax=ax,
     )
 
-    # Legenda
     patches = [
         mpatches.Patch(color=COLORS["Data Table"], label="Data Table (T)"),
         mpatches.Patch(color=COLORS["Data Job"],   label="Data Job (J)"),

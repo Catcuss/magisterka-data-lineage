@@ -12,7 +12,6 @@ import matplotlib.patheffects as pe
 _OUT = Path(__file__).resolve().parent.parent / "results" / "figures"
 _OUT.mkdir(parents=True, exist_ok=True)
 
-# Paleta
 C_TABLE   = "#1565C0"
 C_JOB     = "#388E3C"
 C_STAGING = "#E65100"
@@ -73,9 +72,7 @@ def setup_ax(ax, title, title_color):
             fontsize=10.5, fontweight="bold", color=title_color)
 
 
-# ---------------------------------------------------------------------------
 # Panel górny — graf pełny
-# ---------------------------------------------------------------------------
 def draw_full(ax):
     setup_ax(ax, "Graf pełny", "#1A237E")
 
@@ -98,9 +95,7 @@ def draw_full(ax):
                 style="italic", zorder=5)
 
 
-# ---------------------------------------------------------------------------
 # Panel dolny — broken lineage
-# ---------------------------------------------------------------------------
 def draw_broken(ax):
     setup_ax(ax, "Graf po Broken Lineage", C_RED)
 
@@ -142,9 +137,7 @@ def draw_broken(ax):
                       ec=C_RED, lw=1.5, alpha=0.9))
 
 
-# ---------------------------------------------------------------------------
 # Legenda typów węzłów (wspólna, pod wykresem)
-# ---------------------------------------------------------------------------
 def draw_legend(fig):
     items = [
         (C_TABLE,   "Data Table"),
@@ -163,9 +156,6 @@ def draw_legend(fig):
                  transform=fig.transFigure)
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 def main():
     fig, axes = plt.subplots(2, 1, figsize=(10, 5.5), facecolor=C_BG)
     fig.subplots_adjust(hspace=0.10, left=0.01, right=0.99,
@@ -175,7 +165,6 @@ def main():
     draw_broken(axes[1])
     draw_legend(fig)
 
-    # Linia podziału
     fig.add_artist(plt.Line2D([0.05, 0.95], [0.505, 0.505],
                               transform=fig.transFigure,
                               color="#CFD8DC", linewidth=1.2))

@@ -10,8 +10,11 @@ Rozdział precyzuje formalną definicję problemu detekcji węzłów
 o~zerwanym lineage (sekcja~\ref{sec:sformulowanie}). Sekcja~\ref{sec:dane}
 charakteryzuje zastosowany zbiór danych, sekcja~\ref{sec:symulacja} opisuje
 metodykę symulacji broken lineage przez~usuwanie zadań,
-a~sekcja~\ref{sec:architektura} architekturę potoku przetwarzania. Szczegóły implementacji metod detekcji
-omówiono w~sekcji~\ref{sec:algorytmy}.
+a~sekcja~\ref{sec:architektura} architekturę potoku przetwarzania.
+Zaimplementowane metody detekcji omówiono w~sekcji~\ref{sec:algorytmy},
+realizację techniczną w~sekcji~\ref{sec:implementacja}, testy jednostkowe
+i~odtwarzalność wyników w~sekcji~\ref{sec:testy}, a~dostępność implementacji
+i~pochodzenie algorytmów w~sekcji~\ref{sec:repozytorium}.
 
 % ============================================================
 \section{Sformułowanie problemu}
@@ -61,7 +64,7 @@ nie~udostępniono. Zbiór opublikowano w~2024~roku jako pierwszy
 otwarty zestaw rzeczywistych grafów lineage.
 
 Każdy graf zawiera węzły trzech typów: \textbf{Data Job} (zapytanie SQL
-lub~zadanie ETL, ang.~\emph{Extract, Transform, Load}), \textbf{Data Table}
+lub~zadanie ETL), \textbf{Data Table}
 (tabela lub~widok przechowujący dane) oraz~\textbf{field} (atrybut lub~kolumna
 należąca do~tabeli). Łączą je~krawędzie dwóch typów: \textbf{DATA\_FLOW}
 (skierowana krawędź przepływu danych między tabelą a~zadaniem)
@@ -73,8 +76,9 @@ i~\emph{Data Job}); podgraf ten~ma~strukturę dwudzielną i~skierowaną,
 interpretowaną jako graf DAG. Grafy różnią się skalą: liczba węzłów waha się
 od~278 do~17~085.
 
-Zbiór DLG-DG-23 wybrano, ponieważ jest jedynym publicznie dostępnym
-zestawem rzeczywistych grafów lineage. Anonimizacja nazw
+Zbiór DLG-DG-23 wybrano, ponieważ jest pierwszym publicznie udostępnionym
+zestawem rzeczywistych grafów lineage~\cite{Chen2024}, a~w~trakcie prowadzenia
+badań nie~zidentyfikowano innego zbioru tego rodzaju. Anonimizacja nazw
 węzłów ma~bezpośredni wpływ na~dobór metod: metryki podobieństwa oparte
 na~nazwach obiektów (np.~Jaro–Winkler stosowana przez Boińskiego
 et~al.~\cite{Boinski2025}) są~nieaplikowalne. W~niniejszej pracy sygnał
@@ -270,11 +274,12 @@ model trenuje się~na~podzbiorze grafów, a~testuje na~grafach niewidzianych
 (leave-one-graph-out lub~podział zbioru 18~grafów). Zbiory treningowy
 i~testowy są~rozłączne, co~sprawdza zdolność metody do~generalizacji
 na~nowe grafy, a~nie~jedynie do~zapamiętania jednego. Konsekwencją tego
-protokołu jest~wykluczenie metody Node2Vec: uczy ona~zanurzeń węzłów
-transduktywnie, dla~konkretnego grafu, przez~co~embeddingi są~geometrycznie
-nieporównywalne między grafami. Nie~jest~to~luka, lecz~\emph{wynik}, który
-motywuje zastosowanie indukcyjnych grafowych sieci neuronowych (GraphSAGE,
-R-GCN, HGT), wskazanych w~rozdziale~5 jako~kierunek dalszych badań.
+protokołu jest~wykluczenie metody Node2Vec~\cite{Grover2016}: uczy ona~zanurzeń
+węzłów transduktywnie, dla~konkretnego grafu, przez~co~embeddingi
+są~geometrycznie nieporównywalne między grafami~\cite{Hamilton2017}.
+Nie~jest~to~luka, lecz~\emph{wynik}, który motywuje zastosowanie indukcyjnych
+grafowych sieci neuronowych (GraphSAGE~\cite{Hamilton2017},
+R-GCN~\cite{Schlichtkrull2018}, HGT~\cite{Hu2020}), wskazanych w~rozdziale~5 jako~kierunek dalszych badań.
 
 % ============================================================
 \section{Zaimplementowane metody detekcji}
@@ -292,7 +297,8 @@ LineageDetector.
 Heurystyki strukturalne przypisują tabeli wynik podejrzliwości wyłącznie
 na~podstawie jej pozycji w~grafie, bez~etapu uczenia. Są~naturalnym
 punktem odniesienia (\emph{baseline}) dla~metod uczonych. Miary oparte
-na~wspólnych sąsiadach (Common Neighbors, Jaccard, Adamic-Adar) są~w~grafie
+na~wspólnych sąsiadach (Common Neighbors, Jaccard,
+Adamic-Adar)~\cite{LibenNowell2007} są~w~grafie
 dwudzielnym nieskuteczne, ponieważ węzły tego~samego typu nigdy nie~mają
 wspólnych sąsiadów bezpośrednich; wykluczono je~z~implementacji.
 
@@ -311,7 +317,7 @@ obok czterech poniższych:
   \item \textbf{Brzeg grafu} (\texttt{boundary}): suma wskaźników
         $\mathbf{1}[\mathrm{in\_df}=0] + \mathbf{1}[\mathrm{out\_df}=0]$.
         Tabele na~brzegu przepływu (korzenie i~liście) są~podejrzane,
-        ponieważ zerwanie lineage często wypycha tabelę na~brzeg grafu.
+        ponieważ zerwanie lineage często przesuwa tabelę na~brzeg grafu.
   \item \textbf{Niska łączność z~zadaniami}
         (\texttt{low\_job\_connectivity}): wynik $1/(1+n_{J}(t))$,
         gdzie $n_{J}(t)$ to~liczba unikatowych zadań sąsiadujących
@@ -389,18 +395,18 @@ prawdziwą tabelę źródłową od~tabeli osieroconej po~usunięciu zadania.
 Detektor LineageDetector (sekcja~\ref{sec:lineage-detector})
 rozszerza ten wektor o~trzy cechy kompletności
 (\texttt{peer\_producer\_score}, \texttt{peer\_consumer\_score},
-\texttt{completeness\_anomaly}), opisane w~sekcji~\ref{sec:algorytmy}.
+\texttt{completeness\_anomaly}), opisane w~sekcji~\ref{sec:lineage-detector}.
 
 \subsubsection{Random Forest}
 
-Random Forest (RF) to~metoda uczenia zespołowego oparta na~uśrednianiu
+Random Forest (RF)~\cite{Breiman2001} to~metoda uczenia zespołowego oparta na~uśrednianiu
 predykcji drzew decyzyjnych trenowanych na~losowych podpróbkach danych
 i~cech (\emph{bagging}). Dla~obsługi niezrównoważonych klas zastosowano
 \texttt{class\_weight=\textquotedbl{}balanced\textquotedbl{}}.
 
 \subsubsection{RUSBoost}
 
-RUSBoost (\emph{Random Under-Sampling Boosting}) łączy boosting AdaBoost
+RUSBoost (\emph{Random Under-Sampling Boosting})~\cite{Seiffert2010} łączy boosting AdaBoost
 z~losowym podpróbkowaniem klasy większościowej przed~każdą iteracją.
 Zaimplementowano go~dla~bezpośredniego nawiązania do~wyników Boińskiego
 et~al.~\cite{Boinski2025}, przy~czym w~niniejszej pracy klasyfikuje on~węzły,
@@ -408,7 +414,7 @@ a~nie~pary obiektów.
 
 \subsubsection{LightGBM}
 
-LightGBM to~implementacja gradientowego boostingu drzew decyzyjnych,
+LightGBM~\cite{Ke2017} to~implementacja gradientowego boostingu drzew decyzyjnych,
 budująca kolejne drzewa sekwencyjnie, każde minimalizując błąd resztkowy
 poprzednika. Niezbalansowanie klas kompensuje parametr
 \texttt{class\_weight}~$=$~\texttt{balanced}, przypisujący obserwacjom wagi
@@ -433,7 +439,7 @@ model:
         jest~rzetelnym $p(\text{zainfekowana})$, a~nie~dowolnym wynikiem.
 \end{enumerate}
 
-\paragraph{Score kompletności peer-consistency.}
+\noindent\textbf{Score kompletności peer-consistency.}
 Zaproponowany w~pracy score kompletności opiera się na~założeniu,
 że~tabela o~zerwanym lineage jest~\emph{strukturalnie niespójna}
 ze~swoimi sąsiadami (peerami) w~grafie DAG. Dla~tabeli-korzenia
@@ -505,16 +511,16 @@ na~wyniki liczbowe.
 \toprule
 \textbf{Składnik} & \textbf{Wersja} & \textbf{Rola w~pracy} \\
 \midrule
-Python            & 3.10.2  & środowisko uruchomieniowe \\
-NetworkX          & 3.4.2   & reprezentacja i~przetwarzanie grafów \\
-NumPy             & 1.26.4  & operacje macierzowe, wektory cech \\
-pandas            & 1.5.1   & agregacja wyników, eksport CSV \\
-scikit-learn      & 1.6.1   & Random Forest, kalibracja izotoniczna, metryki \\
-LightGBM          & 4.6.0   & gradientowy boosting drzew \\
-imbalanced-learn  & 0.14.1  & RUSBoost \\
-SciPy             & 1.15.3  & test kolejności par Wilcoxona \\
-Matplotlib        & 3.8.0   & rysunki \\
-pytest            & 9.0.2   & testy jednostkowe \\
+Python~\cite{Python}                 & 3.10.2  & środowisko uruchomieniowe \\
+NetworkX~\cite{NetworkX}             & 3.4.2   & reprezentacja i~przetwarzanie grafów \\
+NumPy~\cite{NumPy}                   & 1.26.4  & operacje macierzowe, wektory cech \\
+pandas~\cite{pandas}                 & 1.5.1   & agregacja wyników, eksport CSV \\
+scikit-learn~\cite{scikit-learn}     & 1.6.1   & Random Forest, kalibracja izotoniczna, metryki \\
+LightGBM~\cite{Ke2017}               & 4.6.0   & gradientowy boosting drzew \\
+imbalanced-learn~\cite{imblearn}     & 0.14.1  & RUSBoost \\
+SciPy~\cite{SciPy}                   & 1.15.3  & test kolejności par Wilcoxona \\
+Matplotlib~\cite{Matplotlib}         & 3.8.0   & rysunki \\
+pytest~\cite{pytest}                 & 9.0.2   & testy jednostkowe \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -721,7 +727,7 @@ trzy powtórzenia z~ziarnami 42--44, protokół indukcyjny leave-one-graph-out,
 próg wiarygodności $\mathrm{MIN\_POS} = 5$, wariant uczciwy
 (\texttt{exclude\_isolated}). Wyniki pośrednie zapisywane są~w~postaci plików
 CSV w~katalogu \texttt{results/}, osobno dla~wariantu uczciwego
-i~napompowanego, wraz z~opisem konfiguracji. Eksperymenty poboczne
+i~zawyżonego, wraz z~opisem konfiguracji. Eksperymenty poboczne
 (ablacja, analiza wrażliwości, test cross-dataset) mają~własne skrypty
 i~własne pliki wynikowe, wymienione w~listingu~\ref{lst:repo}, co~pozwala
 odtworzyć każdą tabelę rozdziału~4 niezależnie od~pozostałych.
@@ -736,8 +742,8 @@ wczytywania danych, symulacji broken lineage, ekstrakcji cech, metod
 detekcji oraz~ewaluacji, wraz z~testami jednostkowymi i~skryptami
 odtwarzającymi eksperymenty z~rozdziału~4, udostępniono w~publicznym
 repozytorium Git
-pod~adresem \texttt{https://github.com/Catcuss/magisterka-data-lineage}\footnote{Dostęp
-zweryfikowano 19~sierpnia 2026~r.}. Repozytorium zawiera instrukcję
+pod~adresem \texttt{https://github.com/Catcuss/magisterka-data-lineage}
+(dostęp zweryfikowano 19~sierpnia 2026~r.). Repozytorium zawiera instrukcję
 uruchomienia (dodatek~\ref{dod:uruchomienie}) oraz~pliki konfiguracyjne biegu
 kanonicznego, co~zapewnia odtwarzalność raportowanych wyników.
 

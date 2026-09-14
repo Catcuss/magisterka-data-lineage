@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import networkx as nx
 
-# --- Konfiguracja kolorów ---
+# Konfiguracja kolorów
 NODE_COLORS = {
     "Data Table": "#4C72B0",   # niebieski
     "Data Field": "#55A868",   # zielony
@@ -102,7 +102,6 @@ def draw_graph(G: nx.DiGraph, title: str, out_path: str, is_sample: bool = False
     fig, ax = plt.subplots(figsize=figsize, facecolor="#F8F8F8")
     ax.set_facecolor("#F8F8F8")
 
-    # Kolory węzłów
     node_color_list = [
         NODE_COLORS.get(G.nodes[n].get("asset_type", ""), "#888888")
         for n in G.nodes()
@@ -127,7 +126,6 @@ def draw_graph(G: nx.DiGraph, title: str, out_path: str, is_sample: bool = False
                 connectionstyle="arc3,rad=0.05",
             )
 
-    # Rysuj węzły
     nx.draw_networkx_nodes(
         G, layout,
         node_color=node_color_list,
@@ -136,7 +134,6 @@ def draw_graph(G: nx.DiGraph, title: str, out_path: str, is_sample: bool = False
         ax=ax,
     )
 
-    # Legenda węzłów
     node_patches = [
         mpatches.Patch(color=c, label=t)
         for t, c in NODE_COLORS.items()
