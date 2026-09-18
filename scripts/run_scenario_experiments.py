@@ -1,7 +1,7 @@
 """
 Eksperymenty na scenariuszach broken lineage (strukturalny podział krawędzi).
 
-W przeciwieństwie do run_experiments.py (losowy 80/20 split), tutaj krawędzie
+W przeciwieństwie do losowego podziału krawędzi 80/20, tutaj krawędzie
 testowe są wybierane według roli węzła — symulując realne przyczyny broken lineage:
 
   Scenariusz A — tabela staging usunięta

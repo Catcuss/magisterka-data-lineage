@@ -1,8 +1,8 @@
 # Bieg kanoniczny — jedno źródło prawdy dla rozdziału 4
 
-Wszystkie liczby w pracy pochodzą z TEGO biegu. Nie mieszać z plikami
-`wyniki_detekcja_v2.csv` / `_det_v2.txt` — były niespójne (inna wersja
-detektora) i zostają jako archiwum.
+Wszystkie liczby w pracy pochodzą z TEGO biegu. Wyniki wcześniejszej,
+niespójnej wersji detektora zostały usunięte z repozytorium, aby nie
+było wątpliwości, które pliki są źródłem liczb w pracy.
 
 ## Ustawienia (cytuj je w rozdz. 3 i 4)
 - Grafy: wszystkie 18 (DLG1–DLG18)
