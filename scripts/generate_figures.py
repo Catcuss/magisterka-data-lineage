@@ -46,7 +46,7 @@ C_JOB = "#f0f0f0"
 PL_NAMES = {
     "degree_anomaly": "Anomalia stopnia",
     "boundary": "Brzeg (korzeń/liść)",
-    "low_job_connectivity": "Niska łączność jobów",
+    "low_job_connectivity": "Niska łączność zadań",
     "rule_root": "Reguła korzenia",
     "completeness": "Kompletność*",
     "RandomForest": "Random Forest",
@@ -67,44 +67,68 @@ def _save(fig, name):
 
 # RYSUNEK 1 — schemat potoku przetwarzania
 def fig_pipeline():
-    fig, ax = plt.subplots(figsize=(9.2, 2.5))
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 3)
+    # Wymiary w calach dobrane tak, by rysunek skladany na szerokosc kolumny
+    # tekstu (ok. 6,1 cala) mial czcionke ok. 7 pt.
+    fig, ax = plt.subplots(figsize=(6.3, 3.5))
+    ax.set_xlim(0, 6.3)
+    ax.set_ylim(0, 3.5)
     ax.axis("off")
+    fs = 7.5
+    w, h = 1.3, 0.72
 
-    stages = [
-        ("Zbiór\nDLG-DG-23\n(18 grafów JSON)", C_JOB),
-        ("Wczytanie\ngrafu\n(DiGraph)", C_JOB),
-        ("Symulacja:\nusunięcie jobu\n→ etykiety infected", C_JOB),
-        ("Ekstrakcja cech\n(13 pozycji w DAG\n+ 3 kompletności)", C_JOB),
-        ("Detektor\n(heurystyki / ML /\nLineageDetector)", C_DET),
-        ("Metryki rankingowe\nAUC-ROC, AUC-PR,\nP@k, Brier", C_JOB),
+    def box(x, y, label, color=C_JOB, dashed=False):
+        ax.add_patch(FancyBboxPatch(
+            (x, y - h / 2), w, h,
+            boxstyle="round,pad=0.02,rounding_size=0.05",
+            linewidth=1.0, edgecolor="#333333", facecolor=color,
+            linestyle="--" if dashed else "-"))
+        ax.text(x + w / 2, y, label, ha="center", va="center", fontsize=fs,
+                linespacing=1.3)
+
+    def arrow(p, q):
+        ax.add_patch(FancyArrowPatch(p, q, arrowstyle="-|>", mutation_scale=9,
+                                     linewidth=1.0, color="#333333",
+                                     shrinkA=2.5, shrinkB=2.5))
+
+    def line(p, q):
+        ax.plot([p[0], q[0]], [p[1], q[1]], color="#333333", linewidth=1.0)
+
+    y_top, y_bot = 2.95, 1.35
+    top = [0.05, 1.65, 3.35, 4.95]
+    box(top[0], y_top, "Zbiór DLG-DG-23\n18 grafów\n(pliki JSON)")
+    box(top[1], y_top, "Wczytanie\ngrafów\n(loader.py)")
+    box(top[2], y_top, "Benchmark\nDutkiewicza et al.\n(Northwind, CSV)",
+        dashed=True)
+    box(top[3], y_top, "Adapter DUT\nagregacja do\ntabela–zadanie")
+    arrow((top[0] + w, y_top), (top[1], y_top))
+    arrow((top[2] + w, y_top), (top[3], y_top))
+
+    bot = [0.05, 1.65, 3.25, 4.85]
+    labels = [
+        ("Symulacja\nusunięcia zadań\n(etykiety)", C_JOB),
+        ("Ekstrakcja cech\n13 cech pozycji\n+ 3 kompletności", C_JOB),
+        ("Detektor\nheurystyki, ML,\nLineageDetector", C_DET),
+        ("Metryki\nAUC-ROC, AUC-PR,\nP@k, Brier", C_JOB),
     ]
-    n = len(stages)
-    w, h = 1.42, 1.3
-    gap = (10 - n * w) / (n + 1)
-    y = 1.5
-    centers = []
-    for i, (label, color) in enumerate(stages):
-        x = gap + i * (w + gap)
-        box = FancyBboxPatch((x, y - h / 2), w, h,
-                             boxstyle="round,pad=0.02,rounding_size=0.08",
-                             linewidth=1.2, edgecolor="#333333",
-                             facecolor=color)
-        ax.add_patch(box)
-        ax.text(x + w / 2, y, label, ha="center", va="center", fontsize=8.2)
-        centers.append(x + w / 2)
-        if i > 0:
-            arr = FancyArrowPatch((centers[i - 1] + w / 2, y),
-                                  (x, y),
-                                  arrowstyle="-|>", mutation_scale=13,
-                                  linewidth=1.2, color="#333333")
-            ax.add_patch(arr)
+    for x, (lab, col) in zip(bot, labels):
+        box(x, y_bot, lab, col)
+    for a, b in zip(bot[:-1], bot[1:]):
+        arrow((a + w, y_bot), (b, y_bot))
 
-    ax.text(5, 2.75, "Protokół indukcyjny: leave-one-graph-out "
-                     "(trening na 17 grafach, test na 1)",
-            ha="center", va="center", fontsize=8.5, style="italic",
-            color="#555555")
+    # Zbieg obu źródeł do wspólnego potoku
+    y_bus = (y_top - h / 2 + y_bot + h / 2) / 2
+    x_in = bot[0] + w / 2
+    line((top[1] + w / 2, y_top - h / 2), (top[1] + w / 2, y_bus))
+    line((top[3] + w / 2, y_top - h / 2), (top[3] + w / 2, y_bus))
+    line((x_in, y_bus), (top[3] + w / 2, y_bus))
+    arrow((x_in, y_bus), (x_in, y_bot + h / 2))
+
+    ax.text(3.15, 0.42,
+            "DLG-DG-23: protokół indukcyjny leave-one-graph-out "
+            "(trening na 17 grafach, test na 1)\n"
+            "DUT: wyłącznie test modeli wytrenowanych na DLG-DG-23",
+            ha="center", va="center", fontsize=fs, style="italic",
+            color="#555555", linespacing=1.5)
     _save(fig, "rys_potok")
 
 
@@ -165,14 +189,14 @@ def fig_before_after():
     _draw_lineage(axes[0], removed=False)
     axes[0].set_title("(a) Graf oryginalny", fontsize=10)
     _draw_lineage(axes[1], removed=True)
-    axes[1].set_title("(b) Po usunięciu jobu J1", fontsize=10)
+    axes[1].set_title("(b) Po usunięciu zadania J1", fontsize=10)
 
     from matplotlib.lines import Line2D
     from matplotlib.patches import Patch
     legend = [
         Patch(facecolor=C_CLEAN, edgecolor="#333", label="Tabela czysta"),
         Patch(facecolor=C_INFECTED, edgecolor="#333", label="Tabela zainfekowana (infected)"),
-        Patch(facecolor=C_JOB, edgecolor="#333", label="Job (zadanie)"),
+        Patch(facecolor=C_JOB, edgecolor="#333", label="Zadanie (job)"),
         Line2D([0], [0], color="#cccccc", linestyle="--",
                label="Krawędź utracona"),
     ]
@@ -192,7 +216,7 @@ def fig_auc_bars():
     y = np.arange(len(order))
     hgt = 0.38
 
-    fig, ax = plt.subplots(figsize=(8.6, 5.0))
+    fig, ax = plt.subplots(figsize=(8.6, 5.6))
     ax.barh(y + hgt / 2, infl.loc[order, "auc_roc_mean"], height=hgt,
             xerr=infl.loc[order, "auc_roc_std"], error_kw=dict(lw=0.8, alpha=0.5),
             color="#c9c9c9", edgecolor="#888", label="Wariant zawyżony (n=10)")
@@ -211,7 +235,7 @@ def fig_auc_bars():
     ax.set_yticklabels(labels)
     ax.set_xlabel("AUC-ROC (średnia po grafach wiarygodnych)")
     ax.set_xlim(0, 1.0)
-    ax.set_title("Skuteczność detekcji zainfekowanych tabel — protokół indukcyjny")
+    ax.set_title("Skuteczność detekcji zainfekowanych tabel – protokół indukcyjny")
 
     # wartości wariantu uczciwego na słupkach
     for yi, a in zip(y, order):
@@ -219,11 +243,22 @@ def fig_auc_bars():
         ax.text(v + 0.012, yi - hgt / 2, f"{v:.3f}".replace(".", ","),
                 va="center", fontsize=7.5)
 
-    ax.legend(loc="lower right", frameon=True, fontsize=8.5)
-    fig.text(0.01, -0.02,
-             "* wkład własny. Warianty uśrednione po różnych zbiorach grafów "
-             "wiarygodnych (uczciwy 8, zawyżony 10) — nie odejmować 1:1.",
-             fontsize=7.2, color="#555")
+    from matplotlib.patches import Patch
+    from matplotlib.lines import Line2D
+    legend = [
+        Patch(facecolor=C_DET, edgecolor="#333",
+              label="Wariant uczciwy (n=8) – autorski detektor"),
+        Patch(facecolor=C_ML, edgecolor="#333",
+              label="Wariant uczciwy (n=8) – klasyczne ML"),
+        Patch(facecolor=C_HEUR, edgecolor="#333",
+              label="Wariant uczciwy (n=8) – heurystyki"),
+        Patch(facecolor="#c9c9c9", edgecolor="#888",
+              label="Wariant zawyżony (n=10) – wszystkie metody"),
+        Line2D([0], [0], color="#333", lw=0.8,
+               label="Odchylenie standardowe"),
+    ]
+    ax.legend(handles=legend, loc="upper center", frameon=False, fontsize=8,
+              ncol=2, bbox_to_anchor=(0.5, -0.13))
     fig.tight_layout()
     _save(fig, "rys_auc_uczciwy_napompowany")
 
@@ -248,15 +283,15 @@ def fig_sensitivity():
     ax.axhline(0.5, color="#333", linestyle=":", linewidth=1.0)
     ax.text(0.30, 0.505, "losowo", fontsize=8, color="#333",
             ha="right", va="bottom")
-    ax.set_xlabel("removal_ratio (odsetek usuwanych jobów)")
+    ax.set_xlabel("removal_ratio (odsetek usuwanych zadań)")
     ax.set_ylabel("AUC-ROC (grafy wiarygodne)")
     ax.set_xticks(ratios)
     ax.set_ylim(0.45, 0.85)
-    ax.set_title("Wrażliwość skuteczności na odsetek usuwanych jobów")
+    ax.set_title("Wrażliwość skuteczności na odsetek usuwanych zadań")
     ax.legend(loc="center right", frameon=True, fontsize=8.5)
     fig.text(0.01, -0.02,
-             "* wkład własny. Wynik LineageDetectora niemal stały (0,754–0,771) "
-             "— nie jest artefaktem wyboru removal_ratio.",
+             "* wkład własny. Wynik LineageDetectora niemal stały (0,754–0,771), "
+             "nie jest artefaktem wyboru removal_ratio.",
              fontsize=7.2, color="#555")
     fig.tight_layout()
     _save(fig, "rys_wrazliwosc_removal_ratio")

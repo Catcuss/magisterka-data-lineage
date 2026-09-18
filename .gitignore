@@ -43,3 +43,9 @@ references
 *.vrb
 *.lol
 
+
+# Archiwa do oddania (budowane lokalnie)
+*.zip
+
+# Lokalna konfiguracja narzedzi
+.claude/
