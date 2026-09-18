@@ -1,2 +1,0 @@
-- [Profil autorki](user_profile.md) — Maria Nowicka (151851), PP, drafty potoczne, wymaga pełnej redakcji akademickiej
-- [Konwencje projektu](project_conventions.md) — terminologia, skróty, klucze BibTeX, struktura rozdziałów, scenariusze danych

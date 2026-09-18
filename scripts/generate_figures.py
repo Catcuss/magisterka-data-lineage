@@ -1,9 +1,9 @@
 """
 Generacja rysunków do rozdz. 3 i 4 pracy magisterskiej (detekcja chorych węzłów).
 
-Wyjście: docs/thesis_draft_new/thesis/figures/*.pdf (+ .png do podglądu).
+Wyjście: docs/thesis/figures/*.pdf (+ .png do podglądu).
 Źródła liczb: bieg kanoniczny (results/agregat_detekcja*.csv) oraz sweep
-removal_ratio z results/_faza2_runs.txt.
+removal_ratio (src/detection/run_removal_sensitivity.py).
 
 Uruchomienie:
     python scripts/generate_figures.py
@@ -19,7 +19,7 @@ from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Circle
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
-FIGDIR = ROOT / "docs" / "thesis_draft_new" / "thesis" / "figures"
+FIGDIR = ROOT / "docs" / "thesis" / "figures"
 FIGDIR.mkdir(parents=True, exist_ok=True)
 
 # Styl spójny dla wszystkich rysunków.
@@ -265,7 +265,7 @@ def fig_auc_bars():
 
 # RYSUNEK 4 — wrażliwość na removal_ratio (sweep)
 def fig_sensitivity():
-    # dane wprost ze sweepu w results/_faza2_runs.txt
+    # dane ze sweepu removal_ratio (src/detection/run_removal_sensitivity.py)
     ratios = [0.05, 0.10, 0.20, 0.30]
     series = {
         "LineageDetector*": ([0.761, 0.771, 0.755, 0.754], C_DET, "o"),

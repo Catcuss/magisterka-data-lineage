@@ -30,7 +30,7 @@ gałąź `edge-prediction-archive`.
 ## Główny wynik
 
 <p align="center">
-  <img src="docs/thesis_draft_new/thesis/figures/rys_auc_uczciwy_napompowany.png"
+  <img src="docs/thesis/figures/rys_auc_uczciwy_napompowany.png"
        alt="AUC-ROC per algorytm: wariant uczciwy vs napompowany" width="720">
 </p>
 
@@ -231,7 +231,7 @@ Python 3.10; zależności: `networkx`, `numpy`, `scikit-learn`,
 
 ```bash
 pip install -r requirements.txt
-pytest tests/                              # 77 testów jednostkowych
+pytest tests/                              # 83 testy jednostkowe
 
 # Bieg kanoniczny — wariant uczciwy (główny):
 python -m src.detection.run_detection_experiments --all --exclude-isolated \
@@ -247,7 +247,7 @@ python scripts/aggregate_detection.py
 # Analiza wrażliwości na removal_ratio:
 python -m src.detection.run_removal_sensitivity
 
-# Rysunki do pracy (PDF+PNG → docs/thesis_draft_new/thesis/figures/):
+# Rysunki do pracy (PDF+PNG → docs/thesis/figures/):
 python scripts/generate_figures.py
 ```
 
@@ -255,34 +255,31 @@ python scripts/generate_figures.py
 
 ```
 MAGISTERKA/
-├── data/raw/DataAssetGraphData/        # dataset (gitignore)
-├── docs/
-│   ├── thesis_draft_new/thesis/        # AKTUALNY tekst pracy (LaTeX + figures/)
-│   ├── thesis_draft/                   # archiwum tekstu sprzed pivotu
-│   └── BAZA_WIEDZY_OBRONA.md           # kompendium do obrony
-├── references/                         # PDF-y artykułów (w tym references/new/)
-├── results/                            # wyniki; README_BIEG_KANONICZNY.md = źródło prawdy
+├── data/                               # dane wejsciowe (poza repozytorium, .gitignore)
+│   ├── raw/DataAssetGraphData/         #   DLG-DG-23 (Chen et al.)
+│   └── external/dutkiewicz/            #   benchmark zewnetrzny -> graf DUT
+├── docs/thesis/                        # tekst pracy: zrodla LaTeX, figures/, Thesis.pdf
+├── results/                            # wyniki biegow; README_BIEG_KANONICZNY.md = zrodlo prawdy
 ├── src/
-│   ├── detection/                      # AKTUALNE: job_removal, node_features,
-│   │                                   #   completeness, node_classifier,
-│   │                                   #   lineage_detector, node_metrics, runnery
-│   ├── data/ · algorithms/ · evaluation/   # badanie wstępne (predykcja krawędzi)
-├── scripts/                            # aggregate_detection, generate_figures,
-│                                       #   runnery badania wstępnego
-├── tests/                              # pytest (77 testów)
-├── requirements.txt
-└── 151851_SLR.pdf                      # raport Systematic Literature Review
+│   ├── detection/                      # detekcja wezlow: job_removal, node_features,
+│   │                                   #   completeness, lineage_detector, node_classifier,
+│   │                                   #   node_metrics oraz runnery eksperymentow
+│   ├── data/                           # loader DLG-DG-23, adapter grafu DUT, podzialy
+│   └── algorithms/ · evaluation/       # badanie wstepne (predykcja krawedzi)
+├── scripts/                            # agregacja wynikow, tabele i rysunki do pracy
+├── tests/                              # pytest (83 testy)
+└── requirements.txt
 ```
 
 ## Status pracy
 
-- [x] Zadanie 1 — Systematic Literature Review (`151851_SLR.pdf`)
+- [x] Zadanie 1 — Systematic Literature Review
 - [x] Zadanie 2 — Implementacja algorytmów (heurystyki + ML + LineageDetector)
 - [x] Zadanie 3 — Zastosowanie do datasetu DLG-DG-23 (18 grafów)
-- [x] Zadanie 4 — Testy jednostkowe (77 testów, pytest)
-- [x] Zadanie 5 — Ewaluacja eksperymentalna (bieg kanoniczny + kontrola
-      przecieku + analiza wrażliwości)
-- [~] Tekst pracy: rozdz. 1–3 gotowe (LaTeX, 24 str. PDF); w toku rozdz. 4–5
+- [x] Zadanie 4 — Testy jednostkowe (83 testy, pytest)
+- [x] Zadanie 5 — Ewaluacja eksperymentalna (bieg kanoniczny, kontrola
+      przecieku, analiza wrażliwości, test na zewnętrznym grafie DUT)
+- [x] Tekst pracy: rozdz. 1–5 w `docs/thesis/` (LaTeX + `Thesis.pdf`)
 
 ## Odtwarzalność
 
